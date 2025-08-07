@@ -1,0 +1,16 @@
+name: or-tools
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - black
+  - icecream
+  - ipympl
+  - isort
+  - numpy
+  - openpyxl
+  - pandas
+  - pip
+  - python
+  - pip:
+    - ortools
