@@ -4,6 +4,7 @@ channels:
   - defaults
 dependencies:
   - black
+  - faker
   - icecream
   - ipympl
   - isort

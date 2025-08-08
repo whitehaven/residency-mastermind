@@ -4,11 +4,7 @@ from icecream import ic
 import numpy as np
 
 
-def generate_fake_residents_csv(
-    filename, residents_structure={"TY1": 8, "PMR1": 8, "R1": 10, "R2": 10, "R3": 10}
-) -> None:
-    if residents_structure:
-        residents_to_generate = residents_structure
+def generate_fake_residents(residents_structure: dict) -> pd.DataFrame:
 
     fake = Faker()
 
@@ -22,7 +18,7 @@ def generate_fake_residents_csv(
         "R3": "IM-Senior",
     }
 
-    for year, count in residents_to_generate.items():
+    for year, count in residents_structure.items():
         for resident_index in range(count):
             faked_residents.update(
                 {
@@ -41,11 +37,28 @@ def generate_fake_residents_csv(
                 }
             )
 
-    df = pd.DataFrame.from_dict(faked_residents, orient="index")
-    df.to_csv(filename, index=False)
-    print(f"Generated {filename} with fake residents data.")
+    return pd.DataFrame.from_dict(faked_residents, orient="index")
+
 
 
 if __name__ == "__main__":
     fake = Faker()
-    generate_fake_residents_csv("./testing/residents.csv")
+
+    current_residency_structure = {"TY1": 8, "PMR1": 8, "R1": 10, "R2": 10, "R3": 10}
+
+    fake_residents = generate_fake_residents(current_residency_structure)
+    fake_residents.to_csv("testing/residents.csv", index=False)
+
+    # this test presumes real structure of rotations, rotation categories, and prerequisites are in place - can't generate these randomly
+    residents = pd.read_csv("testing/residents.csv", index_col="last_name")
+    rotations = pd.read_csv("testing/rotations.csv", index_col="rotation_name")
+    rotation_categories = pd.read_csv(
+        "testing/rotation_categories.csv", index_col="category"
+    )
+
+    ic(residents.head())
+    ic(rotations.head())
+    ic(rotation_categories.head())
+
+    # fake_preferences = generate_fake_preferences(residents=fake_residents, rotations=rotations, rotation_categories=rotation_categories)
+    # fake_preferences.to_csv("testing/preferences.csv", index=False)
