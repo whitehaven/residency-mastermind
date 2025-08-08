@@ -40,15 +40,36 @@ def generate_fake_residents(residents_structure: dict) -> pd.DataFrame:
     return pd.DataFrame.from_dict(faked_residents, orient="index")
 
 
+def generate_fake_preferences(
+    residents: pd.DataFrame, rotations: pd.DataFrame, rotation_categories: pd.DataFrame
+) -> pd.DataFrame:
+    import pandas as pd
+    from faker import Faker
+
+    fake = Faker()
+
+    # rotations_with_categories = pd.merge(left=rotations, right=rotation_categories, left_on="category", right_index=True, how="inner", suffixes=("_rotation", "_category"))
+
+    # TODO requires a field added to rotation_categories to determine, done in sqlite
+
+    return None
+
 
 if __name__ == "__main__":
     fake = Faker()
 
     generate_new_residents = False
+    generate_new_preferences = True
 
     if generate_fake_residents:
 
-        current_residency_structure = {"TY1": 8, "PMR1": 8, "R1": 10, "R2": 10, "R3": 10}
+        current_residency_structure = {
+            "TY1": 8,
+            "PMR1": 8,
+            "R1": 10,
+            "R2": 10,
+            "R3": 10,
+        }
 
         fake_residents = generate_fake_residents(current_residency_structure)
         fake_residents.to_csv("testing/residents.csv", index=False)
@@ -60,9 +81,18 @@ if __name__ == "__main__":
         "testing/rotation_categories.csv", index_col="category"
     )
 
+    if generate_new_preferences:
+        fake_preferences = generate_fake_preferences(
+            residents=residents,
+            rotations=rotations,
+            rotation_categories=rotation_categories,
+        )
+
+        fake_preferences.to_csv("testing/preferences.csv", index=False)
+
+    preferences = pd.read_csv("testing/preferences.csv", index_col="resident")
+
     ic(residents.head())
     ic(rotations.head())
     ic(rotation_categories.head())
-
-    # fake_preferences = generate_fake_preferences(residents=fake_residents, rotations=rotations, rotation_categories=rotation_categories)
-    # fake_preferences.to_csv("testing/preferences.csv", index=False)
+    ic(preferences.head())
