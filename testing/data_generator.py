@@ -44,10 +44,14 @@ def generate_fake_residents(residents_structure: dict) -> pd.DataFrame:
 if __name__ == "__main__":
     fake = Faker()
 
-    current_residency_structure = {"TY1": 8, "PMR1": 8, "R1": 10, "R2": 10, "R3": 10}
+    generate_new_residents = False
 
-    fake_residents = generate_fake_residents(current_residency_structure)
-    fake_residents.to_csv("testing/residents.csv", index=False)
+    if generate_fake_residents:
+
+        current_residency_structure = {"TY1": 8, "PMR1": 8, "R1": 10, "R2": 10, "R3": 10}
+
+        fake_residents = generate_fake_residents(current_residency_structure)
+        fake_residents.to_csv("testing/residents.csv", index=False)
 
     # this test presumes real structure of rotations, rotation categories, and prerequisites are in place - can't generate these randomly
     residents = pd.read_csv("testing/residents.csv", index_col="last_name")
