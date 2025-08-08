@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
     # this test presumes real structure of rotations, rotation categories, and prerequisites are in place - can't generate these randomly
     residents = pd.read_csv("testing/residents.csv", index_col="last_name")
-    rotations = pd.read_csv("testing/rotations.csv", index_col="rotation_name")
+    rotations = pd.read_csv("testing/rotations.csv", index_col="rotation")
     rotation_categories = pd.read_csv(
         "testing/rotation_categories.csv", index_col="category"
     )
