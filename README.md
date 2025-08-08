@@ -6,7 +6,6 @@ Satisfiability solver-driven residency scheduler. Ultimately specific to our loc
 
 - compartmentalized way to force a value to be true arbitrarily (i.e., for setting first-rotation HS or clinic)
 
-
 ## Variables
 
 - bool for every intersection of Resident, Rotation, and Week
@@ -44,3 +43,9 @@ Getting concerned by how complex this problem is.
 
 - some rotations change over time - how can I change a rotation requirement from one year to another? - fortunately only this year's requirements matter; old rotations just have to count toward existing requirments
 - as above, rotations should generally change on block transition dates to facilitate office work
+
+### 2025-08-08
+
+`9f08d6fa84cca1f5fddbb30f3b20a28f33a747dd` - working do-this-year preference generator for relevant rotations
+
+Test data generator is now working, now for the actual program.

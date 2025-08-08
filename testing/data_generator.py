@@ -43,23 +43,77 @@ def generate_fake_residents(residents_structure: dict) -> pd.DataFrame:
 def generate_fake_preferences(
     residents: pd.DataFrame, rotations: pd.DataFrame, rotation_categories: pd.DataFrame
 ) -> pd.DataFrame:
-    import pandas as pd
-    from faker import Faker
 
     fake = Faker()
 
-    # rotations_with_categories = pd.merge(left=rotations, right=rotation_categories, left_on="category", right_index=True, how="inner", suffixes=("_rotation", "_category"))
+    rotations_needing_preferences = get_rotations_needing_preferences(
+        residents=residents,
+        rotations=rotations,
+        rotation_categories=rotation_categories,
+    )
 
-    # TODO requires a field added to rotation_categories to determine, done in sqlite
+    residents["mapped_role"] = residents.role.replace(
+        {"IM-Senior": "Senior", "IM-Intern": "Any", "PMR": "Any", "TY": "Any"}
+    )
+    residents = residents.reset_index()
+    rotations_needing_preferences = get_rotations_needing_preferences(
+        residents, rotations, rotation_categories
+    )
 
-    return None
+    resident_to_elective_mapping = pd.merge(
+        rotations_needing_preferences,
+        residents,
+        left_on="required_role",
+        right_on="mapped_role",
+        how="inner",
+    ).loc[
+        :,
+        [
+            "category",
+            "last_name",
+            "first_name",
+            "degree",
+            "year",
+            "role",
+            "mapped_role",
+        ],
+    ]
+    resident_to_elective_mapping["preference"] = np.random.randint(
+        0, 10 + 1, size=len(resident_to_elective_mapping)
+    )
+
+    return resident_to_elective_mapping
+
+
+def get_rotations_needing_preferences(
+    residents: pd.DataFrame, rotations: pd.DataFrame, rotation_categories: pd.DataFrame
+) -> pd.DataFrame:
+
+    fake = Faker()
+
+    rotations_with_categories = pd.merge(
+        left=rotations,
+        right=rotation_categories,
+        left_on="category",
+        right_index=True,
+        how="inner",
+        suffixes=("_rotation", "_category"),
+    )
+
+    elective_rotations = rotations_with_categories.loc[
+        rotations_with_categories.elective == "elective"
+    ]
+
+    # it.product(elective_rotations.index, residents.index)
+
+    return elective_rotations
 
 
 if __name__ == "__main__":
     fake = Faker()
 
     generate_new_residents = False
-    generate_new_preferences = True
+    generate_new_preferences = False
 
     if generate_fake_residents:
 
@@ -82,17 +136,26 @@ if __name__ == "__main__":
     )
 
     if generate_new_preferences:
+
         fake_preferences = generate_fake_preferences(
             residents=residents,
             rotations=rotations,
             rotation_categories=rotation_categories,
         )
-
         fake_preferences.to_csv("testing/preferences.csv", index=False)
 
-    preferences = pd.read_csv("testing/preferences.csv", index_col="resident")
+    preferences = pd.read_csv(
+        "testing/preferences.csv",
+        index_col=[
+            "last_name",
+            "first_name",
+            "degree",
+        ],
+    )
+
 
     ic(residents.head())
     ic(rotations.head())
     ic(rotation_categories.head())
     ic(preferences.head())
+    ic("All test data is in place.")
