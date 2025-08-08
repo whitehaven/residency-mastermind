@@ -1,16 +1,19 @@
-category,minimum_weeks,maximum_weeks,pertinent_role
-HS Rounding Senior,8,8,Senior
-HS Rounding Intern,8,8,Any Intern
-Hospitalist,4,8,Senior
-ICU Intern,8,8,Any Intern
-HS Admitting Senior,8,8,Senior
-HS Admitting Intern,8,8,Any Intern
-Endocrinology Specialty,2,8,Senior
-Pulmonology Specialty,,,Senior
-Rheumatology Speciality,,,Senior
-Primary Care Senior,8,12,Senior
-Primary Care Intern,8,8,IM Intern
-Night Senior,6,6,Senior
-SHMC Night Intern,4,4,Any Intern
-Heme/Onc Specialty,,,Senior
-ICU Senior,4,12,Senior
+category,minimum_weeks,maximum_weeks,pertinent_role,elective
+HS Rounding Senior,8,8,Senior,core
+HS Rounding Intern,8,8,Any Intern,core
+Hospitalist,4,8,Senior,elective
+ICU Intern,8,8,Any Intern,core
+HS Admitting Senior,8,8,Senior,core
+HS Admitting Intern,8,8,Any Intern,core
+Endocrinology Specialty,2,8,Senior,elective
+Pulmonology Specialty,,,Senior,elective
+Rheumatology Speciality,,,Senior,elective
+Primary Care Senior,8,8,Senior,core
+Primary Care Intern,8,8,IM Intern,core
+Night Senior,6,6,Senior,core
+SHMC Night Intern,4,4,Any Intern,core
+Heme/Onc Specialty,,,Senior,elective
+ICU Senior,4,8,Senior,core
+Primary Care Track,0,12,Senior,elective
+ICU Specialty,4,8,Senior,elective
+Vacation,3,3,Any,elective 
