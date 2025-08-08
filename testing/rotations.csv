@@ -1,23 +1,24 @@
-rotation_name,min_wks,min_contig_wks,max_wks,resident_capacity,required_level,category,core_vs_elective
-PMP,0,2,4,1,Any,Primary Care,elective
-HS Green Senior,4,2,8,2,Senior,HS,core
-HS Orange Senior,4,2,8,2,Senior,HS,core
-HS Intern,8,4,8,4,Intern,HS,core
-SHMC ICU Senior,4,4,4,1,Senior,ICU,core
-Prov Rheum,0,2,4,1,Senior,Rheum,elective
-STHC Amb,4,1,12,2,Senior,Primary Care,core
-Nights Intern,4,4,4,2,Intern,Nights,core
-Nights Senior,4,4,4,1,Senior,Nights,core
-CCNW H/O,0,2,4,1,Senior,Heme/Onc,elective
-Hospitalist Consults,4,1,4,2,Senior,Hospitalist,elective
-Hospitalist Rounding,0,1,4,2,Senior,Hospitalist,core
-DH Hospitalist Rounding,0,1,4,2,Senior,Hospitalist,core
-Purple Senior,4,1,4,1,Senior,Purple,core
-DH ICU Intern,0,4,4,1,Intern,ICU,core
-Prov Pulm,0,2,4,1,Senior,Pulmonology,elective
-Summit CC,0,2,4,1,Senior,Heme/Onc,elective
-Multicare Pulm,0,2,4,2,Senior,Pulmonology,elective
-CICU,0,2,4,1,Senior,ICU,elective
-SHMC ICU Intern,4,4,4,2,Intern,ICU,core
-Purple Intern,2,1,4,1,Intern,Purple,core
-DH ICU Senior,0,4,4,1,Senior,ICU,core # not sure what to do about this now that no IMR seniors at DH
+rotation,category,required_role,minimum_weeks,maximum_weeks,minimum_residents_assigned,maximum_residents_assigned,minimum_contiguous_weeks
+Green HS Senior,HS Rounding Senior,Senior,,,1,1,2
+Orange HS Senior,HS Rounding Senior,Senior,,,1,1,2
+SHMC Consults,Hospitalist,Senior,,,0,1,1
+SHMC Admitting,Hospitalist,Senior,,,0,1,1
+Orange HS Intern,HS Rounding Intern,Any Intern,,,2,2,4
+Green HS Intern,HS Rounding Intern,Any Intern,,,2,2,4
+Purple HS Senior,HS Admitting Senior,Senior,,,1,1,1
+Purple HS Intern,HS Admitting Intern,Any Intern,,,1,1,1
+Providence Endocrinology,Endocrinology Specialty,Senior,,,0,1,1
+DH Rounding,Hospitalist,Senior,,,0,1,1
+SHMC Rounding,Hospitalist,Senior,,,0,2,1
+Providence Pulmonology,Pulmonology Specialty,Senior,,4,0,1,1
+Rheum To Grow Rheumatology Modules,Rheumatology Speciality,Senior,,2,0,4,1
+STHC Intern,Primary Care Intern,IM Intern,,,0,5,1
+STHC Senior Non-Ambulatory,Primary Care Senior,Senior,,,0,5,1
+SHMC Night Senior,Night Senior,Senior,,,1,2,2
+SHMC Night Intern,SHMC Night Intern,Any Intern,,,2,2,4
+CCNW Heme/Onc,Heme/Onc Specialty,Senior,,,0,1,1
+Multicare Heme/Onc,Heme/Onc Specialty,Senior,,,0,1,1
+DH ICU Senior,ICU Senior,Senior,,,1,1,4
+SHMC CICU,ICU Senior,Senior,,,0,1,1
+STHC Senior Ambulatory,Primary Care Senior,Senior,4,4,1,1,1
+Multicare Endocrinology,Endocrinology Specialty,Senior,,4,0,2,2

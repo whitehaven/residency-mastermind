@@ -1,11 +1,16 @@
-category,category_min_wks,category_max_wks,core_vs_elective
-Hospitalist,0,54, core
-Heme/Onc,4,8, elective
-HS Rounding Senior,4,12, core
-HS Purple Senior, 4, 4, core
-ICU Senior,4,12, core
-Nights,0,54, core
-Primary Care,4,12, partial_core
-Pulmonology,0,8, elective
-Purple,0,54, core
-Rheum,2,8, partial_core
+category,minimum_weeks,maximum_weeks,pertinent_role
+HS Rounding Senior,8,8,Senior
+HS Rounding Intern,8,8,Any Intern
+Hospitalist,4,8,Senior
+ICU Intern,8,8,Any Intern
+HS Admitting Senior,8,8,Senior
+HS Admitting Intern,8,8,Any Intern
+Endocrinology Specialty,2,8,Senior
+Pulmonology Specialty,,,Senior
+Rheumatology Speciality,,,Senior
+Primary Care Senior,8,12,Senior
+Primary Care Intern,8,8,IM Intern
+Night Senior,6,6,Senior
+SHMC Night Intern,4,4,Any Intern
+Heme/Onc Specialty,,,Senior
+ICU Senior,4,12,Senior
