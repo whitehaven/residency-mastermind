@@ -102,6 +102,14 @@ for resident, rotation in it.product(
     for week in weeks.index:
         model.Add(scheduled.loc[(resident, rotation, week)] == False)
 
+# set minimum number of residents scheduled for rotations that require that
+for rotation_head, rotation_tail in rotations.iterrows():
+    if rotation_tail["minimum_residents_assigned"] > 0:
+        for week in weeks.index:
+            model.Add(
+                sum(scheduled.loc[pd.IndexSlice[:, rotation_head, week]])  # type: ignore
+                >= rotation_tail["minimum_residents_assigned"]
+            )
 
 ic(model.ModelStats())
 
