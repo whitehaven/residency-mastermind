@@ -111,6 +111,17 @@ for rotation_head, rotation_tail in rotations.iterrows():
                 >= rotation_tail["minimum_residents_assigned"]
             )
 
+# minimum contiguous weeks for rotations that require that
+for rotation_head, rotation_tail in rotations.iterrows():
+    if rotation_tail["minimum_contiguous_weeks"] > 1:
+        for resident in residents.index:
+            hard_minimum = rotation_tail.minimum_contiguous_weeks
+            sequence = scheduled.loc[
+                pd.IndexSlice[resident, rotation_head, :]
+            ]  # TODO: test
+            for length in range(1, hard_minimum):
+                for start in range(len(sequence) - length + 1):
+                    model.AddBoolOr(negated_bounded_span(sequence, start, length))
 ic(model.ModelStats())
 
 # solve model
