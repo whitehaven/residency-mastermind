@@ -37,6 +37,71 @@ scheduled = model.NewBoolVarSeries(
 for resident, week in it.product(residents.index, weeks.index):
     model.AddExactlyOne(scheduled.loc[pd.IndexSlice[resident, :, week]])
 
+# restrict rotations by role
+
+# join rotation to rotation_categories since these are recorded in the rotation_categories table
+rotations_with_categories = pd.merge(
+    rotations,
+    rotation_categories,
+    left_on="category",
+    right_index=True,
+    how="inner",
+    suffixes=("_rotations", "_categories"),
+)
+
+# for seniors: set non-senior roles to False (note "Any" left in)
+for resident, rotation in it.product(
+    residents.loc[(residents.role == "IM-Senior")].index,
+    rotations_with_categories.loc[
+        ~((rotations_with_categories.pertinent_role.isin(["Senior", "Any"])))
+    ].index,
+):
+    for week in weeks.index:
+        model.Add(scheduled.loc[(resident, rotation, week)] == False)
+
+# for im interns: set non intern + im intern roles to false
+for resident, rotation in it.product(
+    residents.loc[residents.role == "IM-Intern"].index,
+    rotations_with_categories.loc[
+        ~(
+            rotations_with_categories.pertinent_role.isin(
+                ["Any Intern", "IM Intern", "Any"]
+            )
+        )
+    ].index,
+):
+    for week in weeks.index:
+        model.Add(scheduled.loc[(resident, rotation, week)] == False)
+
+
+# for TY interns, set non-TY intern roles to false
+for resident, rotation in it.product(
+    residents.loc[residents.role.isin(["TY"])].index,
+    rotations_with_categories.loc[
+        ~(
+            rotations_with_categories.pertinent_role.isin(
+                ["Any Intern", "TY_Intern", "Any"]
+            )
+        )
+    ].index,
+):
+    for week in weeks.index:
+        model.Add(scheduled.loc[(resident, rotation, week)] == False)
+
+# for PMR interns: set non- PMR roles to false
+for resident, rotation in it.product(
+    residents.loc[residents.role.isin(["PMR"])].index,
+    rotations_with_categories.loc[
+        ~(
+            rotations_with_categories.pertinent_role.isin(
+                ["Any Intern", "PMR Intern", "Any"]
+            )
+        )
+    ].index,
+):
+    for week in weeks.index:
+        model.Add(scheduled.loc[(resident, rotation, week)] == False)
+
 
 ic(model.ModelStats())
 
