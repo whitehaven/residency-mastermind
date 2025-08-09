@@ -122,6 +122,34 @@ for rotation_head, rotation_tail in rotations.iterrows():
             for length in range(1, hard_minimum):
                 for start in range(len(sequence) - length + 1):
                     model.AddBoolOr(negated_bounded_span(sequence, start, length))
+
+# limit total weeks for each resident in each rotation with specific limits
+for resident_head, resident_tail in residents.iterrows():
+    for rotation_head, rotation_tail in rotations.loc[
+        rotations.maximum_weeks.notna()
+    ].iterrows():
+        model.Add(
+            sum(scheduled.loc[pd.IndexSlice[resident_head, rotation_head, :]])
+            <= int(rotation_tail.maximum_weeks)
+        )
+
+# limit total weeks for each resident in each rotation category that has its own limits
+for resident_head, resident_tail in residents.iterrows():
+    for (
+        rotation_with_categories_head,
+        rotation_with_categories_tail,
+    ) in rotations_with_categories.loc[
+        rotations_with_categories.maximum_weeks_categories.notna()
+    ].iterrows():
+        model.Add(
+            sum(
+                scheduled.loc[
+                    pd.IndexSlice[resident_head, rotation_with_categories_head, :]
+                ]
+            )
+            <= int(rotation_with_categories_tail.maximum_weeks_categories)
+        )
+
 ic(model.ModelStats())
 
 # solve model

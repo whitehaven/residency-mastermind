@@ -1,7 +1,7 @@
 rotation,category,required_role,minimum_weeks,maximum_weeks,minimum_residents_assigned,maximum_residents_assigned,minimum_contiguous_weeks
 Green HS Senior,HS Rounding Senior,Senior,,,1,1,2
 Orange HS Senior,HS Rounding Senior,Senior,,,1,1,2
-SHMC Consults,Hospitalist,Senior,,,0,1,1
+SHMC Consults,Hospitalist,Senior,,4,0,1,1
 SHMC Admitting,Hospitalist,Senior,,,0,1,1
 Orange HS Intern,HS Rounding Intern,Any Intern,,,2,2,4
 Green HS Intern,HS Rounding Intern,Any Intern,,,2,2,4
@@ -23,3 +23,5 @@ SHMC CICU,ICU Senior,Senior,,,0,1,1
 STHC Senior Ambulatory,Primary Care Senior,Senior,4,4,1,1,1
 Multicare Endocrinology,Endocrinology Specialty,Senior,,4,0,2,2
 Vacation,Vacation,Any,3,3,0,5,1
+TY Elective,TY Electives,TY_Intern,0,23,0,8,4
+PMR Elective,PMR Electives,PMR_Intern,0,23,0,8,4
