@@ -109,11 +109,20 @@ def get_rotations_needing_preferences(
     return elective_rotations
 
 
+def generate_week_mapping() -> pd.DataFrame:
+    weekly_2025_index = pd.date_range(start="2025-07-07", periods=52, freq="W-MON")
+    week_to_date = pd.DataFrame(
+        {"date": weekly_2025_index, "week": range(len(weekly_2025_index))}
+    ).set_index("week")
+    return week_to_date
+
+
 if __name__ == "__main__":
     fake = Faker()
 
     generate_new_residents = False
     generate_new_preferences = False
+    generate_weeks = False
 
     if generate_fake_residents:
 
@@ -153,9 +162,14 @@ if __name__ == "__main__":
         ],
     )
 
+    if generate_weeks:
+        generate_week_mapping().to_csv("testing/weeks.csv", index=True)
+
+    weeks = pd.read_csv("testing/weeks.csv", index_col="week")
 
     ic(residents.head())
     ic(rotations.head())
     ic(rotation_categories.head())
     ic(preferences.head())
+    ic(weeks.head())
     ic("All test data is in place.")
