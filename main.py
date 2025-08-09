@@ -23,3 +23,14 @@ preferences = pd.read_csv(
     ],
 )
 weeks = pd.read_csv("testing/weeks.csv", index_col="week")
+
+model = cp_model.CpModel()
+model.SetName("Resident Scheduler")
+
+scheduled = model.NewBoolVarSeries(
+    "is_scheduled_",
+    pd.Index((list(it.product(residents.index, rotations.index, weeks.index)))),
+).sort_index()
+
+ic(scheduled)
+
