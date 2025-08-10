@@ -1,9 +1,7 @@
 import pandas as pd
 
 
-def read_data() -> (
-    tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]
-):
+def read_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Read data from CSV files and prepare DataFrames for residents, rotations,
     rotation categories, preferences, and weeks.
@@ -22,9 +20,7 @@ def read_data() -> (
     preferences = pd.read_csv(
         "testing/preferences.csv",
         index_col=[
-            "last_name",
-            "first_name",
-            "degree",
+            "full_name",
         ],
     )
     weeks = pd.read_csv("testing/weeks.csv", index_col="week")
