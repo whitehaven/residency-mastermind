@@ -5,6 +5,7 @@ from icecream import ic
 from ortools.sat.python import cp_model
 
 import data_handler
+from constraints import exclude_incompatible_roles
 from optimization import negated_bounded_span
 from tools.display import print_full_DataFrame
 
@@ -35,58 +36,23 @@ rotations_with_categories = pd.merge(
     suffixes=("_rotations", "_categories"),
 )
 
-# for seniors: set non-senior roles to False (note "Any" left in)
-for resident, rotation in it.product(
-    residents.loc[(residents.role == "IM-Senior")].index,
-    rotations_with_categories.loc[
-        ~((rotations_with_categories.pertinent_role.isin(["Senior", "Any"])))
-    ].index,
-):
-    for week in weeks.index:
-        model.Add(scheduled.loc[(resident, rotation, week)] == False)
+role_mappings = {
+    "IM-Senior": ["Senior", "Any"],
+    "IM-Intern": ["IM Intern", "Any Intern", "Any"],
+    "TY": ["TY Intern", "Any Intern", "Any"],
+    "PMR": ["PMR Intern", "Any Intern", "Any"],
+}
 
-# for im interns: set non intern + im intern roles to false
-for resident, rotation in it.product(
-    residents.loc[residents.role == "IM-Intern"].index,
-    rotations_with_categories.loc[
-        ~(
-            rotations_with_categories.pertinent_role.isin(
-                ["Any Intern", "IM Intern", "Any"]
-            )
-        )
-    ].index,
-):
-    for week in weeks.index:
-        model.Add(scheduled.loc[(resident, rotation, week)] == False)
-
-
-# for TY interns, set non-TY intern roles to false
-for resident, rotation in it.product(
-    residents.loc[residents.role.isin(["TY"])].index,
-    rotations_with_categories.loc[
-        ~(
-            rotations_with_categories.pertinent_role.isin(
-                ["Any Intern", "TY_Intern", "Any"]
-            )
-        )
-    ].index,
-):
-    for week in weeks.index:
-        model.Add(scheduled.loc[(resident, rotation, week)] == False)
-
-# for PMR interns: set non- PMR roles to false
-for resident, rotation in it.product(
-    residents.loc[residents.role.isin(["PMR"])].index,
-    rotations_with_categories.loc[
-        ~(
-            rotations_with_categories.pertinent_role.isin(
-                ["Any Intern", "PMR Intern", "Any"]
-            )
-        )
-    ].index,
-):
-    for week in weeks.index:
-        model.Add(scheduled.loc[(resident, rotation, week)] == False)
+for role, pertinent_allowed_roles in role_mappings.items():
+    exclude_incompatible_roles(
+        model=model,
+        residents=residents,
+        rotations_with_categories=rotations_with_categories,
+        scheduled=scheduled,
+        weeks=weeks,
+        role=role,
+        pertinent_allowed_roles=pertinent_allowed_roles,
+    )
 
 # set minimum number of residents scheduled for rotations that require that
 for rotation_head, rotation_tail in rotations.iterrows():
