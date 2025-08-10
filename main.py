@@ -4,25 +4,11 @@ import pandas as pd
 from icecream import ic
 from ortools.sat.python import cp_model
 
+import data_handler
 from tools.display import print_full_DataFrame
 from tools.optimization import negated_bounded_span
 
-residents = pd.read_csv(
-    "testing/residents.csv", index_col=["last_name", "first_name", "degree"]
-)
-rotations = pd.read_csv("testing/rotations.csv", index_col="rotation")
-rotation_categories = pd.read_csv(
-    "testing/rotation_categories.csv", index_col="category"
-)
-preferences = pd.read_csv(
-    "testing/preferences.csv",
-    index_col=[
-        "last_name",
-        "first_name",
-        "degree",
-    ],
-)
-weeks = pd.read_csv("testing/weeks.csv", index_col="week")
+residents, rotations, rotation_categories, preferences, weeks = data_handler.read_data()
 
 model = cp_model.CpModel()
 model.SetName("Resident Scheduler")
