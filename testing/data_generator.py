@@ -116,6 +116,20 @@ def generate_week_mapping() -> pd.DataFrame:
     ).set_index("week")
     return week_to_date
 
+def week_to_date(week: int) -> pd.Timestamp:
+    """
+    Convert academic year week number to date
+    """
+    weeks = pd.read_csv("testing/weeks.csv", index_col="week", parse_dates=["date"])
+    return weeks.loc[week, "date"] # type: ignore | works as tested
+
+def date_to_week(date: pd.Timestamp) -> int:
+    """
+    Convert date to academic year week number
+    """
+    weeks = pd.read_csv("testing/weeks.csv", index_col="week", parse_dates=["date"])
+    return weeks[weeks["date"] == date].index[0]
+
 
 if __name__ == "__main__":
     fake = Faker()
