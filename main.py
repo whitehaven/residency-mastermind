@@ -23,7 +23,7 @@ scheduled = model.NewBoolVarSeries(
 for resident, week in it.product(residents.index, weeks.index):
     model.AddExactlyOne(scheduled.loc[pd.IndexSlice[resident, :, week]])
 
-# restrict rotations by role
+# >>> restrict rotations by role
 
 # join rotation to rotation_categories since these are recorded in the rotation_categories table
 rotations_with_categories = pd.merge(
@@ -103,7 +103,7 @@ for rotation_head, rotation_tail in rotations.iterrows():
         for resident in residents.index:
             hard_minimum = rotation_tail.minimum_contiguous_weeks
             sequence = scheduled.loc[
-                pd.IndexSlice[resident, rotation_head, :]
+                pd.IndexSlice[resident, rotation_head, :] #type:ignore
             ]  # TODO: test
             for length in range(1, hard_minimum):
                 for start in range(len(sequence) - length + 1):
@@ -115,7 +115,7 @@ for resident_head, resident_tail in residents.iterrows():
         rotations.maximum_weeks.notna()
     ].iterrows():
         model.Add(
-            sum(scheduled.loc[pd.IndexSlice[resident_head, rotation_head, :]])
+            sum(scheduled.loc[pd.IndexSlice[resident_head, rotation_head, :]])  # type: ignore
             <= int(rotation_tail.maximum_weeks)
         )
 
@@ -130,11 +130,13 @@ for resident_head, resident_tail in residents.iterrows():
         model.Add(
             sum(
                 scheduled.loc[
-                    pd.IndexSlice[resident_head, rotation_with_categories_head, :]
+                    pd.IndexSlice[resident_head, rotation_with_categories_head, :]  # type: ignore
                 ]
             )
             <= int(rotation_with_categories_tail.maximum_weeks_categories)
         )
+
+# TODO Optimization targets
 
 ic(model.ModelStats())
 
