@@ -5,8 +5,8 @@ from icecream import ic
 from ortools.sat.python import cp_model
 
 import data_handler
+from optimization import negated_bounded_span
 from tools.display import print_full_DataFrame
-from tools.optimization import negated_bounded_span
 
 residents, rotations, rotation_categories, preferences, weeks = data_handler.read_data()
 
@@ -103,7 +103,7 @@ for rotation_head, rotation_tail in rotations.iterrows():
         for resident in residents.index:
             hard_minimum = rotation_tail.minimum_contiguous_weeks
             sequence = scheduled.loc[
-                pd.IndexSlice[resident, rotation_head, :] #type:ignore
+                pd.IndexSlice[resident, rotation_head, :]  # type:ignore
             ]  # TODO: test
             for length in range(1, hard_minimum):
                 for start in range(len(sequence) - length + 1):
