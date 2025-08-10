@@ -1,8 +1,9 @@
+import numpy as np
 import pandas as pd
 from faker import Faker
 from icecream import ic
-import numpy as np
 
+first_day_2025_academic_year = pd.Timestamp("2025-07-07")
 
 def generate_fake_residents(residents_structure: dict) -> pd.DataFrame:
 
@@ -39,52 +40,6 @@ def generate_fake_residents(residents_structure: dict) -> pd.DataFrame:
 
     return pd.DataFrame.from_dict(faked_residents, orient="index")
 
-
-def generate_fake_preferences(
-    residents: pd.DataFrame, rotations: pd.DataFrame, rotation_categories: pd.DataFrame
-) -> pd.DataFrame:
-
-    fake = Faker()
-
-    rotations_needing_preferences = get_rotations_needing_preferences(
-        residents=residents,
-        rotations=rotations,
-        rotation_categories=rotation_categories,
-    )
-
-    residents["mapped_role"] = residents.role.replace(
-        {"IM-Senior": "Senior", "IM-Intern": "Any", "PMR": "Any", "TY": "Any"}
-    )
-    residents = residents.reset_index()
-    rotations_needing_preferences = get_rotations_needing_preferences(
-        residents, rotations, rotation_categories
-    )
-
-    resident_to_elective_mapping = pd.merge(
-        rotations_needing_preferences,
-        residents,
-        left_on="required_role",
-        right_on="mapped_role",
-        how="inner",
-    ).loc[
-        :,
-        [
-            "category",
-            "last_name",
-            "first_name",
-            "degree",
-            "year",
-            "role",
-            "mapped_role",
-        ],
-    ]
-    resident_to_elective_mapping["preference"] = np.random.randint(
-        0, 10 + 1, size=len(resident_to_elective_mapping)
-    )
-
-    return resident_to_elective_mapping
-
-
 def get_rotations_needing_preferences(
     residents: pd.DataFrame, rotations: pd.DataFrame, rotation_categories: pd.DataFrame
 ) -> pd.DataFrame:
@@ -110,7 +65,7 @@ def get_rotations_needing_preferences(
 
 
 def generate_week_mapping() -> pd.DataFrame:
-    weekly_2025_index = pd.date_range(start="2025-07-07", periods=52, freq="W-MON")
+    weekly_2025_index = pd.date_range(start=first_day_2025_academic_year, periods=52, freq="W-MON")
     week_to_date = pd.DataFrame(
         {"date": weekly_2025_index, "week": range(len(weekly_2025_index))}
     ).set_index("week")

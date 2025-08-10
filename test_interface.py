@@ -1,42 +1,58 @@
-from interface import set_resident_preference
+import pandas as pd
+from icecream import ic
+
+from data_handler import read_data
+from interface import generate_resident_preference_dataframe
 
 
 def test_set_resident_preference():
-    import pandas as pd
 
-    # Create a sample preferences DataFrame
-    preferences = pd.DataFrame(
-        {
-            "full_name": ["John Doe, DO", "Jane Smith, MD"],
-            "rotation": ["Rotation1", "Rotation2"],
-            "week": [1, 2],
-            "preference": [0, 0],
-        }
+    residents, rotations, rotation_categories, preferences, weeks = read_data()
+
+    test_preferences_single_week = generate_resident_preference_dataframe(
+        resident="John Doe, DO",
+        rotation="Rotation1",
+        week=0,
+        weeks=weeks,
+        preference_value=5,
     )
 
-    # Set preference for a specific resident and rotation
-    set_resident_preference(preferences, "John Doe, DO", "Rotation1", 1, 5)
-
-    # Check if the preference was set correctly
+    assert isinstance(
+        test_preferences_single_week, pd.DataFrame
+    ), "Test preferences DataFrame is not a DataFrame."
     assert (
-        preferences.loc[
-            (preferences["full_name"] == "John Doe, DO")
-            & (preferences["rotation"] == "Rotation1")
-            & (preferences["week"] == 1),
-            "preference",
-        ].values[0]
-        == 5
+        len(test_preferences_single_week) == 1
+    ), "Test preferences DataFrame should have one row."
+    assert (
+        test_preferences_single_week["full_name"].iloc[0] == "John Doe, DO"
+    ), "Resident name not set right."
+
+    test_preferences_multiple_weeks = generate_resident_preference_dataframe(
+        resident="John Doe, DO",
+        rotation="Rotation1",
+        week=(0, 3),
+        weeks=weeks,
+        preference_value=3,
     )
 
-    # Set preference for all weeks in a rotation
-    set_resident_preference(preferences, "Jane Smith, MD", "Rotation2", None, 3)
+    assert isinstance(
+        test_preferences_multiple_weeks, pd.DataFrame
+    ), "Test preferences DataFrame is not a DataFrame."
+    assert (
+        len(test_preferences_multiple_weeks) == 4
+    ), "Test preferences DataFrame should have 4 rows."
 
-    # Check if the preference was set for all weeks
-    assert all(
-        preferences.loc[
-            (preferences["full_name"] == "Jane Smith, MD")
-            & (preferences["rotation"] == "Rotation2"),
-            "preference",
-        ]
-        == 3
+    test_preferences_all_weeks = generate_resident_preference_dataframe(
+        resident="John Doe, DO",
+        rotation="Rotation1",
+        week=None,
+        weeks=weeks,
+        preference_value=2,
     )
+
+    assert isinstance(
+        test_preferences_all_weeks, pd.DataFrame
+    ), "Test preferences DataFrame is not a DataFrame."
+    assert len(test_preferences_all_weeks) == len(
+        weeks
+    ), "Test preferences DataFrame should have the same number of rows as master weeks DataFrame."
