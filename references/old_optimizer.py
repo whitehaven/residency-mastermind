@@ -1,12 +1,8 @@
 import itertools as it
 
 import pandas as pd
-
-from utils.optimization import negated_bounded_span
-import utils.data_handling  # no idea why I can't import this directly, but it works like this
-
-
 from ortools.sat.python import cp_model
+
 
 def negated_bounded_span(works, start, length):
     """Filters an isolated sub-sequence of variables assigned to True.
@@ -36,12 +32,14 @@ def negated_bounded_span(works, start, length):
         sequence.append(works[start + length])
     return sequence
 
+
 def read_entire_sqlite_blind(dbfile):
     """
     Reads all tables from a SQLite database file into a dictionary of DataFrames.
     Source: https://stackoverflow.com/questions/36028759/how-to-open-and-convert-sqlite-database-to-pandas-dataframe
     """
     import sqlite3
+
     from pandas import read_sql_query, read_sql_table
 
     with sqlite3.connect(dbfile) as dbcon:
@@ -55,6 +53,7 @@ def read_entire_sqlite_blind(dbfile):
         }  # maybe this was supposed to be read_sql_table?
 
     return out
+
 
 def print_full_DataFrame(df):
     """
