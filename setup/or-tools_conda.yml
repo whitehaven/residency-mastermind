@@ -12,6 +12,7 @@ dependencies:
   - openpyxl
   - pandas
   - pip
+  - pytest
   - python
   - pip:
     - ortools
