@@ -1,10 +1,13 @@
-def read_data():
+import pandas as pd
+
+
+def read_data() -> (
+    tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]
+):
     """
     Read data from CSV files and prepare DataFrames for residents, rotations,
     rotation categories, preferences, and weeks.
     """
-    import pandas as pd
-
     residents = pd.read_csv("testing/residents.csv")
 
     residents["full_name"] = (
