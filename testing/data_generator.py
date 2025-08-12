@@ -34,9 +34,8 @@ def generate_fake_residents(residents_structure: dict) -> pd.DataFrame:
 
 
 def get_rotations_needing_preferences(
-    residents: pd.DataFrame, rotations: pd.DataFrame, rotation_categories: pd.DataFrame
+        residents: pd.DataFrame, rotations: pd.DataFrame, rotation_categories: pd.DataFrame
 ) -> pd.DataFrame:
-
     fake = Faker()
 
     rotations_with_categories = pd.merge(
@@ -50,7 +49,7 @@ def get_rotations_needing_preferences(
 
     elective_rotations = rotations_with_categories.loc[
         rotations_with_categories.elective == "elective"
-    ]
+        ]
 
     # it.product(elective_rotations.index, residents.index)
 
@@ -64,12 +63,14 @@ def generate_week_mapping() -> pd.DataFrame:
     ).set_index("week")
     return week_to_date
 
+
 def week_to_date(week: int) -> pd.Timestamp:
     """
     Convert academic year week number to date
     """
     weeks = pd.read_csv("testing/weeks.csv", index_col="week", parse_dates=["date"])
-    return weeks.loc[week, "date"] # type: ignore | works as tested
+    return weeks.loc[week, "date"]  # type: ignore | works as tested
+
 
 def date_to_week(date: pd.Timestamp) -> int:
     """
@@ -83,11 +84,9 @@ if __name__ == "__main__":
     fake = Faker()
 
     generate_new_residents = False
-    generate_new_preferences = False
     generate_weeks = False
 
     if generate_fake_residents:
-
         current_residency_structure = {
             "TY1": 8,
             "PMR1": 8,

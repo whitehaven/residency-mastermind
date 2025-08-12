@@ -88,8 +88,8 @@ for resident_head, resident_tail in residents.iterrows():
 # limit total weeks for each resident in each rotation category that has its own limits
 for resident_head, resident_tail in residents.iterrows():
     for (
-        rotation_with_categories_head,
-        rotation_with_categories_tail,
+            rotation_with_categories_head,
+            rotation_with_categories_tail,
     ) in rotations_with_categories.loc[
         rotations_with_categories.maximum_weeks_categories.notna()
     ].iterrows():
@@ -107,8 +107,8 @@ for resident_head, resident_tail in residents.iterrows():
 # test requirement
 for resident_head, resident_tail in residents.iterrows():
     for (
-        rotation_with_categories_head,
-        rotation_with_categories_tail,
+            rotation_with_categories_head,
+            rotation_with_categories_tail,
     ) in rotations_with_categories.loc[
         rotations_with_categories.category == "Vacation"
     ].iterrows():

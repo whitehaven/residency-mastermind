@@ -49,3 +49,11 @@ Getting concerned by how complex this problem is.
 `9f08d6fa84cca1f5fddbb30f3b20a28f33a747dd` - working do-this-year preference generator for relevant rotations
 
 Test data generator is now working, now for the actual program.
+
+### 2025-08-12
+
+Notably changed vacation blocks to 
+
+Many single-year constraints implemented and tested. Besides multi-year requirements, still missing:
+
+- HS blocks must start at same times (apparently) - could see if there is flexibility on that from admin
