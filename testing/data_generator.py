@@ -96,37 +96,24 @@ if __name__ == "__main__":
         }
 
         fake_residents = generate_fake_residents(current_residency_structure)
-        fake_residents.to_csv("testing/residents.csv", index=False)
+        fake_residents.to_csv("residents.csv", index=False)
 
     # this test presumes real structure of rotations, rotation categories, and prerequisites are in place - can't generate these randomly
-    residents = pd.read_csv("testing/residents.csv", index_col="last_name")
-    rotations = pd.read_csv("testing/rotations.csv", index_col="rotation")
+    residents = pd.read_csv("residents.csv", index_col="full_name")
+    rotations = pd.read_csv("rotations.csv", index_col="rotation")
     rotation_categories = pd.read_csv(
-        "testing/rotation_categories.csv", index_col="category"
+        "rotation_categories.csv", index_col="category"
     )
 
-    if generate_new_preferences:
-
-        fake_preferences = generate_fake_preferences(
-            residents=residents,
-            rotations=rotations,
-            rotation_categories=rotation_categories,
-        )
-        fake_preferences.to_csv("testing/preferences.csv", index=False)
-
     preferences = pd.read_csv(
-        "testing/preferences.csv",
-        index_col=[
-            "last_name",
-            "first_name",
-            "degree",
-        ],
+        "preferences.csv",
+        index_col=["full_name"],
     )
 
     if generate_weeks:
-        generate_week_mapping().to_csv("testing/weeks.csv", index=True)
+        generate_week_mapping().to_csv("weeks.csv", index=True)
 
-    weeks = pd.read_csv("testing/weeks.csv", index_col="week")
+    weeks = pd.read_csv("weeks.csv", index_col="week")
 
     ic(residents.head())
     ic(rotations.head())
