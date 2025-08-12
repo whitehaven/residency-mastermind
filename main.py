@@ -102,9 +102,29 @@ for resident_head, resident_tail in residents.iterrows():
             <= int(rotation_with_categories_tail.maximum_weeks_categories)
         )
 
+# contrain requirements, taking into account past completions
+
+# test requirement
+for resident_head, resident_tail in residents.iterrows():
+    for (
+        rotation_with_categories_head,
+        rotation_with_categories_tail,
+    ) in rotations_with_categories.loc[
+        rotations_with_categories.category == "Vacation"
+    ].iterrows():
+        ic(rotation_with_categories_tail)
+        model.Add(
+            sum(
+                scheduled.loc[
+                    pd.IndexSlice[resident_head, rotation_with_categories_head, :]  # type: ignore
+                ]
+            )
+            >= int(rotation_with_categories_tail.minimum_weeks_categories)
+        )
+
 # TODO Optimization targets
 
-ic(model.ModelStats())
+# maximize value of preferences, vacations amplified(?)
 
 # solve model
 solver = cp_model.CpSolver()
@@ -125,7 +145,7 @@ elif status == cp_model.FEASIBLE:
 else:
     print("no solution")
 
-print_full_DataFrame(
+consolidated_schedule = (
     solver.Values(scheduled)[solver.Values(scheduled) == 1]
     .sort_index(level=(0, 2))
     .unstack()
@@ -136,3 +156,7 @@ print_full_DataFrame(
     .sort_index()["level_1"]
     .unstack()
 )
+
+consolidated_schedule.to_csv('consolidated_schedule.csv')
+
+print_full_DataFrame(consolidated_schedule)
