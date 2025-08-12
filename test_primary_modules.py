@@ -1,6 +1,7 @@
 import pandas as pd
 from icecream import ic
 
+import date_handling
 from data_handler import read_data
 from interface import generate_resident_preference_dataframe
 
@@ -56,3 +57,12 @@ def test_set_resident_preference():
     assert len(test_preferences_all_weeks) == len(
         weeks
     ), "Test preferences DataFrame should have the same number of rows as master weeks DataFrame."
+
+
+def test_mondays_generator():
+    mondays = date_handling.generate_weekly_mondays_with_index_df(
+        "2025-01-01", "2025-12-31"
+    )
+    assert isinstance(mondays, pd.DataFrame)
+    assert mondays.iloc[0].values == pd.to_datetime("2025-01-06")
+    assert len(mondays) == 52
