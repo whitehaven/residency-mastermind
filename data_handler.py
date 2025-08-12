@@ -8,9 +8,6 @@ def read_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame,
     """
     residents = pd.read_csv("testing/residents.csv")
 
-    residents["full_name"] = (
-        residents.first_name + " " + residents.last_name + " " + residents.degree
-    )
     residents.set_index("full_name", append=False, inplace=True)
 
     rotations = pd.read_csv("testing/rotations.csv", index_col="rotation")

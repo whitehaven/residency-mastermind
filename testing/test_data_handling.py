@@ -8,9 +8,6 @@ def test_data_integrity():
 
     residents = pd.read_csv("testing/residents.csv")
 
-    residents["full_name"] = (
-        residents.first_name + " " + residents.last_name + " " + residents.degree
-    )
     residents.set_index("full_name", append=True, inplace=True)
 
     rotations = pd.read_csv("testing/rotations.csv", index_col="rotation")

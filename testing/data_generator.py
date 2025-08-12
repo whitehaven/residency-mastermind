@@ -1,12 +1,11 @@
-import numpy as np
 import pandas as pd
 from faker import Faker
 from icecream import ic
 
 first_day_2025_academic_year = pd.Timestamp("2025-07-07")
 
-def generate_fake_residents(residents_structure: dict) -> pd.DataFrame:
 
+def generate_fake_residents(residents_structure: dict) -> pd.DataFrame:
     fake = Faker()
 
     faked_residents = {}
@@ -24,14 +23,7 @@ def generate_fake_residents(residents_structure: dict) -> pd.DataFrame:
             faked_residents.update(
                 {
                     f"{year}_{resident_index}": {
-                        "last_name": fake.last_name(),
-                        "first_name": fake.first_name(),
-                        "degree": fake.random_element(
-                            elements=(
-                                "MD",
-                                "DO",
-                            )
-                        ),
+                        "full_name": f"{fake.first_name()} {fake.last_name()} {fake.random_element(["MD", "DO"])}",
                         "year": year,
                         "role": roles_mapping[year],
                     }
@@ -39,6 +31,7 @@ def generate_fake_residents(residents_structure: dict) -> pd.DataFrame:
             )
 
     return pd.DataFrame.from_dict(faked_residents, orient="index")
+
 
 def get_rotations_needing_preferences(
     residents: pd.DataFrame, rotations: pd.DataFrame, rotation_categories: pd.DataFrame
