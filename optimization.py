@@ -1,3 +1,7 @@
+import pandas as pd
+from icecream import ic
+
+
 def negated_bounded_span(superspan, start, length):
     """Filters an isolated sub-sequence of variables assigned to True.
 
@@ -25,3 +29,14 @@ def negated_bounded_span(superspan, start, length):
     if start + length < len(superspan):
         sequence.append(superspan[start + length])
     return sequence
+
+
+def generate_completed_rotation(resident: str, rotation: str, weeks: int) -> pd.DataFrame:
+    return pd.DataFrame({"resident": [resident], "rotation": [rotation], "weeks": [weeks]})
+
+
+if __name__ == "__main__":
+    single_test = generate_completed_rotation("John Doe, DO", "HS Orange Senior", 4)
+    second_test = generate_completed_rotation("John Doe, DO", "STHC Ambulatory Senior", 2)
+    combo = pd.concat([single_test, second_test], ignore_index=True)
+    ic(combo)
