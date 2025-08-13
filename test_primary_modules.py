@@ -2,13 +2,13 @@ import pandas as pd
 from icecream import ic
 
 import date_handling
-from data_handler import read_data
+from data_handler import read_data_csv, read_data_sqlite3
 from interface import generate_resident_preference_dataframe
 
 
 def test_set_resident_preference():
 
-    residents, rotations, rotation_categories, preferences, weeks = read_data()
+    residents, rotations, rotation_categories, preferences, weeks = read_data_csv()
 
     test_preferences_single_week = generate_resident_preference_dataframe(
         resident="John Doe, DO",
@@ -66,3 +66,7 @@ def test_mondays_generator():
     assert isinstance(mondays, pd.DataFrame)
     assert mondays.iloc[0].values == pd.to_datetime("2025-01-06")
     assert len(mondays) == 52
+
+def test_sqlite3_db_import():
+    test_read_tables = read_data_sqlite3("testing/residency_mastermind_inputs.db")
+    assert len(test_read_tables) == 5

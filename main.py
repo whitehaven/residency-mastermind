@@ -9,7 +9,7 @@ from constraints import exclude_incompatible_roles
 from optimization import negated_bounded_span
 from tools.display import print_full_DataFrame
 
-residents, rotations, rotation_categories, preferences, weeks = data_handler.read_data()
+residents, rotations, rotation_categories, preferences, weeks = data_handler.read_data_csv()
 
 model = cp_model.CpModel()
 model.SetName("Resident Scheduler")

@@ -1,7 +1,7 @@
 import pandas as pd
 from icecream import ic
 
-from data_handler import read_data
+from data_handler import read_data_csv
 
 
 def generate_resident_preference_dataframe(
@@ -62,7 +62,7 @@ def generate_resident_preference_dataframe(
     
 if __name__ == "__main__":
     
-    residents, rotations, rotation_categories, preferences, weeks = read_data()
+    residents, rotations, rotation_categories, preferences, weeks = read_data_csv()
 
     preferences = generate_resident_preference_dataframe(
         resident="John Doe, DO",
