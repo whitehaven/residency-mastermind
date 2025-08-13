@@ -102,9 +102,9 @@ for resident_head, resident_tail in residents.iterrows():
             <= int(rotation_with_categories_tail.maximum_weeks_categories)
         )
 
-# contrain requirements, taking into account past completions
+# container for requirements, taking into account past completions
 
-# test requirement
+# test requirement - vacations necessarily must fit into one year
 for resident_head, resident_tail in residents.iterrows():
     for (
             rotation_with_categories_head,
@@ -124,7 +124,8 @@ for resident_head, resident_tail in residents.iterrows():
 
 # TODO Optimization targets
 
-# maximize value of preferences, vacations amplified(?)
+# maximize value of preferences, vacations amplified(?) - maybe triangular ramp functions to get them close?
+# do seniors get priority?
 
 # solve model
 solver = cp_model.CpSolver()

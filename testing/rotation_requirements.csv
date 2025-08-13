@@ -1,0 +1,28 @@
+role,rotation,minimum_weeks,notes
+IM-Senior,HS Rounding Senior,12
+IM-Senior,HS Admitting Senior,8
+IM-Senior,ICU Senior,4
+IM-Senior,Primary Care Senior,8,Amb vs nonamb matters?
+IM-Senior,Endocrinology Specialty
+IM-Senior,Heme/Onc Specialty
+IM-Senior,Nephrology Specialty
+IM-Senior,GI Specialty
+IM-Senior,HS Nights,4,Maybe year 2
+
+IM-Intern,ICU Nights,3
+IM-Intern,Primary Care Intern,8
+IM-Intern,HS Rounding,8
+IM-Intern,HS Admitting,4
+IM-Intern,ICU Intern,8
+
+PMR,ICU Nights,3
+PMR,Primary Care Intern,8
+PMR,HS Rounding,8
+PMR,HS Admitting,4
+PMR,ICU Intern,8
+
+TY-Intern,ICU Nights,3
+TY-Intern,Primary Care Intern,8
+TY-Intern,HS Rounding,8
+TY-Intern,HS Admitting,4
+TY-Intern,ICU Intern,8
