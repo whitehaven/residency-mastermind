@@ -4,12 +4,11 @@ import pandas as pd
 from icecream import ic
 from ortools.sat.python import cp_model
 
-import data_handler
-from constraints import exclude_incompatible_roles
-from optimization import negated_bounded_span
+from constraints import exclude_incompatible_roles, negated_bounded_span
+from data_io import read_data_csv
 from tools.display import print_full_DataFrame
 
-residents, rotations, rotation_categories, preferences, weeks = data_handler.read_data_csv()
+residents, rotations, rotation_categories, preferences, weeks = read_data_csv()
 
 model = cp_model.CpModel()
 model.SetName("Resident Scheduler")
