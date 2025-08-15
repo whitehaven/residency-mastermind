@@ -7,7 +7,6 @@ from interface import generate_resident_preference_dataframe, generate_completed
 
 
 def test_set_resident_preference():
-
     residents, rotations, rotation_categories, preferences, weeks = read_data_csv()
 
     test_preferences_single_week = generate_resident_preference_dataframe(
@@ -22,10 +21,10 @@ def test_set_resident_preference():
         test_preferences_single_week, pd.DataFrame
     ), "Test preferences DataFrame is not a DataFrame."
     assert (
-        len(test_preferences_single_week) == 1
+            len(test_preferences_single_week) == 1
     ), "Test preferences DataFrame should have one row."
     assert (
-        test_preferences_single_week["full_name"].iloc[0] == "John Doe, DO"
+            test_preferences_single_week["full_name"].iloc[0] == "John Doe, DO"
     ), "Resident name not set right."
 
     test_preferences_multiple_weeks = generate_resident_preference_dataframe(
@@ -40,7 +39,7 @@ def test_set_resident_preference():
         test_preferences_multiple_weeks, pd.DataFrame
     ), "Test preferences DataFrame is not a DataFrame."
     assert (
-        len(test_preferences_multiple_weeks) == 4
+            len(test_preferences_multiple_weeks) == 4
     ), "Test preferences DataFrame should have 4 rows."
 
     test_preferences_all_weeks = generate_resident_preference_dataframe(
@@ -66,6 +65,7 @@ def test_mondays_generator():
     assert isinstance(mondays, pd.DataFrame)
     assert mondays.iloc[0].values == pd.to_datetime("2025-01-06")
     assert len(mondays) == 52
+
 
 def test_sqlite3_db_import():
     test_read_tables = read_data_sqlite3("testing/residency_mastermind_inputs.db")
