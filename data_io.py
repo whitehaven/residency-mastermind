@@ -28,18 +28,26 @@ def read_data_csv() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFr
     return residents, rotations, rotation_categories, preferences, weeks
 
 
-def read_data_sqlite3(db_location: str, tables_to_read: list[str] | None = None) -> dict[str, pd.DataFrame]:
-    if tables_to_read is None:
-        tables_to_read = ["residents", "rotations", "rotation_categories", "preferences", "weeks"]
-    
+def read_data_sqlite3(db_location: str, tables_and_indexes_to_read: dict[str, str] | None = None) -> dict[
+    str, pd.DataFrame]:
+    """
+    Read data from sqlite3 database, extracting tables as requested.
+
+    Returns:
+        dict[str, pd.DataFrame]: extracted tables from db
+    """
+    if tables_and_indexes_to_read is None:
+        tables_and_indexes_to_read = {"residents": "full_name", "rotations": "rotation", "categories": "category_name",
+                                      "preferences": "full_name", "weeks": "week"}
+
     tables = dict()
     with sqlite3.connect(db_location) as con:
-        for table in tables_to_read:
-            df = pd.read_sql_query(f"SELECT * FROM {table}", con)
-            tables.update({table: df})
+        for table_name, index in tables_and_indexes_to_read.items():
+            extracted_df = pd.read_sql_query(f"SELECT * FROM {table_name}", con, index_col=index)
+            tables.update({table_name: extracted_df})
     return tables
 
 
 if __name__ == "__main__":
-    test_read_tables = read_data_sqlite3("testing/residency_mastermind_inputs.db")
+    test_read_tables = read_data_sqlite3("residency_mastermind.db")
     ic(test_read_tables)

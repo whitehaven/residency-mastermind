@@ -68,7 +68,7 @@ def test_mondays_generator():
 
 
 def test_sqlite3_db_import():
-    test_read_tables = read_data_sqlite3("testing/residency_mastermind_inputs.db")
+    test_read_tables = read_data_sqlite3("residency_mastermind.db")
     assert len(test_read_tables) == 5
 
 

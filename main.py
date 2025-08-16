@@ -5,10 +5,16 @@ from icecream import ic
 from ortools.sat.python import cp_model
 
 from constraints import exclude_incompatible_roles, negated_bounded_span
-from data_io import read_data_csv
+from data_io import read_data_sqlite3
 from tools.display import print_full_DataFrame
 
-residents, rotations, rotation_categories, preferences, weeks = read_data_csv()
+input_tables = read_data_sqlite3("residency_mastermind.db")
+
+residents = input_tables["residents"]
+rotations = input_tables["rotations"]
+categories = input_tables["categories"]
+preferences = input_tables["preferences"]
+weeks = input_tables["weeks"]
 
 model = cp_model.CpModel()
 model.SetName("Resident Scheduler")
@@ -28,7 +34,7 @@ for resident, week in it.product(residents.index, weeks.index):
 # join rotation to rotation_categories since these are recorded in the rotation_categories table
 rotations_with_categories = pd.merge(
     rotations,
-    rotation_categories,
+    categories,
     left_on="category",
     right_index=True,
     how="inner",
