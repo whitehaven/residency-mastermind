@@ -28,10 +28,13 @@ def read_data_csv() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFr
     return residents, rotations, rotation_categories, preferences, weeks
 
 
-def read_data_sqlite3(db_location: str) -> dict[str, pd.DataFrame]:
+def read_data_sqlite3(db_location: str, tables_to_read: list[str] | None = None) -> dict[str, pd.DataFrame]:
+    if tables_to_read is None:
+        tables_to_read = ["residents", "rotations", "rotation_categories", "preferences", "weeks"]
+    
     tables = dict()
     with sqlite3.connect(db_location) as con:
-        for table in ["residents", "rotations", "rotation_categories", "preferences", "weeks"]:
+        for table in tables_to_read:
             df = pd.read_sql_query(f"SELECT * FROM {table}", con)
             tables.update({table: df})
     return tables
