@@ -1,15 +1,12 @@
 import pandas as pd
-from icecream import ic
-
-from data_io import read_data_csv
 
 
 def generate_resident_preference_dataframe(
-    resident: str,
-    rotation: str,
-    week: int | tuple[int, int] | None,
-    weeks: pd.DataFrame,
-    preference_value: int,
+        resident: str,
+        rotation: str,
+        week: int | tuple[int, int] | None,
+        weeks: pd.DataFrame,
+        preference_value: int,
 ) -> pd.DataFrame:
     """
     Generate a DataFrame with a single resident's preference for a specific rotation and week or week range.
@@ -65,32 +62,4 @@ def generate_completed_rotation(resident: str, rotation: str, weeks: int) -> pd.
 
 
 if __name__ == "__main__":
-    
-    residents, rotations, rotation_categories, preferences, weeks = read_data_csv()
-
-    preferences = generate_resident_preference_dataframe(
-        resident="John Doe, DO",
-        rotation="Rotation1",
-        week=(0, 3),
-        weeks=pd.read_csv("testing/weeks.csv", index_col="week"),
-        preference_value=3,
-    )
-    ic(preferences)
-
-    test_preferences_single_week = generate_resident_preference_dataframe(
-        resident="John Doe, DO",
-        rotation="Rotation1",
-        week=0,
-        weeks=weeks,
-        preference_value=5,
-    )
-    ic(test_preferences_single_week)
-
-    test_preferences_all_weeks = generate_resident_preference_dataframe(
-    resident="John Doe, DO",
-    rotation="Rotation1",
-    week=None,
-    weeks=weeks,
-    preference_value=2,
-)
-    ic(test_preferences_all_weeks)
+    pass

@@ -1,7 +1,7 @@
 import pandas as pd
 
 from data_io import read_data_csv, read_data_sqlite3
-from interface import generate_resident_preference_dataframe, generate_completed_rotation
+from faux_data_generation import generate_resident_preference_dataframe, generate_completed_rotation
 
 
 def test_set_resident_preference():
