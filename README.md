@@ -52,8 +52,20 @@ Test data generator is now working, now for the actual program.
 
 ### 2025-08-12
 
-Notably changed vacation blocks to 
+Notably changed vacation blocks to 6 weeks for seniors - in retrospect, not sure how to represent this.
 
 Many single-year constraints implemented and tested. Besides multi-year requirements, still missing:
 
 - HS blocks must start at same times (apparently) - could see if there is flexibility on that from admin
+
+### 2025-08-16
+
+Getting stuck on the multi-year component - it's the only part I don't conceptually have a solution for.
+
+Questions for admin that could cut down (or break open) the sample space:
+
+- are there discrete requirement sets for R2 and R3? Or perhaps the only real set is the entire residency?
+- who decides when TY/PMR do their IM rotations? Are we just told when they are available?
+- how many rotations are offered less than continuously?
+- (confirm contraints above)
+- do we even care about this project?
