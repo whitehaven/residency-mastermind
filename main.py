@@ -22,18 +22,39 @@ def main():
 
     scheduled = model.NewBoolVarSeries(
         "is_scheduled_",
-        pd.Index((list(it.product(residents.full_name, rotations.rotation, weeks.monday_date)))),
+        pd.Index(
+            (
+                list(
+                    it.product(
+                        residents.full_name, rotations.rotation, weeks.monday_date
+                    )
+                )
+            )
+        ),
     ).sort_index()
 
-    set_single_year_resident_constraints("PMR", residents, rotations, weeks, categories, model, scheduled,
-                                         starting_academic_year=2025)
-    set_single_year_resident_constraints("TY", residents, rotations, weeks, categories, model, scheduled,
-                                         starting_academic_year=2025)
+    set_single_year_resident_constraints(
+        "PMR",
+        residents,
+        rotations,
+        weeks,
+        categories,
+        model,
+        scheduled,
+        starting_academic_year=2025,
+    )
+    set_single_year_resident_constraints(
+        "TY",
+        residents,
+        rotations,
+        weeks,
+        categories,
+        model,
+        scheduled,
+        starting_academic_year=2025,
+    )
 
     # Optimization
-
-    # maximize value of preferences, vacations amplified(?) - maybe triangular ramp functions to get them close?
-    # do seniors get priority?
 
     # solve model
     solver = cp_model.CpSolver()
