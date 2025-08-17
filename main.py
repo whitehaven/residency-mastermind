@@ -143,26 +143,36 @@ if status == cp_model.OPTIMAL:
     print("=====Stats:======")
     print(solver.SolutionInfo())
     print(solver.ResponseStats())
+    consolidated_schedule = (
+        solver.Values(scheduled)[solver.Values(scheduled) == 1]
+        .sort_index(level=(0, 2))
+        .unstack()
+        .reset_index()
+        .melt(id_vars=["level_0", "level_1"])
+        .query("value == 1")
+        .set_index(["level_0", "variable"])
+        .sort_index()["level_1"]
+        .unstack()
+    )
+
+    print_full_DataFrame(consolidated_schedule)
 elif status == cp_model.FEASIBLE:
     print("feasible")
     print("=====Stats:======")
     print(solver.SolutionInfo())
     print(solver.ResponseStats())
+    consolidated_schedule = (
+        solver.Values(scheduled)[solver.Values(scheduled) == 1]
+        .sort_index(level=(0, 2))
+        .unstack()
+        .reset_index()
+        .melt(id_vars=["level_0", "level_1"])
+        .query("value == 1")
+        .set_index(["level_0", "variable"])
+        .sort_index()["level_1"]
+        .unstack()
+    )
+
+    print_full_DataFrame(consolidated_schedule)
 else:
     print("no solution")
-
-consolidated_schedule = (
-    solver.Values(scheduled)[solver.Values(scheduled) == 1]
-    .sort_index(level=(0, 2))
-    .unstack()
-    .reset_index()
-    .melt(id_vars=["level_0", "level_1"])
-    .query("value == 1")
-    .set_index(["level_0", "variable"])
-    .sort_index()["level_1"]
-    .unstack()
-)
-
-consolidated_schedule.to_csv('consolidated_schedule.csv')
-
-print_full_DataFrame(consolidated_schedule)
