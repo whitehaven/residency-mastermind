@@ -1,6 +1,10 @@
 # exclude binary sqlite db
 *.db
 
+# exlude pycharm and vscode chaff files
+.idea/
+.vscode/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
