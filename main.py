@@ -138,11 +138,22 @@ solver.parameters.log_search_progress = True
 solver.log_callback = print
 status = solver.Solve(model)
 
-if status == cp_model.OPTIMAL:
-    print("optimal")
-    print("=====Stats:======")
+    if status != cp_model.INFEASIBLE:
+        print("no solution")
+        return
+    elif status == cp_model.OPTIMAL:
+        print("optimal")
+        print("=====Stats:======")
+    elif status == cp_model.FEASIBLE:
+        print("feasible")
+        print("=====Stats:======")
+    else:
+        print("undefined error")
+        return
+
     print(solver.SolutionInfo())
     print(solver.ResponseStats())
+
     consolidated_schedule = (
         solver.Values(scheduled)[solver.Values(scheduled) == 1]
         .sort_index(level=(0, 2))
@@ -156,23 +167,3 @@ if status == cp_model.OPTIMAL:
     )
 
     print_full_DataFrame(consolidated_schedule)
-elif status == cp_model.FEASIBLE:
-    print("feasible")
-    print("=====Stats:======")
-    print(solver.SolutionInfo())
-    print(solver.ResponseStats())
-    consolidated_schedule = (
-        solver.Values(scheduled)[solver.Values(scheduled) == 1]
-        .sort_index(level=(0, 2))
-        .unstack()
-        .reset_index()
-        .melt(id_vars=["level_0", "level_1"])
-        .query("value == 1")
-        .set_index(["level_0", "variable"])
-        .sort_index()["level_1"]
-        .unstack()
-    )
-
-    print_full_DataFrame(consolidated_schedule)
-else:
-    print("no solution")
