@@ -41,7 +41,7 @@ def main():
     solver.log_callback = print
     status = solver.Solve(model)
 
-    if status != cp_model.INFEASIBLE:
+    if status == cp_model.INFEASIBLE:
         print("no solution")
         return
     elif status == cp_model.OPTIMAL:
