@@ -24,10 +24,6 @@ def main():
         pd.Index((list(it.product(residents.full_name, rotations.rotation, weeks.monday_date)))),
     ).sort_index()
 
-    # every resident's week x must have exactly 1 scheduled rotation or vacation (which is a "rotation")
-    for resident, week in it.product(residents.full_name, weeks.monday_date):
-        model.AddExactlyOne(scheduled.loc[pd.IndexSlice[resident, :, week]])
-
     # Optimization
 
     # maximize value of preferences, vacations amplified(?) - maybe triangular ramp functions to get them close?
