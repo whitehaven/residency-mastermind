@@ -2,8 +2,6 @@ import pandas as pd
 from faker import Faker
 from icecream import ic
 
-first_day_2025_academic_year = pd.Timestamp("2025-07-07")
-
 
 def generate_fake_residents(residents_structure: dict) -> pd.DataFrame:
     fake = Faker()
@@ -55,36 +53,10 @@ def get_rotations_needing_preferences(
 
     return elective_rotations
 
-
-def generate_week_mapping() -> pd.DataFrame:
-    weekly_2025_index = pd.date_range(start=first_day_2025_academic_year, periods=52, freq="W-MON")
-    week_to_date = pd.DataFrame(
-        {"date": weekly_2025_index, "week": range(len(weekly_2025_index))}
-    ).set_index("week")
-    return week_to_date
-
-
-def week_to_date(week: int) -> pd.Timestamp:
-    """
-    Convert academic year week number to date
-    """
-    weeks = pd.read_csv("testing/weeks.csv", index_col="week", parse_dates=["date"])
-    return weeks.loc[week, "date"]  # type: ignore | works as tested
-
-
-def date_to_week(date: pd.Timestamp) -> int:
-    """
-    Convert date to academic year week number
-    """
-    weeks = pd.read_csv("testing/weeks.csv", index_col="week", parse_dates=["date"])
-    return weeks[weeks["date"] == date].index[0]
-
-
 if __name__ == "__main__":
     fake = Faker()
 
     generate_new_residents = False
-    generate_weeks = False
 
     if generate_fake_residents:
         current_residency_structure = {
@@ -109,9 +81,6 @@ if __name__ == "__main__":
         "preferences.csv",
         index_col=["full_name"],
     )
-
-    if generate_weeks:
-        generate_week_mapping().to_csv("weeks.csv", index=True)
 
     weeks = pd.read_csv("weeks.csv", index_col="week")
 

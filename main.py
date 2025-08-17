@@ -1,10 +1,9 @@
 import itertools as it
 
 import pandas as pd
-from icecream import ic
 from ortools.sat.python import cp_model
 
-from constraints import exclude_incompatible_roles, negated_bounded_span
+from constraints import negated_bounded_span
 from data_io import read_data_sqlite3
 from tools.display import print_full_DataFrame
 
