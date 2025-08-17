@@ -12,28 +12,52 @@ Satisfiability solver-driven residency scheduler. Ultimately specific to our loc
 
 ## Constraints
 
-### For all Residents
+### TY
 
-- [ ] Each resident must be scheduled on a rotation or vacation
-- [ ] All new interns start in clinic or HS, then HS or clinic respectively
+- no existing complete rotations
+- must meet
+- unclear order of assignments - their program supplies openings, or do we?
 
-### For all Rotations
+### PMR
 
-- [ ] resident only added if they can fit the prescribed number of weeks `min_contig_wks`
-- [ ] No fewer resients than required (i.e., the HS services must be fully staffed)
-- [ ] No more residents per week than `resident capacity`
-- [ ] Rotations that require intern or senior are restricted by role
-- [ ] Some rotations can only change personel on 1-block division to facilitate notification of preceptors. (HS must match blocks).
-- [ ] Some rotations can't have all team members change simultaneously (seemingly only ICU and Rounding HS, (as DH no longer has senior position))
+- no existing complete rotations
+- must meet
+- unclear order of assignments - their program supplies openings, or do we?
 
-### For all Categories
+### current IM R1
 
-- [ ] Residents can't exceed a certain number of rotation types, i.e., <6 months in any ICU context
+- no existing completed rotation
+- year 1: *primary target* : meet requirements for intern year; note intern->senior break week + vacation(3)
+- **year 2**: prove can complete requirements
+- **year 3**: prove can complete requirements
+
+### IM R2
+
+- some completed R1 rotations
+- year 1: start on requirements for R2/R3
+- **year 2**: complete requirements
+
+### IM R3
+
+- some completed R1 and R2 rotations
+- year 1: complete all requirements for IM program
+
+# Apply to all:
+
+- All residents should be scheduled on exactly one rotation for a week
+- All rotations have an upper limit on simultaneous residents
+- Some rotations require staffing at all times (this is recorded as minimum_residents)
+- Some rotations have a certain number of weeks of prerequisite rotations beforehand (can schedule, but must be in
+  order)
+- Some rotations require that only the interns or senior can change from one week to another to preserve continuity
+- Some rotations require assignments to them be contiguous with a minimum length
+- Some rotations are only available during specific weeks
+- 3 weeks vacation must be scheduled for all residents, for all years (except for bonus intern->senior break week)
 
 ## Optimization targets
 
 - [ ] Maximize resident elective preferences
-- [ ] Maximize fit of vacation preferences (perhaps vacation could be a special rotation that must be done 3 weeks a year?)
+- [ ] Maximize fit of vacation preferences
 
 ## Dev Log
 
@@ -62,10 +86,13 @@ Many single-year constraints implemented and tested. Besides multi-year requirem
 
 Getting stuck on the multi-year component - it's the only part I don't conceptually have a solution for.
 
+Rewrote constraints - will need to run three years to make things work on the original, though the constraints will be
+loosened for year 2 and 3. This just proves all constraints can be completed.
+
 Questions for admin that could cut down (or break open) the sample space:
 
 - are there discrete requirement sets for R2 and R3? Or perhaps the only real set is the entire residency?
 - who decides when TY/PMR do their IM rotations? Are we just told when they are available?
 - how many rotations are offered less than continuously?
-- (confirm contraints above)
+- (confirm constraints above)
 - do we even care about this project?
