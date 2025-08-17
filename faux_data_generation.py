@@ -1,4 +1,33 @@
 import pandas as pd
+from faker import Faker
+
+
+def generate_fake_residents(residents_structure: dict) -> pd.DataFrame:
+    fake = Faker()
+
+    faked_residents = {}
+
+    roles_mapping = {
+        "TY1": "TY",
+        "PMR1": "PMR",
+        "R1": "IM-Intern",
+        "R2": "IM-Senior",
+        "R3": "IM-Senior",
+    }
+
+    for year, count in residents_structure.items():
+        for resident_index in range(count):
+            faked_residents.update(
+                {
+                    f"{year}_{resident_index}": {
+                        "full_name": f"{fake.first_name()} {fake.last_name()} {fake.random_element(["MD", "DO"])}",
+                        "year": year,
+                        "role": roles_mapping[year],
+                    }
+                }
+            )
+
+    return pd.DataFrame.from_dict(faked_residents, orient="index")
 
 
 def generate_resident_preference_dataframe(

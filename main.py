@@ -4,7 +4,7 @@ import pandas as pd
 from ortools.sat.python import cp_model
 
 from data_io import read_data_sqlite3
-from tools.display import print_full_DataFrame
+from display import print_full_DataFrame
 
 
 def main():
