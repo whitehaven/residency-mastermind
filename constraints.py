@@ -46,5 +46,39 @@ def force_value(resident: str, rotation: str, week: str, value: bool, model: cp_
     model.Add(scheduled.loc[resident, rotation, week] == value)
 
 
+def set_TY_constraints(residents: pd.DataFrame, rotations: pd.DataFrame, weeks: pd.DataFrame, categories: pd.DataFrame,
+                       model: cp_model.CpModel, scheduled: pd.Series, starting_academic_year: int) -> None:
+    TYs = residents.loc[residents.role == "TY"]
+    TY_requirements = categories[categories.pertinent_role == "TY"]
+    eligible_rotations = pd.merge(TY_requirements, rotations, left_on="category_name", right_on="category",
+                                  suffixes=("_category", "_rotation"))
+
+    for resident_idx, resident in residents.loc[residents.role == "TY"].iterrows():
+        for (
+                eligible_rotation_groupby_category_name,
+                eligible_rotation_groupby_category,
+        ) in eligible_rotations.groupby(["category"]):
+            model.Add(
+                sum(
+                    scheduled.loc[
+                        pd.IndexSlice[
+                            resident.full_name,
+                            [
+                                eligible_rotation
+                                for eligible_rotation in eligible_rotation_groupby_category.rotation
+                            ],
+                            [
+                                relevant_week.monday_date
+                                for relevant_week_idx, relevant_week in weeks.loc[
+                                weeks.starting_academic_year == starting_academic_year
+                                ].iterrows()
+                            ],
+                        ]
+                    ]
+                )
+                >= eligible_rotation_groupby_category.minimum_weeks_category.max()
+            )
+
+
 if __name__ == "__main__":
     pass

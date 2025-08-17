@@ -15,13 +15,13 @@ Satisfiability solver-driven residency scheduler. Ultimately specific to our loc
 ### TY
 
 - no existing complete rotations
-- must meet
+- must meet requirements
 - unclear order of assignments - their program supplies openings, or do we?
 
 ### PMR
 
 - no existing complete rotations
-- must meet
+- must meet requirements
 - unclear order of assignments - their program supplies openings, or do we?
 
 ### current IM R1
