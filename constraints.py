@@ -1,3 +1,7 @@
+import pandas as pd
+from ortools.sat.python import cp_model
+
+
 def negated_bounded_span(superspan, start, length):
     """Filters an isolated sub-sequence of variables assigned to True.
 
@@ -25,3 +29,22 @@ def negated_bounded_span(superspan, start, length):
     if start + length < len(superspan):
         sequence.append(superspan[start + length])
     return sequence
+
+
+def force_value(resident: str, rotation: str, week: str, value: bool, model: cp_model.CpModel, scheduled: pd.Series,
+                residents: pd.DataFrame,
+                rotations: pd.DataFrame, weeks: pd.DataFrame) -> None:
+    """
+    Add a specific constraint to force a value at the given slot described by [resident, rotation, week].
+
+    Only receives reference to the main dataframes for error checking.
+    """
+    assert resident in residents.full_name.values, f"{resident} not in residents"
+    assert rotation in rotations.rotation.values, f"{rotation} not in rotations"
+    assert week in weeks.monday_date.values, f"{week} not in weeks"
+
+    model.Add(scheduled.loc[resident, rotation, week] == value)
+
+
+if __name__ == "__main__":
+    pass
