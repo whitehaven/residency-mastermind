@@ -3,7 +3,7 @@ import itertools as it
 import pandas as pd
 from ortools.sat.python import cp_model
 
-from constraints import set_TY_constraints
+from constraints import set_single_year_resident_constraints
 from data_io import read_data_sqlite3
 from display import print_full_DataFrame
 
@@ -25,7 +25,10 @@ def main():
         pd.Index((list(it.product(residents.full_name, rotations.rotation, weeks.monday_date)))),
     ).sort_index()
 
-    set_TY_constraints(residents, rotations, weeks, categories, model, scheduled, starting_academic_year=2025)
+    set_single_year_resident_constraints("PMR", residents, rotations, weeks, categories, model, scheduled,
+                                         starting_academic_year=2025)
+    set_single_year_resident_constraints("TY", residents, rotations, weeks, categories, model, scheduled,
+                                         starting_academic_year=2025)
 
     # Optimization
 
