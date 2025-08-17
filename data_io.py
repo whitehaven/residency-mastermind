@@ -28,7 +28,7 @@ def read_data_csv() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFr
     return residents, rotations, rotation_categories, preferences, weeks
 
 
-def read_data_sqlite3(db_location: str, tables_and_indexes_to_read: dict[str, str] | None = None) -> dict[
+def read_data_sqlite3(db_location: str, tables_to_read: dict[str, str] | None = None) -> dict[
     str, pd.DataFrame]:
     """
     Read data from sqlite3 database, extracting tables as requested.
@@ -36,14 +36,13 @@ def read_data_sqlite3(db_location: str, tables_and_indexes_to_read: dict[str, st
     Returns:
         dict[str, pd.DataFrame]: extracted tables from db
     """
-    if tables_and_indexes_to_read is None:
-        tables_and_indexes_to_read = {"residents": "full_name", "rotations": "rotation", "categories": "category_name",
-                                      "preferences": "full_name", "weeks": "week"}
+    if tables_to_read is None:
+        tables_to_read = {"residents", "rotations", "categories", "preferences", "weeks"}
 
     tables = dict()
     with sqlite3.connect(db_location) as con:
-        for table_name, index in tables_and_indexes_to_read.items():
-            extracted_df = pd.read_sql_query(f"SELECT * FROM {table_name}", con, index_col=index)
+        for table_name in tables_to_read:
+            extracted_df = pd.read_sql_query(f"SELECT * FROM {table_name}", con)
             tables.update({table_name: extracted_df})
     return tables
 
