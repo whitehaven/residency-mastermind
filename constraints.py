@@ -101,6 +101,16 @@ def set_single_year_resident_constraints(
                 )
                 >= eligible_rotation_groupby_category.minimum_weeks_category.max()
             )
+    # on something every week of their year
+    for resident_idx, resident in relevant_residents.iterrows():
+        for relevant_week_idx, relevant_week in weeks_R1_year.iterrows():
+            model.AddExactlyOne(
+                scheduled.loc[
+                    pd.IndexSlice[resident.full_name, :, relevant_week.monday_date]
+                ]
+            )
+
+
 
 
 if __name__ == "__main__":
