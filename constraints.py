@@ -111,6 +111,44 @@ def set_single_year_resident_constraints(
             )
 
 
+def set_im_r1_constraints(
+    residents: pd.DataFrame,
+    rotations: pd.DataFrame,
+    weeks: pd.DataFrame,
+    categories: pd.DataFrame,
+    model: cp_model.CpModel,
+    scheduled: pd.Series,
+    starting_academic_year: int,
+) -> None:
+    relevant_residents = residents.loc[residents.role == "IM-Intern"]
+    eligible_rotations_current_year = pd.merge(
+        categories[categories.pertinent_role == "IM-Intern"],
+        rotations,
+        left_on="category_name",
+        right_on="category",
+        suffixes=("_category", "_rotation"),
+    )
+    eligible_rotations_R2_year = pd.merge(
+        categories[categories.pertinent_role == "IM-Senior"],
+        rotations,
+        left_on="category_name",
+        right_on="category",
+        suffixes=("_category", "_rotation"),
+    )
+    eligible_rotations_R3_year = pd.merge(
+        categories[categories.pertinent_role == "IM-Senior"],
+        rotations,
+        left_on="category_name",
+        right_on="category",
+        suffixes=("_category", "_rotation"),
+    )
+    weeks_R1_year = weeks.loc[weeks.starting_academic_year == starting_academic_year]
+    weeks_R2_year = weeks.loc[
+        weeks.starting_academic_year == starting_academic_year + 1
+    ]
+    weeks_R3_year = weeks.loc[
+        weeks.starting_academic_year == starting_academic_year + 2
+    ]
 
 
 if __name__ == "__main__":
