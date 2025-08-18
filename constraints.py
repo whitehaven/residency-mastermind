@@ -114,6 +114,21 @@ def set_single_year_resident_constraints(
             )
     assign_rotation_every_week(model, relevant_residents, scheduled, weeks_R1_year)
 
+    ineligible_rotations = pd.merge(
+        categories[  # categories that don't match role, but also aren't available to other resident_types
+            (categories.pertinent_role != resident_type)
+            & (  # essentially set subtraction
+                ~categories.category_name.isin(
+                    categories[categories.pertinent_role == resident_type].category_name
+                )
+            )
+        ],
+        rotations,  # roles are controlled through categories, don't need to filter rotations AFAIK
+        left_on="category_name",
+        right_on="category",
+        suffixes=("_category", "_rotation"),
+    )
+
 
 def set_im_r1_constraints(
     residents: pd.DataFrame,
