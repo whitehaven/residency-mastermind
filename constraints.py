@@ -187,24 +187,6 @@ def set_im_r1_constraints(
                 )
                 >= eligible_rotation_groupby_category.minimum_weeks_category.max()
             )
-            model.Add(  # must <= max_weeks
-                sum(
-                    scheduled.loc[
-                        pd.IndexSlice[
-                            resident.full_name,
-                            [
-                                eligible_rotation
-                                for eligible_rotation in eligible_rotation_groupby_category.rotation
-                            ],
-                            [
-                                relevant_week.monday_date
-                                for _, relevant_week in weeks_R1_year.iterrows()
-                            ],
-                        ]
-                    ]
-                )
-                <= eligible_rotation_groupby_category.maximum_weeks_category.min()
-            )
 
     # meet residency requirements during the three years
     eligible_rotations_im_total = pd.merge(
