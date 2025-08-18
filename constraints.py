@@ -206,7 +206,12 @@ def set_im_r1_constraints(
         for (
             _,
             eligible_rotation_groupby_category,
-        ) in eligible_rotations_im_r1.groupby(["category"]):
+        ) in eligible_rotations_R1_year.groupby(["category"]):
+
+            assert (
+                eligible_rotation_groupby_category.minimum_weeks_category.nunique() == 1
+            ), "incoherent category table"
+
             model.Add(  # must >= min_weeks
                 sum(
                     scheduled.loc[
@@ -224,6 +229,7 @@ def set_im_r1_constraints(
                     ]
                 )
                 >= eligible_rotation_groupby_category.minimum_weeks_category.max()
+                #  .max() is just to coerce out of being an array; would have thrown AssertionError above if not all equal
             )
 
     # meet senior-level residency requirements during the three years
