@@ -153,7 +153,7 @@ def set_single_year_resident_constraints(
             )
 
 
-def set_im_r1_constraints(
+def set_IM_R1_constraints(
     residents: pd.DataFrame,
     rotations: pd.DataFrame,
     weeks: pd.DataFrame,
