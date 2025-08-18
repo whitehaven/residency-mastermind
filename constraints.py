@@ -188,9 +188,10 @@ def set_im_r1_constraints(
                 >= eligible_rotation_groupby_category.minimum_weeks_category.max()
             )
 
-    # meet residency requirements during the three years
+    # meet senior-level residency requirements during the three years
+    # presumes intern requirements all met
     eligible_rotations_im_total = pd.merge(
-        categories[categories.pertinent_role.isin(["IM-Intern", "IM-Senior"])],
+        categories[categories.pertinent_role == "IM-Senior"],
         rotations,
         left_on="category_name",
         right_on="category",
