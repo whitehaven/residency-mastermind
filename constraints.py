@@ -232,6 +232,16 @@ def set_IM_R1_constraints(
                 #  .max() is just to coerce out of being an array; would have thrown AssertionError above if not all equal
             )
 
+    forbid_ineligible_rotations(
+        categories,
+        model,
+        relevant_residents,
+        "IM-Intern",
+        rotations,
+        scheduled,
+        relevant_weeks=weeks_R1_year,  # for only intern year
+    )
+
     # meet senior-level residency requirements during the three years
     # presumes intern requirements all met
     eligible_rotations_im_total = pd.merge(
