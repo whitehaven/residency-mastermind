@@ -1,5 +1,5 @@
 --
--- File generated with SQLiteStudio v3.4.17 on Sat Aug 16 18:42:23 2025
+-- File generated with SQLiteStudio v3.4.17 on Sun Aug 17 21:07:53 2025
 --
 -- Text encoding used: System
 --
@@ -37,8 +37,8 @@ INSERT INTO categories (category_name, minimum_weeks, maximum_weeks, pertinent_r
 INSERT INTO categories (category_name, minimum_weeks, maximum_weeks, pertinent_role, elective) VALUES ('Primary Care Track', 0, 12, 'IM-Senior', 'elective');
 INSERT INTO categories (category_name, minimum_weeks, maximum_weeks, pertinent_role, elective) VALUES ('ICU Specialty', 4, 8, 'IM-Senior', 'elective');
 INSERT INTO categories (category_name, minimum_weeks, maximum_weeks, pertinent_role, elective) VALUES ('Vacation', 6, 6, 'IM-Senior', 'core ');
-INSERT INTO categories (category_name, minimum_weeks, maximum_weeks, pertinent_role, elective) VALUES ('TY Elective', 0, 23, 'TY', 'elective');
-INSERT INTO categories (category_name, minimum_weeks, maximum_weeks, pertinent_role, elective) VALUES ('PMR Elective', 0, 23, 'PMR', 'elective');
+INSERT INTO categories (category_name, minimum_weeks, maximum_weeks, pertinent_role, elective) VALUES ('TY Elective', 18, 24, 'TY', 'elective');
+INSERT INTO categories (category_name, minimum_weeks, maximum_weeks, pertinent_role, elective) VALUES ('PMR Elective', 18, 24, 'PMR', 'elective');
 INSERT INTO categories (category_name, minimum_weeks, maximum_weeks, pertinent_role, elective) VALUES ('HS Rounding Intern', 8, 8, 'IM-Intern', 'core');
 INSERT INTO categories (category_name, minimum_weeks, maximum_weeks, pertinent_role, elective) VALUES ('HS Rounding Intern', 8, 8, 'PMR', 'core');
 INSERT INTO categories (category_name, minimum_weeks, maximum_weeks, pertinent_role, elective) VALUES ('ICU Intern', 8, 8, 'IM-Intern', 'core');
@@ -227,64 +227,170 @@ INSERT INTO rotations_completed (resident, weeks, rotation, start_date) VALUES (
 
 -- Table: weeks
 CREATE TABLE IF NOT EXISTS weeks (
-    week             INTEGER UNIQUE,
-    week_monday_date TEXT    UNIQUE
-                             CHECK (date(week_monday_date) NOT NULL) 
-                             PRIMARY KEY
+    monday_date            TEXT    NOT NULL
+                                   UNIQUE,
+    week                   INTEGER NOT NULL,
+    starting_academic_year INTEGER NOT NULL,
+    ending_academic_year   INTEGER NOT NULL
 );
 
-INSERT INTO weeks (week, week_monday_date) VALUES (0, '2025-07-07');
-INSERT INTO weeks (week, week_monday_date) VALUES (1, '2025-07-14');
-INSERT INTO weeks (week, week_monday_date) VALUES (2, '2025-07-21');
-INSERT INTO weeks (week, week_monday_date) VALUES (3, '2025-07-28');
-INSERT INTO weeks (week, week_monday_date) VALUES (4, '2025-08-04');
-INSERT INTO weeks (week, week_monday_date) VALUES (5, '2025-08-11');
-INSERT INTO weeks (week, week_monday_date) VALUES (6, '2025-08-18');
-INSERT INTO weeks (week, week_monday_date) VALUES (7, '2025-08-25');
-INSERT INTO weeks (week, week_monday_date) VALUES (8, '2025-09-01');
-INSERT INTO weeks (week, week_monday_date) VALUES (9, '2025-09-08');
-INSERT INTO weeks (week, week_monday_date) VALUES (10, '2025-09-15');
-INSERT INTO weeks (week, week_monday_date) VALUES (11, '2025-09-22');
-INSERT INTO weeks (week, week_monday_date) VALUES (12, '2025-09-29');
-INSERT INTO weeks (week, week_monday_date) VALUES (13, '2025-10-06');
-INSERT INTO weeks (week, week_monday_date) VALUES (14, '2025-10-13');
-INSERT INTO weeks (week, week_monday_date) VALUES (15, '2025-10-20');
-INSERT INTO weeks (week, week_monday_date) VALUES (16, '2025-10-27');
-INSERT INTO weeks (week, week_monday_date) VALUES (17, '2025-11-03');
-INSERT INTO weeks (week, week_monday_date) VALUES (18, '2025-11-10');
-INSERT INTO weeks (week, week_monday_date) VALUES (19, '2025-11-17');
-INSERT INTO weeks (week, week_monday_date) VALUES (20, '2025-11-24');
-INSERT INTO weeks (week, week_monday_date) VALUES (21, '2025-12-01');
-INSERT INTO weeks (week, week_monday_date) VALUES (22, '2025-12-08');
-INSERT INTO weeks (week, week_monday_date) VALUES (23, '2025-12-15');
-INSERT INTO weeks (week, week_monday_date) VALUES (24, '2025-12-22');
-INSERT INTO weeks (week, week_monday_date) VALUES (25, '2025-12-29');
-INSERT INTO weeks (week, week_monday_date) VALUES (26, '2026-01-05');
-INSERT INTO weeks (week, week_monday_date) VALUES (27, '2026-01-12');
-INSERT INTO weeks (week, week_monday_date) VALUES (28, '2026-01-19');
-INSERT INTO weeks (week, week_monday_date) VALUES (29, '2026-01-26');
-INSERT INTO weeks (week, week_monday_date) VALUES (30, '2026-02-02');
-INSERT INTO weeks (week, week_monday_date) VALUES (31, '2026-02-09');
-INSERT INTO weeks (week, week_monday_date) VALUES (32, '2026-02-16');
-INSERT INTO weeks (week, week_monday_date) VALUES (33, '2026-02-23');
-INSERT INTO weeks (week, week_monday_date) VALUES (34, '2026-03-02');
-INSERT INTO weeks (week, week_monday_date) VALUES (35, '2026-03-09');
-INSERT INTO weeks (week, week_monday_date) VALUES (36, '2026-03-16');
-INSERT INTO weeks (week, week_monday_date) VALUES (37, '2026-03-23');
-INSERT INTO weeks (week, week_monday_date) VALUES (38, '2026-03-30');
-INSERT INTO weeks (week, week_monday_date) VALUES (39, '2026-04-06');
-INSERT INTO weeks (week, week_monday_date) VALUES (40, '2026-04-13');
-INSERT INTO weeks (week, week_monday_date) VALUES (41, '2026-04-20');
-INSERT INTO weeks (week, week_monday_date) VALUES (42, '2026-04-27');
-INSERT INTO weeks (week, week_monday_date) VALUES (43, '2026-05-04');
-INSERT INTO weeks (week, week_monday_date) VALUES (44, '2026-05-11');
-INSERT INTO weeks (week, week_monday_date) VALUES (45, '2026-05-18');
-INSERT INTO weeks (week, week_monday_date) VALUES (46, '2026-05-25');
-INSERT INTO weeks (week, week_monday_date) VALUES (47, '2026-06-01');
-INSERT INTO weeks (week, week_monday_date) VALUES (48, '2026-06-08');
-INSERT INTO weeks (week, week_monday_date) VALUES (49, '2026-06-15');
-INSERT INTO weeks (week, week_monday_date) VALUES (50, '2026-06-22');
-INSERT INTO weeks (week, week_monday_date) VALUES (51, '2026-06-29');
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-06-23', 1, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-06-30', 2, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-07-07', 3, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-07-14', 4, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-07-21', 5, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-07-28', 6, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-08-04', 7, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-08-11', 8, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-08-18', 9, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-08-25', 10, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-09-01', 11, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-09-08', 12, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-09-15', 13, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-09-22', 14, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-09-29', 15, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-10-06', 16, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-10-13', 17, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-10-20', 18, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-10-27', 19, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-11-03', 20, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-11-10', 21, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-11-17', 22, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-11-24', 23, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-12-01', 24, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-12-08', 25, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-12-15', 26, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-12-22', 27, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2025-12-29', 28, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-01-05', 29, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-01-12', 30, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-01-19', 31, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-01-26', 32, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-02-02', 33, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-02-09', 34, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-02-16', 35, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-02-23', 36, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-03-02', 37, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-03-09', 38, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-03-16', 39, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-03-23', 40, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-03-30', 41, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-04-06', 42, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-04-13', 43, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-04-20', 44, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-04-27', 45, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-05-04', 46, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-05-11', 47, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-05-18', 48, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-05-25', 49, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-06-01', 50, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-06-08', 51, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-06-15', 52, 2025, 2026);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-06-22', 1, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-06-29', 2, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-07-06', 3, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-07-13', 4, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-07-20', 5, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-07-27', 6, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-08-03', 7, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-08-10', 8, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-08-17', 9, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-08-24', 10, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-08-31', 11, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-09-07', 12, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-09-14', 13, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-09-21', 14, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-09-28', 15, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-10-05', 16, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-10-12', 17, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-10-19', 18, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-10-26', 19, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-11-02', 20, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-11-09', 21, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-11-16', 22, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-11-23', 23, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-11-30', 24, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-12-07', 25, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-12-14', 26, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-12-21', 27, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2026-12-28', 28, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-01-04', 29, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-01-11', 30, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-01-18', 31, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-01-25', 32, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-02-01', 33, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-02-08', 34, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-02-15', 35, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-02-22', 36, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-03-01', 37, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-03-08', 38, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-03-15', 39, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-03-22', 40, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-03-29', 41, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-04-05', 42, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-04-12', 43, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-04-19', 44, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-04-26', 45, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-05-03', 46, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-05-10', 47, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-05-17', 48, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-05-24', 49, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-05-31', 50, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-06-07', 51, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-06-14', 52, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-06-21', 53, 2026, 2027);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-06-28', 1, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-07-05', 2, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-07-12', 3, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-07-19', 4, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-07-26', 5, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-08-02', 6, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-08-09', 7, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-08-16', 8, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-08-23', 9, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-08-30', 10, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-09-06', 11, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-09-13', 12, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-09-20', 13, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-09-27', 14, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-10-04', 15, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-10-11', 16, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-10-18', 17, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-10-25', 18, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-11-01', 19, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-11-08', 20, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-11-15', 21, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-11-22', 22, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-11-29', 23, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-12-06', 24, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-12-13', 25, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-12-20', 26, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2027-12-27', 27, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2028-01-03', 28, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2028-01-10', 29, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2028-01-17', 30, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2028-01-24', 31, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2028-01-31', 32, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2028-02-07', 33, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2028-02-14', 34, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2028-02-21', 35, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2028-02-28', 36, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2028-03-06', 37, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2028-03-13', 38, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2028-03-20', 39, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2028-03-27', 40, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2028-04-03', 41, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2028-04-10', 42, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2028-04-17', 43, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2028-04-24', 44, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2028-05-01', 45, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2028-05-08', 46, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2028-05-15', 47, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2028-05-22', 48, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2028-05-29', 49, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2028-06-05', 50, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2028-06-12', 51, 2027, 2028);
+INSERT INTO weeks (monday_date, week, starting_academic_year, ending_academic_year) VALUES ('2028-06-19', 52, 2027, 2028);
 
 -- View: get_active_reqs_as_categories
 CREATE VIEW IF NOT EXISTS get_active_reqs_as_categories AS
