@@ -5,7 +5,7 @@ from ortools.sat.python import cp_model
 def negated_bounded_span(superspan, start, length):
     """Filters an isolated sub-sequence of variables assigned to True.
 
-    Extract the span of Boolean variables [start, start + length), negate them,
+    Extract the span of Boolean variables [start, start + length], negate them,
     and if there is variables to the left/right of this span, surround the span by
     them in non negated form.
 
