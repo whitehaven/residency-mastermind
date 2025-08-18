@@ -54,6 +54,16 @@ def main():
         starting_academic_year=2025,
     )
 
+    set_im_r1_constraints(
+        residents,
+        rotations,
+        weeks,
+        categories,
+        model,
+        scheduled,
+        starting_academic_year=2025,
+    )
+
     # Optimization
 
     # solve model

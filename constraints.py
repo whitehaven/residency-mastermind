@@ -153,6 +153,95 @@ def set_im_r1_constraints(
     weeks_R3_year = weeks.loc[
         weeks.starting_academic_year == starting_academic_year + 2
     ]
+    weeks_full_program = weeks
+
+    eligible_rotations_im_r1 = pd.merge(
+        categories[categories.pertinent_role == "IM-Intern"],
+        rotations,
+        left_on="category_name",
+        right_on="category",
+        suffixes=("_category", "_rotation"),
+    )
+
+    # meet intern requirements year 1
+    for resident_idx, resident in relevant_residents.iterrows():
+        for (
+            _,
+            eligible_rotation_groupby_category,
+        ) in eligible_rotations_im_r1.groupby(["category"]):
+            model.Add(
+                sum(
+                    scheduled.loc[
+                        pd.IndexSlice[
+                            resident.full_name,
+                            [
+                                eligible_rotation
+                                for eligible_rotation in eligible_rotation_groupby_category.rotation
+                            ],
+                            [
+                                relevant_week.monday_date
+                                for _, relevant_week in weeks_R1_year.iterrows()
+                            ],
+                        ]
+                    ]
+                )
+                >= eligible_rotation_groupby_category.minimum_weeks_category.max()
+            )
+
+    # meet residency requirements during the three years
+    eligible_rotations_im_total = pd.merge(
+        categories[categories.pertinent_role.isin(["IM-Intern", "IM-Senior"])],
+        rotations,
+        left_on="category_name",
+        right_on="category",
+        suffixes=("_category", "_rotation"),
+    )
+
+    for resident_idx, resident in relevant_residents.iterrows():
+        for (
+            _,
+            eligible_rotation_groupby_category,
+        ) in eligible_rotations_im_total.groupby(["category"]):
+            model.Add(
+                sum(
+                    scheduled.loc[
+                        pd.IndexSlice[
+                            resident.full_name,
+                            [
+                                eligible_rotation
+                                for eligible_rotation in eligible_rotation_groupby_category.rotation
+                            ],
+                            [
+                                relevant_week.monday_date
+                                for _, relevant_week in weeks_full_program.iterrows()
+                            ],
+                        ]
+                    ]
+                )
+                >= eligible_rotation_groupby_category.minimum_weeks_category.max()
+            )
+
+    # seniors' vacation must be 3 years in one and 3 in the other
+    for resident_idx, resident in relevant_residents.iterrows():
+        for weeks_active_year in [weeks_R2_year, weeks_R3_year]:
+            model.Add(
+                sum(
+                    scheduled.loc[
+                        pd.IndexSlice[
+                            resident.full_name,
+                            "Vacation",
+                            [
+                                week.monday_date
+                                for _, week in weeks_active_year.iterrows()
+                            ],
+                        ]
+                    ]
+                )
+                == 3
+            )
+
+    # assigned somewhere every week for year 1
+    assign_rotation_every_week(model, relevant_residents, scheduled, weeks_R1_year)
 
 
 if __name__ == "__main__":
