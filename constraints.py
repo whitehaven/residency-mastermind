@@ -163,27 +163,15 @@ def set_im_r1_constraints(
     starting_academic_year: int,
 ) -> None:
     relevant_residents = residents.loc[residents.role == "IM-Intern"]
-    eligible_rotations_current_year = pd.merge(
+
+    eligible_rotations_R1_year = pd.merge(
         categories[categories.pertinent_role == "IM-Intern"],
         rotations,
         left_on="category_name",
         right_on="category",
         suffixes=("_category", "_rotation"),
     )
-    eligible_rotations_R2_year = pd.merge(
-        categories[categories.pertinent_role == "IM-Senior"],
-        rotations,
-        left_on="category_name",
-        right_on="category",
-        suffixes=("_category", "_rotation"),
-    )
-    eligible_rotations_R3_year = pd.merge(
-        categories[categories.pertinent_role == "IM-Senior"],
-        rotations,
-        left_on="category_name",
-        right_on="category",
-        suffixes=("_category", "_rotation"),
-    )
+
     weeks_R1_year = weeks.loc[weeks.starting_academic_year == starting_academic_year]
     weeks_R2_year = weeks.loc[
         weeks.starting_academic_year == starting_academic_year + 1
@@ -192,14 +180,6 @@ def set_im_r1_constraints(
         weeks.starting_academic_year == starting_academic_year + 2
     ]
     weeks_full_program = weeks
-
-    eligible_rotations_im_r1 = pd.merge(
-        categories[categories.pertinent_role == "IM-Intern"],
-        rotations,
-        left_on="category_name",
-        right_on="category",
-        suffixes=("_category", "_rotation"),
-    )
 
     # meet intern requirements year 1
     for resident_idx, resident in relevant_residents.iterrows():
