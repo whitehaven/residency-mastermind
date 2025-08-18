@@ -129,6 +129,29 @@ def set_single_year_resident_constraints(
         suffixes=("_category", "_rotation"),
     )
 
+    for resident_idx, resident in relevant_residents.iterrows():
+        for _, ineligible_rotation_groupby_category in ineligible_rotations.groupby(
+            ["category"]
+        ):
+            model.Add(
+                sum(
+                    scheduled.loc[
+                        pd.IndexSlice[
+                            resident.full_name,
+                            [
+                                ineligible_rotation
+                                for ineligible_rotation in ineligible_rotation_groupby_category.rotation
+                            ],
+                            [
+                                relevant_week.monday_date
+                                for _, relevant_week in weeks_R1_year.iterrows()
+                            ],
+                        ]
+                    ]
+                )
+                == 0
+            )
+
 
 def set_im_r1_constraints(
     residents: pd.DataFrame,
