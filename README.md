@@ -96,3 +96,13 @@ Questions for admin that could cut down (or break open) the sample space:
 - how many rotations are offered less than continuously?
 - (confirm constraints above)
 - do we even care about this project?
+
+### 2025-08-17
+
+Some good progress with breaking up requirement constraints by year.
+
+It seems that maximums of different categories and rotations can be applied for all rotations at the same time. Even so,
+it may make sense even to forbid wrong roles from being assigned in the first place. Not sure if it makes more sense
+independent of individual roles or just in the respective functions - the fact you're in a function call gives the most
+important information. Will plan to place all constraints in the respective function with unified methods external to
+those if needed.
