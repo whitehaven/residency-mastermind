@@ -3,9 +3,9 @@ import itertools as it
 import pandas as pd
 from ortools.sat.python import cp_model
 
-from constraints import set_single_year_resident_constraints
+from constraints import set_single_year_resident_constraints, set_im_r1_constraints
 from data_io import read_data_sqlite3
-from display import print_full_DataFrame
+from display import print_full_dataframe
 
 
 def main():
@@ -90,7 +90,7 @@ def main():
         .unstack()
     )
 
-    print_full_DataFrame(consolidated_schedule)
+    print_full_dataframe(consolidated_schedule)
 
 
 if __name__ == "__main__":

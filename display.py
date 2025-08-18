@@ -1,4 +1,4 @@
-def print_full_DataFrame(df):
+def print_full_dataframe(df):
     """
     Prints a DataFrame in full, overriding truncation, then resets the option.
     Source: https://stackoverflow.com/questions/2058552/how-to-print-a-pandas-data
