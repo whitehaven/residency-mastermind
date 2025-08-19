@@ -139,6 +139,25 @@ def set_single_year_resident_constraints(
 
     weeks_R1_year = weeks.loc[weeks.starting_academic_year == starting_academic_year]
 
+    set_requirements_minimum_weeks(
+        eligible_rotations, model, relevant_residents, scheduled, weeks_R1_year
+    )
+    assign_rotation_every_week(model, relevant_residents, scheduled, weeks_R1_year)
+
+    forbid_ineligible_rotations(
+        categories,
+        model,
+        relevant_residents,
+        resident_type,
+        rotations,
+        scheduled,
+        weeks_R1_year,
+    )
+
+
+def set_requirements_minimum_weeks(
+    eligible_rotations, model, relevant_residents, scheduled, relevant_weeks
+):
     for resident_idx, resident in relevant_residents.iterrows():
         for (
             _,
@@ -155,24 +174,13 @@ def set_single_year_resident_constraints(
                             ],
                             [
                                 relevant_week.monday_date
-                                for _, relevant_week in weeks_R1_year.iterrows()
+                                for _, relevant_week in relevant_weeks.iterrows()
                             ],
                         ]
                     ]
                 )
                 >= eligible_rotation_groupby_category.minimum_weeks_category.max()
             )
-    assign_rotation_every_week(model, relevant_residents, scheduled, weeks_R1_year)
-
-    forbid_ineligible_rotations(
-        categories,
-        model,
-        relevant_residents,
-        resident_type,
-        rotations,
-        scheduled,
-        weeks_R1_year,
-    )
 
 
 def set_IM_R1_constraints(
@@ -204,35 +212,9 @@ def set_IM_R1_constraints(
     weeks_full_program = weeks
 
     # meet intern requirements year 1
-    for resident_idx, resident in relevant_residents.iterrows():
-        for (
-            _,
-            eligible_rotation_groupby_category,
-        ) in eligible_rotations_R1_year.groupby(["category"]):
-
-            assert (
-                eligible_rotation_groupby_category.minimum_weeks_category.nunique() == 1
-            ), "incoherent category table"
-
-            model.Add(  # must >= min_weeks
-                sum(
-                    scheduled.loc[
-                        pd.IndexSlice[
-                            resident.full_name,
-                            [
-                                eligible_rotation
-                                for eligible_rotation in eligible_rotation_groupby_category.rotation
-                            ],
-                            [
-                                relevant_week.monday_date
-                                for _, relevant_week in weeks_R1_year.iterrows()
-                            ],
-                        ]
-                    ]
-                )
-                >= eligible_rotation_groupby_category.minimum_weeks_category.max()
-                #  .max() is just to coerce out of being an array; would have thrown AssertionError above if not all equal
-            )
+    set_requirements_minimum_weeks(
+        eligible_rotations_R1_year, model, relevant_residents, scheduled, weeks_R1_year
+    )
 
     forbid_ineligible_rotations(
         categories,
@@ -254,29 +236,13 @@ def set_IM_R1_constraints(
         suffixes=("_category", "_rotation"),
     )
 
-    for resident_idx, resident in relevant_residents.iterrows():
-        for (
-            _,
-            eligible_rotation_groupby_category,
-        ) in eligible_rotations_im_total.groupby(["category"]):
-            model.Add(  # must >= min_weeks in a category throughout R2/R3
-                sum(
-                    scheduled.loc[
-                        pd.IndexSlice[
-                            resident.full_name,
-                            [
-                                eligible_rotation
-                                for eligible_rotation in eligible_rotation_groupby_category.rotation
-                            ],
-                            [
-                                relevant_week.monday_date
-                                for _, relevant_week in weeks_full_program.iterrows()
-                            ],
-                        ]
-                    ]
-                )
-                >= eligible_rotation_groupby_category.minimum_weeks_category.max()
-            )
+    set_requirements_minimum_weeks(
+        eligible_rotations_IM_total,
+        model,
+        relevant_residents,
+        scheduled,
+        weeks_full_program,
+    )
 
     # seniors' vacation must be 3 years in one and 3 in the other
     for resident_idx, resident in relevant_residents.iterrows():
