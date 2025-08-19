@@ -92,6 +92,7 @@ loosened for year 2 and 3. This just proves all constraints can be completed.
 Questions for admin that could cut down (or break open) the sample space:
 
 - are there discrete requirement sets for R2 and R3? Or perhaps the only real set is the entire residency?
+- do interns ever do senior rotations?
 - who decides when TY/PMR do their IM rotations? Are we just told when they are available?
 - how many rotations are offered less than continuously?
 - (confirm constraints above)
