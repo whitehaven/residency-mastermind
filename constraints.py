@@ -69,17 +69,19 @@ def forbid_ineligible_rotations(
     categories: pd.DataFrame,
     model: cp_model.CpModel,
     relevant_residents: pd.DataFrame,
-    resident_type: str,
+    allowed_resident_type: str,
     rotations: pd.DataFrame,
     scheduled: pd.Series,
     relevant_weeks: pd.DataFrame,
 ):
     ineligible_rotations = pd.merge(
         categories[  # categories that don't match role, but also aren't available to other resident_types
-            (categories.pertinent_role != resident_type)
+            (categories.pertinent_role != allowed_resident_type)
             & (  # essentially set subtraction
                 ~categories.category_name.isin(
-                    categories[categories.pertinent_role == resident_type].category_name
+                    categories[
+                        categories.pertinent_role == allowed_resident_type
+                    ].category_name
                 )
             )
         ],
