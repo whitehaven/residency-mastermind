@@ -115,6 +115,34 @@ def forbid_ineligible_rotations(
             )
 
 
+def set_requirements_minimum_weeks(
+    eligible_rotations, model, relevant_residents, scheduled, relevant_weeks
+):
+    for _, resident in relevant_residents.iterrows():
+        for (
+            _,
+            eligible_rotation_groupby_category,
+        ) in eligible_rotations.groupby(["category"]):
+            model.Add(
+                sum(
+                    scheduled.loc[
+                        pd.IndexSlice[
+                            resident.full_name,
+                            [
+                                eligible_rotation
+                                for eligible_rotation in eligible_rotation_groupby_category.rotation
+                            ],
+                            [
+                                relevant_week.monday_date
+                                for _, relevant_week in relevant_weeks.iterrows()
+                            ],
+                        ]
+                    ]
+                )
+                >= eligible_rotation_groupby_category.minimum_weeks_category.max()
+            )
+
+
 def set_single_year_resident_constraints(
     resident_type: str,
     residents: pd.DataFrame,
@@ -153,34 +181,6 @@ def set_single_year_resident_constraints(
         scheduled,
         weeks_R1_year,
     )
-
-
-def set_requirements_minimum_weeks(
-    eligible_rotations, model, relevant_residents, scheduled, relevant_weeks
-):
-    for resident_idx, resident in relevant_residents.iterrows():
-        for (
-            _,
-            eligible_rotation_groupby_category,
-        ) in eligible_rotations.groupby(["category"]):
-            model.Add(
-                sum(
-                    scheduled.loc[
-                        pd.IndexSlice[
-                            resident.full_name,
-                            [
-                                eligible_rotation
-                                for eligible_rotation in eligible_rotation_groupby_category.rotation
-                            ],
-                            [
-                                relevant_week.monday_date
-                                for _, relevant_week in relevant_weeks.iterrows()
-                            ],
-                        ]
-                    ]
-                )
-                >= eligible_rotation_groupby_category.minimum_weeks_category.max()
-            )
 
 
 def set_IM_R1_constraints(
