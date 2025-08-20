@@ -3,7 +3,11 @@ import itertools as it
 import pandas as pd
 from ortools.sat.python import cp_model
 
-from constraints import set_single_year_resident_constraints, set_IM_R1_constraints
+from constraints import (
+    enforce_minimum_contiguity,
+    set_IM_R1_constraints,
+    set_single_year_resident_constraints,
+)
 from data_io import read_data_sqlite3
 from display import print_full_dataframe
 
@@ -63,6 +67,10 @@ def main():
         scheduled,
         starting_academic_year=2025,
     )
+
+    # Rotation-wise constraints
+
+    enforce_minimum_contiguity(residents, rotations, model, scheduled, weeks)
 
     # Optimization
 

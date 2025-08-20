@@ -144,6 +144,27 @@ def set_requirements_minimum_weeks(
             )
 
 
+def enforce_minimum_contiguity(residents, rotations, model, scheduled, relevant_weeks):
+    # TODO may make sense to parse by residents just to cut down on variable creation
+    rotations_requiring_contiguity = rotations[rotations.minimum_contiguous_weeks > 1]
+    for _, rotation in rotations_requiring_contiguity.iterrows():
+        for _, resident in residents.iterrows():
+            hard_min = rotation.minimum_contiguous_weeks
+            sequence = scheduled.loc[
+                pd.IndexSlice[
+                    resident.full_name,
+                    rotation.rotation,
+                    [
+                        relevant_week.monday_date
+                        for _, relevant_week in relevant_weeks.iterrows()
+                    ],
+                ]
+            ]
+            for length in range(1, hard_min):
+                for start in range(len(sequence) - length + 1):
+                    model.AddBoolOr(negated_bounded_span(sequence, start, length))
+
+
 def set_single_year_resident_constraints(
     resident_type: str,
     residents: pd.DataFrame,
