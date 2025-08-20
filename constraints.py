@@ -245,7 +245,7 @@ def set_IM_R1_constraints(
     )
 
     # seniors' vacation must be 3 years in one and 3 in the other
-    for resident_idx, resident in relevant_residents.iterrows():
+    for _, resident in relevant_residents.iterrows():
         for weeks_active_year in [weeks_R2_year, weeks_R3_year]:
             model.Add(
                 sum(
