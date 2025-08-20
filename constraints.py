@@ -2,7 +2,8 @@ import pandas as pd
 from ortools.sat.python import cp_model
 
 
-def negated_bounded_span(superspan, start, length):
+def negated_bounded_span(superspan:pd.Series, start:int, length:int) -> list:
+    # TODO this function may not work, needs to be compared carefully to source
     """Filters an isolated sub-sequence of variables assigned to True.
 
     Extract the span of Boolean variables [start, start + length], negate them,
@@ -22,12 +23,12 @@ def negated_bounded_span(superspan, start, length):
     sequence = []
     # left border (start of superspan, or superspan[start - 1])
     if start > 0:
-        sequence.append(superspan[start - 1])
+        sequence.append(superspan.iloc[start - 1])
     for i in range(length):
-        sequence.append(~superspan[start + i])
+        sequence.append(~superspan.iloc[start + i])
     # right border (end of superspan or superspan[start + length])
     if start + length < len(superspan):
-        sequence.append(superspan[start + length])
+        sequence.append(superspan.iloc[start + length])
     return sequence
 
 
