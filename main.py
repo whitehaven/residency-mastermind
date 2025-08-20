@@ -97,18 +97,17 @@ def main():
     print(solver.ResponseStats())
 
     consolidated_schedule = (
-        solver.Values(scheduled)[solver.Values(scheduled) == 1]
-        .sort_index(level=(0, 2))
+        solver.Values(scheduled)
         .unstack()
         .reset_index()
-        .melt(id_vars=["level_0", "level_1"])
+        .rename({"level_0": "resident", "level_1": "rotation"}, axis="columns")
+        .melt(id_vars=["resident", "rotation"], var_name="date")
         .query("value == 1")
-        .set_index(["level_0", "variable"])
-        .sort_index()["level_1"]
-        .unstack()
+        .set_index(["resident", "date"])
     )
 
-    print_full_dataframe(consolidated_schedule)
+    print(consolidated_schedule)
+    # print_full_dataframe(consolidated_schedule)
 
 
 if __name__ == "__main__":
