@@ -57,8 +57,8 @@ def force_value(
 
 def assign_rotation_every_week(model, relevant_residents, scheduled, weeks_R1_year):
     # on something every week of their year
-    for resident_idx, resident in relevant_residents.iterrows():
-        for relevant_week_idx, relevant_week in weeks_R1_year.iterrows():
+    for _, resident in relevant_residents.iterrows():
+        for _, relevant_week in weeks_R1_year.iterrows():
             model.AddExactlyOne(
                 scheduled.loc[
                     pd.IndexSlice[resident.full_name, :, relevant_week.monday_date]
