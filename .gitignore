@@ -1,3 +1,9 @@
+# exclude confidential IMR policies
+IMR_policy/
+
+# exclude scratch paper .ipynb
+*.ipynb
+
 # exclude binary sqlite db
 *.db
 
