@@ -107,3 +107,11 @@ it may make sense even to forbid wrong roles from being assigned in the first pl
 independent of individual roles or just in the respective functions - the fact you're in a function call gives the most
 important information. Will plan to place all constraints in the respective function with unified methods external to
 those if needed.
+
+### 2025-08-20
+
+Met with admin to positive response. They would like me to schedule the seniors (R2 and R3) since it is a proof of concept. They even want me to leave all electives as just a placeholder they will work on.
+
+### 2025-08-21
+
+Trialed polars for easier syntax, but the rigidity of the Arrow datatypes means I'd have to dump every single variable selection `.to_list()` and operate on it. Takes away any benefit. Will revert.
