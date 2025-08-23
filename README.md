@@ -115,3 +115,8 @@ Met with admin to positive response. They would like me to schedule the seniors 
 ### 2025-08-21
 
 Trialed polars for easier syntax, but the rigidity of the Arrow datatypes means I'd have to dump every single variable selection `.to_list()` and operate on it. Takes away any benefit. Will revert.
+
+### 2025-08-23
+
+Embarked on conversion to cpmpy to make more modular, understandable, and maintainable code. Wrapping cpmpy array into a
+dataframe was easier than expected.
