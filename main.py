@@ -13,7 +13,7 @@ from display import print_full_dataframe
 
 
 def main():
-    input_tables = read_data_sqlite3("residency_mastermind.db")
+    input_tables = read_data_sqlite3("seniors_only.db")
 
     residents = input_tables["residents"]
     rotations = input_tables["rotations"]
