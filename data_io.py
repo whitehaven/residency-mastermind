@@ -50,3 +50,38 @@ def read_data_sqlite3(db_location: str, tables_to_read: dict[str, str] | None = 
 if __name__ == "__main__":
     test_read_tables = read_data_sqlite3("residency_mastermind.db")
     ic(test_read_tables)
+
+
+def generate_pd_wrapped_boolvar(
+    residents: pd.DataFrame, rotations: pd.DataFrame, weeks: pd.DataFrame
+) -> pd.DataFrame:
+    """
+
+    Args:
+        residents: pd.DataFrame of residents
+        rotations: pd.DataFrame of rotations
+        weeks: pd.DataFrame of weeks
+
+    Returns:
+        pd.DataFrame `scheduled`:  wrapped around 3D array of residents, rotations, weeks
+        for ease of complex indexing by string variables.
+    """
+
+    scheduled = pd.Series(  # had to do this way because underlying data is 3D, linearize, then align to 3D labels
+        cp.boolvar(
+            shape=(len(residents), len(rotations), len(weeks)), name="is_scheduled"
+        ).flatten(),
+        index=(
+            pd.MultiIndex.from_product(
+                [residents.full_name, rotations.rotation, weeks.monday_date],
+                names=["resident", "rotation", "week"],
+            )
+        ),
+    )
+    scheduled = (
+        scheduled.reset_index()
+        .assign(week=lambda df: pd.to_datetime(df["week"]))
+        .set_index(["resident", "rotation", "week"])
+    )
+    scheduled.columns = ["is_scheduled_cp_var"]
+    return scheduled
