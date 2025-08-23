@@ -16,4 +16,5 @@ dependencies:
   - pytest
   - python
   - pip:
+    - cpmpy
     - ortools
