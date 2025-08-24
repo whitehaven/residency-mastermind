@@ -21,6 +21,12 @@ def main():
     weeks = input_tables["weeks"]
     rotations_completed = input_tables["rotations_completed"]
 
+    current_academic_starting_year = 2025
+
+    weeks_this_acad_year = weeks.filter(
+        pl.col("starting_academic_year") == current_academic_starting_year
+    )
+
     model = cp.Model()
 
     scheduled = generate_pl_wrapped_boolvar(residents, rotations, weeks)
@@ -29,7 +35,7 @@ def main():
 
     # resident-specific
     model += require_one_rotation_per_resident_per_week(
-        residents, rotations, weeks, scheduled
+        residents, rotations, weeks_this_acad_year, scheduled
     )
 
     # rotation-specific
