@@ -1,4 +1,5 @@
 import pandas as pd
+import polars as pl
 
 from data_io import read_bulk_data_sqlite3, generate_pd_wrapped_boolvar
 from testing_helpers import (
@@ -19,4 +20,8 @@ def test_generate_pd_wrapped_boolvar():
 def test_read_bulk_data_sqlite3():
     test_read_tables = read_bulk_data_sqlite3("residency_mastermind.db")
     assert len(test_read_tables) == 5
-    assert test_read_tables["weeks"].monday_date.dtype == "<M8[ns]"
+    assert isinstance(test_read_tables["residents"], pl.DataFrame)
+    dtype_of_weeks_monday_date = (
+        test_read_tables["weeks"].select("monday_date").dtypes[0]
+    )
+    assert isinstance(dtype_of_weeks_monday_date, pl.Datetime)

@@ -2,6 +2,7 @@ import sqlite3
 
 import cpmpy as cp
 import pandas as pd
+import polars as pl
 
 
 def read_bulk_data_sqlite3(
@@ -31,10 +32,10 @@ def read_bulk_data_sqlite3(
     tables = dict()
     with sqlite3.connect(db_location) as con:
         for table_name in tables_to_read:
-            extracted_df = pd.read_sql_query(f"SELECT * FROM {table_name}", con)
+            extracted_df = pl.read_database(f"SELECT * FROM {table_name}", con)
             if table_name == "weeks":
-                extracted_df["monday_date"] = pd.to_datetime(
-                    extracted_df["monday_date"]
+                extracted_df = extracted_df.with_columns(
+                    pl.col("monday_date").str.to_datetime()
                 )
             tables.update({table_name: extracted_df})
     return tables
