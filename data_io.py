@@ -76,3 +76,7 @@ def generate_pd_wrapped_boolvar(
     )
 
     return scheduled
+
+
+if __name__ == "__main__":
+    pass
