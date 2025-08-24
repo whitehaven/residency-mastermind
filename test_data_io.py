@@ -19,3 +19,8 @@ def test_generate_pd_wrapped_boolvar():
     )
     assert isinstance(fake_scheduled, pd.DataFrame)
     assert len(fake_scheduled) == 54
+
+
+def test_read_bulk_data_sqlite3():
+    test_read_tables = read_bulk_data_sqlite3("residency_mastermind.db")
+    assert len(test_read_tables) == 5
