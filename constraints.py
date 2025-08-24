@@ -1,3 +1,5 @@
+from typing import Callable
+
 import cpmpy as cp
 import pandas as pd
 import polars as pl
@@ -253,35 +255,31 @@ def enforce_rotation_capacity_ranges(
 
     Minimum is another way of saying "resident-staffed." Maximum is capacity.
 
-    Pure function - does not modify passed variables.
-
     Returns: list[constraints]
 
     """
-    # TODO needs testing, not sure this works at all; kinda based on one_rotation above
+    # TODO test
     constraints = []
 
-    # Get the subset lists
-    resident_names = residents["full_name"].to_list()
-    rotation_names = rotations["rotation"].to_list()
-    week_dates = weeks["monday_date"].to_list()
-
-    # Filter scheduled to only include our subset
-    subset_scheduled = scheduled.filter(
-        (pl.col("resident").is_in(resident_names))
-        & (pl.col("rotation").is_in(rotation_names))
-        & (pl.col("week").is_in(week_dates))
+    rotations_with_minimum_residents = rotations.filter(
+        pl.col("minimum_residents_assigned") > 0
     )
 
-    grouped = subset_scheduled.group_by(["resident"]).agg(
-        pl.col("is_scheduled_cp_var").alias("rotation_vars")
+    subset_scheduled = subset_scheduled_by(
+        residents, rotations_with_minimum_residents, weeks, scheduled
     )
 
-    for row in grouped.iter_rows(named=True):
-        rotation_vars = row["rotation_vars"]
-        if rotation_vars:
-            constraints.append(cp.sum(rotation_vars))
+    grouped = group_df_by_for_each(subset_scheduled, for_each=["rotation", "week"])
 
+    constraints = list()
+    for group in grouped.iter_rows(named=True):
+        decision_vars = group["is_scheduled_cp_var"]
+        if decision_vars:
+            rotation = rotations.filter(pl.col("rotation") == group["rotation"])
+            constraints.append(
+                cp.sum(decision_vars)
+                >= rotation.select(pl.col("minimum_residents_assigned"))
+            )
     return constraints
 
 
