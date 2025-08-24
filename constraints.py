@@ -163,7 +163,23 @@ def require_one_rotation_per_resident_per_week(
     weeks: pl.DataFrame,
     scheduled: pl.DataFrame,
 ) -> list:
+    """
+    Generate constraints that require exactly one True at every resident:rotation:week intersection.
 
+    Can be subset from the base data imported early on.
+
+    For example, a super-R3 who was out on maternity leave can be set to a limited range of weeks after being excluded
+    from the main body of residents.
+
+    Args:
+        residents: df of residents - can be subset
+        rotations:  df of weeks - can be subset
+        weeks:  df of weeks - can be subset
+        scheduled:  df of residents - can be subset
+
+    Returns:
+        list[constraints] that should force a solution which requires exactly one True at every resident:rotation:week intersection.
+    """
     constraints = []
 
     # Get the subset lists

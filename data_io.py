@@ -92,38 +92,5 @@ def generate_pl_wrapped_boolvar(
     return scheduled
 
 
-def generate_pd_wrapped_boolvar(
-    residents: pd.DataFrame, rotations: pd.DataFrame, weeks: pd.DataFrame
-) -> pd.DataFrame:
-    """
-
-    Args:
-        residents: pd.DataFrame of residents
-        rotations: pd.DataFrame of rotations
-        weeks: pd.DataFrame of weeks
-
-    Returns:
-        pd.DataFrame `scheduled`:  wrapped around 3D array of residents, rotations, weeks
-        for ease of complex indexing by string variables.
-    """
-
-    # Create the 3D boolean variable array
-    scheduled_vars = cp.boolvar(
-        shape=(len(residents), len(rotations), len(weeks)), name="is_scheduled"
-    )
-
-    # Create the MultiIndex DataFrame
-    scheduled = pd.DataFrame(
-        scheduled_vars.flatten(),
-        index=pd.MultiIndex.from_product(
-            [residents.full_name, rotations.rotation, weeks.monday_date],
-            names=["resident", "rotation", "week"],
-        ),
-        columns=["is_scheduled_cp_var"],
-    )
-
-    return scheduled
-
-
 if __name__ == "__main__":
     pass
