@@ -180,18 +180,24 @@ def require_one_rotation_per_resident_per_week(
     Returns:
         list[constraints] that should force a solution which requires exactly one True at every resident:rotation:week intersection.
     """
-    constraints = []
 
     subset_scheduled = subset_scheduled_by(residents, rotations, weeks, scheduled)
 
     grouped = group_df_by_for_each(subset_scheduled, for_each=["resident", "week"])
 
-    # Create exactly-one constraint for each group
-    for row in grouped.iter_rows(named=True):
-        rotation_vars = row["is_scheduled_cp_var"]
-        if rotation_vars:
-            constraints.append(cp.sum(rotation_vars) == 1)
+    constraints = apply_literal_constraint_to_groups(
+        grouped, constraint=lambda group: cp.sum(group) == 1
+    )
 
+    return constraints
+
+
+def apply_literal_constraint_to_groups(grouped, constraint: Callable):
+    constraints = list()
+    for group in grouped.iter_rows(named=True):
+        decision_vars = group["is_scheduled_cp_var"]
+        if decision_vars:
+            constraints.append(constraint(decision_vars))
     return constraints
 
 
