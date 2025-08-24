@@ -1,5 +1,9 @@
+import cpmpy as cp
+import polars as pl
+
 from constraints import require_one_rotation_per_resident_per_week
 from data_io import generate_pl_wrapped_boolvar
+from display import extract_solved_schedule
 from testing_helpers import (
     grab_tester_weeks,
     grab_tester_rotations,
@@ -8,7 +12,7 @@ from testing_helpers import (
 
 
 def test_require_one_rotation_per_resident_per_week():
-    scheduled = generate_pl_wrapped_boolvar(
+    test_scheduled = generate_pl_wrapped_boolvar(
         grab_tester_residents(),
         grab_tester_rotations(),
         grab_tester_weeks(),
@@ -17,7 +21,20 @@ def test_require_one_rotation_per_resident_per_week():
         grab_tester_residents(),
         grab_tester_rotations(),
         grab_tester_weeks(),
-        scheduled=scheduled,
+        scheduled=test_scheduled,
     )
-    # TODO test with tiny test cp.Model
     assert len(test_constraints) == 18
+
+    model = cp.Model()
+    model += test_constraints
+    model.solve("ortools", log_search_progress=False)
+    solved_schedule = extract_solved_schedule(test_scheduled).sort("week")
+    assert (
+        len(
+            solved_schedule.group_by(["resident", "week"])
+            .sum()
+            .filter(pl.col("is_scheduled_value") != 1)
+        )
+        == 0
+    ), "not every (resident -> week => all rotations) pairing has exactly 1 rotation set"
+    assert False, "not done"
