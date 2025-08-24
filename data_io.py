@@ -4,45 +4,38 @@ import pandas as pd
 from icecream import ic
 
 
-def read_data_csv() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """
-    Read data from CSV files and prepare DataFrames for residents, rotations,
-    rotation categories, preferences, and weeks.
-    """
-    residents = pd.read_csv("testing/residents.csv")
-
-    residents.set_index("full_name", append=False, inplace=True)
-
-    rotations = pd.read_csv("testing/rotations.csv", index_col="rotation")
-    rotation_categories = pd.read_csv(
-        "testing/rotation_categories.csv", index_col="category"
-    )
-    preferences = pd.read_csv(
-        "testing/preferences.csv",
-        index_col=[
-            "full_name",
-        ],
-    )
-    weeks = pd.read_csv("testing/weeks.csv", index_col="week")
-
-    return residents, rotations, rotation_categories, preferences, weeks
-
-
-def read_data_sqlite3(db_location: str, tables_to_read: dict[str, str] | None = None) -> dict[
-    str, pd.DataFrame]:
+def read_bulk_data_sqlite3(
+    db_location: str,
+    tables_to_read: dict[str, str] | None = None,
+    date_fields: dict[str, str] | None = None,
+) -> dict[str, pd.DataFrame]:
     """
     Read data from sqlite3 database, extracting tables as requested.
+
+    Converts to datetime where requested and by default to standard data set.
 
     Returns:
         dict[str, pd.DataFrame]: extracted tables from db
     """
     if tables_to_read is None:
-        tables_to_read = {"residents", "rotations", "categories", "preferences", "weeks"}
+        tables_to_read = {
+            "residents",
+            "rotations",
+            "categories",
+            "preferences",
+            "weeks",
+        }
+    if date_fields is None:
+        date_field = {"weeks": "monday_date"}
 
     tables = dict()
     with sqlite3.connect(db_location) as con:
         for table_name in tables_to_read:
             extracted_df = pd.read_sql_query(f"SELECT * FROM {table_name}", con)
+            if table_name == "weeks":
+                extracted_df["monday_date"] = pd.to_datetime(
+                    extracted_df["monday_date"]
+                )
             tables.update({table_name: extracted_df})
     return tables
 
@@ -81,9 +74,5 @@ def generate_pd_wrapped_boolvar(
         ),
         columns=["is_scheduled_cp_var"],
     )
-
-    # Convert week to datetime if needed
-    scheduled = scheduled.reset_index()
-    scheduled["monday_date"] = pd.to_datetime(scheduled["monday_date"])
 
     return scheduled

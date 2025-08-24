@@ -1,11 +1,11 @@
 import cpmpy as cp
 
 from constraints import force_single_weekly_scheduling
-from data_io import read_data_sqlite3, generate_pd_wrapped_boolvar
+from data_io import read_bulk_data_sqlite3, generate_pd_wrapped_boolvar
 
 
 def main():
-    input_tables = read_data_sqlite3("seniors_only.db")
+    input_tables = read_bulk_data_sqlite3("seniors_only.db")
 
     residents = input_tables["residents"]
     rotations = input_tables["rotations"]
