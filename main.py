@@ -19,6 +19,7 @@ def main():
     categories = input_tables["categories"]
     preferences = input_tables["preferences"]
     weeks = input_tables["weeks"]
+    rotations_completed = input_tables["rotations_completed"]
 
     model = cp.Model()
 

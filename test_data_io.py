@@ -12,12 +12,14 @@ from testing_helpers import (
 
 
 def test_read_bulk_data_sqlite3():
+    tables_in_use = 6
     test_read_tables = read_bulk_data_sqlite3("residency_mastermind.db")
-    assert len(test_read_tables) == 5
+
+    assert len(test_read_tables) == tables_in_use
     assert isinstance(test_read_tables["residents"], pl.DataFrame)
-    dtype_of_weeks_monday_date = (
-        test_read_tables["weeks"].select("monday_date").dtypes[0]
-    )
+
+    dtype_of_weeks_monday_date = test_read_tables["weeks"].select.dtypes[0]
+
     assert isinstance(dtype_of_weeks_monday_date, pl.Date)
 
 
