@@ -10,7 +10,7 @@ def read_bulk_data_sqlite3(
     date_fields: dict[str, str] | None = None,
 ) -> dict[str, pd.DataFrame]:
     """
-    Read data from sqlite3 database, extracting tables as requested.
+    Read data from sqlite3 database, extracting tables as requested. Defaults to pulling all tables normally used in schedule building.
 
     Converts to datetime where requested and by default to standard data set.
 
