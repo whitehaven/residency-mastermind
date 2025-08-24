@@ -1,6 +1,7 @@
 # residency-mastermind
 
-Satisfiability solver-driven residency scheduler. Ultimately specific to our local situation, but many parts likely to be reusable.
+Satisfiability solver-driven residency scheduler. Ultimately specific to our local situation, but many parts likely to
+be reusable.
 
 ## Core Functionality
 
@@ -65,7 +66,8 @@ Satisfiability solver-driven residency scheduler. Ultimately specific to our loc
 
 Getting concerned by how complex this problem is.
 
-- some rotations change over time - how can I change a rotation requirement from one year to another? - fortunately only this year's requirements matter; old rotations just have to count toward existing requirments
+- some rotations change over time - how can I change a rotation requirement from one year to another? - fortunately only
+  this year's requirements matter; old rotations just have to count toward existing requirments
 - as above, rotations should generally change on block transition dates to facilitate office work
 
 ### 2025-08-08
@@ -110,11 +112,13 @@ those if needed.
 
 ### 2025-08-20
 
-Met with admin to positive response. They would like me to schedule the seniors (R2 and R3) since it is a proof of concept. They even want me to leave all electives as just a placeholder they will work on.
+Met with admin to positive response. They would like me to schedule the seniors (R2 and R3) since it is a proof of
+concept. They even want me to leave all electives as just a placeholder they will work on.
 
 ### 2025-08-21
 
-Trialed polars for easier syntax, but the rigidity of the Arrow datatypes means I'd have to dump every single variable selection `.to_list()` and operate on it. Takes away any benefit. Will revert.
+Trialed polars for easier syntax, but the rigidity of the Arrow datatypes means I'd have to dump every single variable
+selection `.to_list()` and operate on it. Takes away any benefit. Will revert.
 
 ### 2025-08-23
 
@@ -123,4 +127,8 @@ dataframe was easier than expected.
 
 ### 2025-08-24
 
-Major progress today with `polars` - code is much easier to understand and reason about.
+Major progress today with `polars`. The secret was to use `polars` and `cpmpy` together. I could not wrap or-tools
+directly, and polars on its own didn't solve the problem of uninterpretable integer indexing in `cpmpy`. Code is much
+easier to understand and reason about. Vectorized constraints are seductive but hard.
+
+This is going well enough that I have merged main to this candidate.
