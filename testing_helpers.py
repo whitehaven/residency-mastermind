@@ -1,9 +1,9 @@
 import numpy as np
-import pandas as pd
+import polars as pl
 
 
 def grab_tester_residents():
-    return pd.DataFrame(
+    return pl.DataFrame(
         {
             "full_name": ["Fake Person, MD", "Also Fake Person, MD"],
             "year": ["R3", "R3"],
@@ -14,7 +14,7 @@ def grab_tester_residents():
 
 
 def grab_tester_rotations():
-    return pd.DataFrame(
+    return pl.DataFrame(
         {
             "rotation": ["Green HS Senior", "Orange HS Senior", "SHMC Consults"],
             "category": ["HS Rounding Senior", "HS Rounding Senior", "Hospitalist"],
@@ -30,7 +30,7 @@ def grab_tester_rotations():
 
 
 def grab_tester_weeks():
-    return pd.DataFrame(
+    return pl.DataFrame(
         {
             "monday_date": [
                 "2025-06-23",
@@ -67,4 +67,4 @@ def grab_tester_weeks():
                 2026,
             ],
         }
-    )
+    ).with_columns(pl.col("monday_date").str.to_date())

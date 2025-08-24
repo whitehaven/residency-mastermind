@@ -1,5 +1,6 @@
 import cpmpy as cp
 import pandas as pd
+import polars as pl
 from ortools.sat.python import cp_model
 
 
@@ -157,10 +158,10 @@ def enforce_minimum_contiguity(residents, rotations, model, scheduled, relevant_
 
 
 def force_single_weekly_scheduling(
-    residents: pd.DataFrame,
-    rotations: pd.DataFrame,
-    weeks: pd.DataFrame,
-    scheduled: pd.DataFrame,
+    residents: pl.DataFrame,
+    rotations: pl.DataFrame,
+    weeks: pl.DataFrame,
+    scheduled: pl.DataFrame,
 ) -> list:
     """
         Generates constraints to cause residents to be assigned to a single rotation weekly.
@@ -179,15 +180,14 @@ def force_single_weekly_scheduling(
 
     constraints = []
 
-    for _, resident in residents.iterrows():
-        for _, week in weeks.iterrows():
-            mask = (
-                (scheduled["resident"] == resident.full_name)
-                & (scheduled["week"] == week.monday_date)
-                & (scheduled["rotation"] == rotation.rotation)
-            )
-            vars_subset = scheduled.loc[mask, "is_scheduled_cp_var"].values
-            if len(vars_subset) > 0:
+    for resident_row in residents.iter_rows(named=True):
+        for week_row in weeks.iter_rows(named=True):
+            vars_subset = scheduled.filter(
+                (pl.col("resident") == resident_row["full_name"])
+                & (pl.col("week") == week_row["monday_date"])
+            )["is_scheduled_cp_var"].to_list()
+
+            if vars_subset:
                 constraints.append(cp.sum(vars_subset) == 1)
 
     return constraints

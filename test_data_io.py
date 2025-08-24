@@ -1,20 +1,15 @@
 import pandas as pd
 import polars as pl
 
-from data_io import read_bulk_data_sqlite3, generate_pd_wrapped_boolvar
+from data_io import (
+    read_bulk_data_sqlite3,
+    generate_pl_wrapped_boolvar,
+)
 from testing_helpers import (
     grab_tester_residents,
     grab_tester_rotations,
     grab_tester_weeks,
 )
-
-
-def test_generate_pd_wrapped_boolvar():
-    fake_scheduled = generate_pd_wrapped_boolvar(
-        grab_tester_residents(), grab_tester_rotations(), grab_tester_weeks()
-    )
-    assert isinstance(fake_scheduled, pd.DataFrame)
-    assert len(fake_scheduled) == 54
 
 
 def test_read_bulk_data_sqlite3():
@@ -24,4 +19,12 @@ def test_read_bulk_data_sqlite3():
     dtype_of_weeks_monday_date = (
         test_read_tables["weeks"].select("monday_date").dtypes[0]
     )
-    assert isinstance(dtype_of_weeks_monday_date, pl.Datetime)
+    assert isinstance(dtype_of_weeks_monday_date, pl.Date)
+
+
+def test_generate_pl_wrapped_boolvar():
+    fake_scheduled = generate_pl_wrapped_boolvar(
+        grab_tester_residents(), grab_tester_rotations(), grab_tester_weeks()
+    )
+    assert isinstance(fake_scheduled, pd.DataFrame)
+    assert len(fake_scheduled) == 54

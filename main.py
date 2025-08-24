@@ -1,7 +1,10 @@
 import cpmpy as cp
 
 from constraints import force_single_weekly_scheduling
-from data_io import read_bulk_data_sqlite3, generate_pd_wrapped_boolvar
+from data_io import (
+    read_bulk_data_sqlite3,
+    generate_pl_wrapped_boolvar,
+)
 
 
 def main():
@@ -15,7 +18,7 @@ def main():
 
     model = cp.Model()
 
-    scheduled = generate_pd_wrapped_boolvar(residents, rotations, weeks)
+    scheduled = generate_pl_wrapped_boolvar(residents, rotations, weeks)
 
     # TODO Constraints
 
