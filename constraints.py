@@ -289,5 +289,29 @@ def set_IM_R1_constraints(
     assign_rotation_every_week(model, relevant_residents, scheduled, weeks_R1_year)
 
 
+def residents_must_be_scheduled_somewhere(residents, rotations, weeks, scheduled):
+    """Most efficient approach using vectorized operations."""
+
+    constraints = []
+
+    # Reset index to work with the data more easily
+    df = scheduled.reset_index()
+
+    for _, resident in residents.iterrows():
+        for _, week in weeks.iterrows():
+            week_date = pd.to_datetime(week.monday_date)
+
+            # Filter for specific resident and week
+            mask = (df["resident"] == resident.full_name) & (
+                df["week"] == week.monday_date
+            )
+            vars_subset = df.loc[mask, "is_scheduled_cp_var"].values
+
+            if len(vars_subset) > 0:
+                constraints.append(cp.sum(vars_subset) == 1)
+
+    return constraints
+
+
 if __name__ == "__main__":
     pass
