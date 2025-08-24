@@ -37,4 +37,3 @@ def test_require_one_rotation_per_resident_per_week():
         )
         == 0
     ), "not every (resident -> week => all rotations) pairing has exactly 1 rotation set"
-    assert False, "not done"
