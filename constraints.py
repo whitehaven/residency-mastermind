@@ -218,12 +218,13 @@ def group_df_by_for_each(subset_scheduled, for_each: list[str] | str) -> pl.Data
     Returns:
         grouped pl.DataFrame
 
-    Somewhat cursed method to pile each group together. This returns subframes and aggregates the decision variables
+    Note any filtering should have happened before this.
+
+    Somewhat cursed method to pile each group together. This returns subframes and "aggregates" the decision variables
     into a pile without actually doing anything to them. Long story short, the group_by elements are the "for each"
-    groups and the non-mentioned ones are "for all."
+    groups and the non-mentioned ones are "for all." Note if you try to look at it, you just get errors.
 
-    Any filtering should have happened before this.
-
+    Examples
     The 1:1:1 constraint is "for each resident, for each week, for all rotations, sum of all should be == 1
     for example, so for_each should receive `resident` and `week`. This means the `rotation` field is grouped.
 
