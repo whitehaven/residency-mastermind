@@ -1,6 +1,6 @@
 import pandas as pd
 
-from data_io import read_data_sqlite3, generate_pd_wrapped_boolvar
+from data_io import read_bulk_data_sqlite3, generate_pd_wrapped_boolvar
 from testing_helpers import (
     grab_tester_residents,
     grab_tester_rotations,
