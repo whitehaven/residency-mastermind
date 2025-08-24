@@ -182,22 +182,14 @@ def require_one_rotation_per_resident_per_week(
     """
     constraints = []
 
-    # Get the subset lists
-    resident_names = residents["full_name"].to_list()
-    rotation_names = rotations["rotation"].to_list()
-    week_dates = weeks["monday_date"].to_list()
+    subset_scheduled = subset_scheduled_by(residents, rotations, weeks, scheduled)
 
-    # Filter scheduled to only include our subset
-    subset_scheduled = scheduled.filter(
-        (pl.col("resident").is_in(resident_names))
-        & (pl.col("rotation").is_in(rotation_names))
-        & (pl.col("week").is_in(week_dates))
-    )
-
-    # Group by resident and week to get all rotation variables for each combination
-    grouped = subset_scheduled.group_by(["resident", "week"]).agg(
-        pl.col("is_scheduled_cp_var").alias("rotation_vars")
-    )
+    # Somewhat cursed method to pile each group together. This returns subframes and aggregates the decision variables.
+    # Long story short, the group_by elements are the "for each" groups and the non-mentioned ones are "for all."
+    # This constraint is "for each resident, for each week, for all rotations, sum of all should be == 1.
+    # Note `rotations` is never mentioned below, but the `subset_scheduled` already selects out the rotations in question.
+    # MAYBE I wonder if it could be done differently, like with .implode, but this works for now.
+    grouped = group_df_by_for_each(subset_scheduled, for_each=["resident", "week"])
 
     # Create exactly-one constraint for each group
     for row in grouped.iter_rows(named=True):
@@ -206,6 +198,13 @@ def require_one_rotation_per_resident_per_week(
             constraints.append(cp.sum(rotation_vars) == 1)
 
     return constraints
+
+
+def group_df_by_for_each(subset_scheduled, for_each: list[str] | str):
+    grouped = subset_scheduled.group_by(for_each).agg(
+        pl.col("is_scheduled_cp_var").alias("rotation_vars")
+    )
+    return grouped
 
 
 def enforce_rotation_capacity_ranges(
