@@ -1,4 +1,5 @@
 import cpmpy as cp
+import polars as pl
 
 from constraints import (
     require_one_rotation_per_resident_per_week,
