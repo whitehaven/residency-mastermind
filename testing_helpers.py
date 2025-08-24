@@ -68,3 +68,30 @@ def grab_tester_weeks():
             ],
         }
     ).with_columns(pl.col("monday_date").str.to_date())
+
+
+def get_resident_week_vars(
+    scheduled: pl.DataFrame, resident_name: str, week_date
+) -> list:
+    """Get all rotation variables for a specific resident and week."""
+    return scheduled.filter(
+        (pl.col("resident") == resident_name) & (pl.col("week") == week_date)
+    )["is_scheduled_cp_var"].to_list()
+
+
+def get_rotation_week_vars(
+    scheduled: pl.DataFrame, rotation_name: str, week_date
+) -> list:
+    """Get all resident variables for a specific rotation and week."""
+    return scheduled.filter(
+        (pl.col("rotation") == rotation_name) & (pl.col("week") == week_date)
+    )["is_scheduled_cp_var"].to_list()
+
+
+def get_resident_rotation_vars(
+    scheduled: pl.DataFrame, resident_name: str, rotation_name: str
+) -> list:
+    """Get all week variables for a specific resident and rotation."""
+    return scheduled.filter(
+        (pl.col("resident") == resident_name) & (pl.col("rotation") == rotation_name)
+    )["is_scheduled_cp_var"].to_list()
