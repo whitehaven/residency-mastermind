@@ -188,7 +188,7 @@ def require_one_rotation_per_resident_per_week(
 
     # Create exactly-one constraint for each group
     for row in grouped.iter_rows(named=True):
-        rotation_vars = row["rotation_vars"]
+        rotation_vars = row["is_scheduled_cp_var"]
         if rotation_vars:
             constraints.append(cp.sum(rotation_vars) == 1)
 
@@ -229,9 +229,7 @@ def group_df_by_for_each(subset_scheduled, for_each: list[str] | str) -> pl.Data
 
     MAYBE I wonder if it could be done more transparently, like with .implode, but this works for now.
     """
-    grouped = subset_scheduled.group_by(for_each).agg(
-        pl.col("is_scheduled_cp_var").alias("rotation_vars")
-    )
+    grouped = subset_scheduled.group_by(for_each).agg(pl.col("is_scheduled_cp_var"))
     return grouped
 
 
