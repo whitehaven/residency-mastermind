@@ -200,6 +200,18 @@ def require_one_rotation_per_resident_per_week(
     return constraints
 
 
+def subset_scheduled_by(residents, rotations, weeks, scheduled):
+    resident_names = residents["full_name"].to_list()
+    rotation_names = rotations["rotation"].to_list()
+    week_dates = weeks["monday_date"].to_list()
+    subset_scheduled = scheduled.filter(
+        (pl.col("resident").is_in(resident_names))
+        & (pl.col("rotation").is_in(rotation_names))
+        & (pl.col("week").is_in(week_dates))
+    )
+    return subset_scheduled
+
+
 def group_df_by_for_each(subset_scheduled, for_each: list[str] | str):
     grouped = subset_scheduled.group_by(for_each).agg(
         pl.col("is_scheduled_cp_var").alias("rotation_vars")
