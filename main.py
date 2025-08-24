@@ -22,7 +22,9 @@ def main():
 
     # TODO Constraints
 
-    model += force_single_weekly_scheduling(residents, rotations, weeks, scheduled)
+    model += require_one_rotation_per_resident_per_week(
+        residents, rotations, weeks, scheduled
+    )
 
     # TODO Optimization
 

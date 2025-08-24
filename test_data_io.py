@@ -1,4 +1,3 @@
-import pandas as pd
 import polars as pl
 
 from data_io import (
@@ -26,5 +25,5 @@ def test_generate_pl_wrapped_boolvar():
     fake_scheduled = generate_pl_wrapped_boolvar(
         grab_tester_residents(), grab_tester_rotations(), grab_tester_weeks()
     )
-    assert isinstance(fake_scheduled, pd.DataFrame)
+    assert isinstance(fake_scheduled, pl.DataFrame)
     assert len(fake_scheduled) == 54
