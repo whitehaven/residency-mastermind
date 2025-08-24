@@ -1,10 +1,11 @@
 import cpmpy as cp
 
-from constraints import force_single_weekly_scheduling
+from constraints import require_one_rotation_per_resident_per_week
 from data_io import (
     read_bulk_data_sqlite3,
     generate_pl_wrapped_boolvar,
 )
+from display import extract_solved_schedule
 
 
 def main():
@@ -30,9 +31,13 @@ def main():
 
     # TODO Solve model
 
-    model.solve("ortools", log_search_progress=True)
+    is_feasible = model.solve("ortools", log_search_progress=True)
+    if not is_feasible:
+        raise ValueError("Infeasible")
 
     # TODO Visualize
+    solved_schedule = extract_solved_schedule(scheduled)
+    print(solved_schedule)
 
 
 if __name__ == "__main__":
