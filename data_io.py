@@ -85,6 +85,5 @@ def generate_pd_wrapped_boolvar(
     # Convert week to datetime if needed
     scheduled = scheduled.reset_index()
     scheduled["monday_date"] = pd.to_datetime(scheduled["monday_date"])
-    scheduled = scheduled.set_index(["resident", "rotation", "week"])
 
     return scheduled
