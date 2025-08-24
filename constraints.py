@@ -157,38 +157,37 @@ def enforce_minimum_contiguity(residents, rotations, model, scheduled, relevant_
                     model.AddBoolOr(negated_bounded_span(sequence, start, length))
 
 
-def force_single_weekly_scheduling(
+def require_one_rotation_per_resident_per_week(
     residents: pl.DataFrame,
     rotations: pl.DataFrame,
     weeks: pl.DataFrame,
     scheduled: pl.DataFrame,
 ) -> list:
-    """
-        Generates constraints to cause residents to be assigned to a single rotation weekly.
-
-        Note the input can be **subset** which will have the logical effect - if there are different requirements for some residents, they can be set individually.
-
-    Args:
-        residents: residents subject to constraint
-        rotations: residents subject to constraint
-        weeks: residents subject to constraint
-        scheduled: decision variable dataframe
-
-    Returns:
-        list of constraints (pure function - does not add to model; must be added a la model += []
-    """
 
     constraints = []
 
-    for resident_row in residents.iter_rows(named=True):
-        for week_row in weeks.iter_rows(named=True):
-            vars_subset = scheduled.filter(
-                (pl.col("resident") == resident_row["full_name"])
-                & (pl.col("week") == week_row["monday_date"])
-            )["is_scheduled_cp_var"].to_list()
+    # Get the subset lists
+    resident_names = residents["full_name"].to_list()
+    rotation_names = rotations["rotation"].to_list()
+    week_dates = weeks["monday_date"].to_list()
 
-            if vars_subset:
-                constraints.append(cp.sum(vars_subset) == 1)
+    # Filter scheduled to only include our subset
+    subset_scheduled = scheduled.filter(
+        (pl.col("resident").is_in(resident_names))
+        & (pl.col("rotation").is_in(rotation_names))
+        & (pl.col("week").is_in(week_dates))
+    )
+
+    # Group by resident and week to get all rotation variables for each combination
+    grouped = subset_scheduled.group_by(["resident", "week"]).agg(
+        pl.col("is_scheduled_cp_var").alias("rotation_vars")
+    )
+
+    # Create exactly-one constraint for each group
+    for row in grouped.iter_rows(named=True):
+        rotation_vars = row["rotation_vars"]
+        if rotation_vars:
+            constraints.append(cp.sum(rotation_vars) == 1)
 
     return constraints
 
