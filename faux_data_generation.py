@@ -31,11 +31,11 @@ def generate_fake_residents(residents_structure: dict) -> pd.DataFrame:
 
 
 def generate_resident_preference_dataframe(
-        resident: str,
-        rotation: str,
-        week: int | tuple[int, int] | None,
-        weeks: pd.DataFrame,
-        preference_value: int,
+    resident: str,
+    rotation: str,
+    week: int | tuple[int, int] | None,
+    weeks: pd.DataFrame,
+    preference_value: int,
 ) -> pd.DataFrame:
     """
     Generate a DataFrame with a single resident's preference for a specific rotation and week or week range.
@@ -86,8 +86,37 @@ def generate_resident_preference_dataframe(
     return generated_preferences
 
 
-def generate_completed_rotation(resident: str, rotation: str, weeks: int) -> pd.DataFrame:
-    return pd.DataFrame({"resident": [resident], "rotation": [rotation], "weeks": [weeks]})
+def generate_completed_rotation(
+    resident: str, rotation: str, weeks: int
+) -> pd.DataFrame:
+    return pd.DataFrame(
+        {"resident": [resident], "rotation": [rotation], "weeks": [weeks]}
+    )
+
+
+if __name__ == "__main__":
+    pass
+
+
+def get_rotations_needing_preferences(
+    residents: pd.DataFrame, rotations: pd.DataFrame, rotation_categories: pd.DataFrame
+) -> pd.DataFrame:
+    fake = Faker()
+
+    rotations_with_categories = pd.merge(
+        left=rotations,
+        right=rotation_categories,
+        left_on="category",
+        right_index=True,
+        how="inner",
+        suffixes=("_rotation", "_category"),
+    )
+
+    elective_rotations = rotations_with_categories.loc[
+        rotations_with_categories.elective == "elective"
+    ]
+
+    return elective_rotations
 
 
 if __name__ == "__main__":

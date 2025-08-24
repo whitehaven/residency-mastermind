@@ -1,0 +1,8 @@
+cpmpy~=0.9.26
+pandas~=2.3.1
+polars~=1.32.3
+ortools~=9.14.6206
+numpy~=2.3.1
+icecream~=2.1.6
+faker~=37.3.0
+ipython~=9.1.0

@@ -42,7 +42,7 @@ Satisfiability solver-driven residency scheduler. Ultimately specific to our loc
 - some completed R1 and R2 rotations
 - year 1: complete all requirements for IM program
 
-# Apply to all:
+# Apply to all
 
 - All residents should be scheduled on exactly one rotation for a week
 - All rotations have an upper limit on simultaneous residents
@@ -115,3 +115,12 @@ Met with admin to positive response. They would like me to schedule the seniors 
 ### 2025-08-21
 
 Trialed polars for easier syntax, but the rigidity of the Arrow datatypes means I'd have to dump every single variable selection `.to_list()` and operate on it. Takes away any benefit. Will revert.
+
+### 2025-08-23
+
+Embarked on conversion to cpmpy to make more modular, understandable, and maintainable code. Wrapping cpmpy array into a
+dataframe was easier than expected.
+
+### 2025-08-24
+
+Major progress today with `polars` - code is much easier to understand and reason about.

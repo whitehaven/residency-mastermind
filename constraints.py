@@ -1,8 +1,10 @@
+import cpmpy as cp
 import pandas as pd
+import polars as pl
 from ortools.sat.python import cp_model
 
 
-def negated_bounded_span(superspan:pd.Series, start:int, length:int) -> list:
+def negated_bounded_span(superspan: pd.Series, start: int, length: int) -> list:
     # TODO this function may not work, needs to be compared carefully to source
     """Filters an isolated sub-sequence of variables assigned to True.
 
@@ -43,6 +45,7 @@ def force_value(
     rotations: pd.DataFrame,
     weeks: pd.DataFrame,
 ) -> None:
+    # TODO should be mass setter and accept singletons or lists/ranges
     """
     Add a specific constraint to force a value at the slot described by [resident, rotation, week].
 
@@ -53,17 +56,6 @@ def force_value(
     assert week in weeks.monday_date.values, f"{week} not in weeks"
 
     model.Add(scheduled.loc[resident, rotation, week] == value)
-
-
-def assign_rotation_every_week(model, relevant_residents, scheduled, weeks_R1_year):
-    # on something every week of their year
-    for _, resident in relevant_residents.iterrows():
-        for _, relevant_week in weeks_R1_year.iterrows():
-            model.AddExactlyOne(
-                scheduled.loc[
-                    pd.IndexSlice[resident.full_name, :, relevant_week.monday_date]
-                ]
-            )
 
 
 def forbid_ineligible_rotations(
@@ -145,7 +137,7 @@ def set_requirements_minimum_weeks(
 
 
 def enforce_minimum_contiguity(residents, rotations, model, scheduled, relevant_weeks):
-    # TODO may make sense to parse by residents just to cut down on variable creation
+    # MAYBE may make sense to parse by residents just to cut down on variable creation
     rotations_requiring_contiguity = rotations[rotations.minimum_contiguous_weeks > 1]
     for _, rotation in rotations_requiring_contiguity.iterrows():
         for _, resident in residents.iterrows():
@@ -165,128 +157,39 @@ def enforce_minimum_contiguity(residents, rotations, model, scheduled, relevant_
                     model.AddBoolOr(negated_bounded_span(sequence, start, length))
 
 
-def set_single_year_resident_constraints(
-    resident_type: str,
-    residents: pd.DataFrame,
-    rotations: pd.DataFrame,
-    weeks: pd.DataFrame,
-    categories: pd.DataFrame,
-    model: cp_model.CpModel,
-    scheduled: pd.Series,
-    starting_academic_year: int,
-) -> None:
-    assert resident_type in ["PMR", "TY"], "invalid resident type"
+def require_one_rotation_per_resident_per_week(
+    residents: pl.DataFrame,
+    rotations: pl.DataFrame,
+    weeks: pl.DataFrame,
+    scheduled: pl.DataFrame,
+) -> list:
 
-    relevant_residents = residents.loc[residents.role == resident_type]
+    constraints = []
 
-    eligible_rotations = pd.merge(
-        categories[categories.pertinent_role == resident_type],
-        rotations,
-        left_on="category_name",
-        right_on="category",
-        suffixes=("_category", "_rotation"),
+    # Get the subset lists
+    resident_names = residents["full_name"].to_list()
+    rotation_names = rotations["rotation"].to_list()
+    week_dates = weeks["monday_date"].to_list()
+
+    # Filter scheduled to only include our subset
+    subset_scheduled = scheduled.filter(
+        (pl.col("resident").is_in(resident_names))
+        & (pl.col("rotation").is_in(rotation_names))
+        & (pl.col("week").is_in(week_dates))
     )
 
-    weeks_R1_year = weeks.loc[weeks.starting_academic_year == starting_academic_year]
-
-    set_requirements_minimum_weeks(
-        eligible_rotations, model, relevant_residents, scheduled, weeks_R1_year
-    )
-    assign_rotation_every_week(model, relevant_residents, scheduled, weeks_R1_year)
-
-    forbid_ineligible_rotations(
-        categories,
-        model,
-        relevant_residents,
-        resident_type,
-        rotations,
-        scheduled,
-        weeks_R1_year,
+    # Group by resident and week to get all rotation variables for each combination
+    grouped = subset_scheduled.group_by(["resident", "week"]).agg(
+        pl.col("is_scheduled_cp_var").alias("rotation_vars")
     )
 
+    # Create exactly-one constraint for each group
+    for row in grouped.iter_rows(named=True):
+        rotation_vars = row["rotation_vars"]
+        if rotation_vars:
+            constraints.append(cp.sum(rotation_vars) == 1)
 
-def set_IM_R1_constraints(
-    residents: pd.DataFrame,
-    rotations: pd.DataFrame,
-    weeks: pd.DataFrame,
-    categories: pd.DataFrame,
-    model: cp_model.CpModel,
-    scheduled: pd.Series,
-    starting_academic_year: int,
-) -> None:
-    relevant_residents = residents.loc[residents.role == "IM-Intern"]
-
-    eligible_rotations_R1_year = pd.merge(
-        categories[categories.pertinent_role == "IM-Intern"],
-        rotations,
-        left_on="category_name",
-        right_on="category",
-        suffixes=("_category", "_rotation"),
-    )
-
-    weeks_R1_year = weeks.loc[weeks.starting_academic_year == starting_academic_year]
-    weeks_R2_year = weeks.loc[
-        weeks.starting_academic_year == starting_academic_year + 1
-    ]
-    weeks_R3_year = weeks.loc[
-        weeks.starting_academic_year == starting_academic_year + 2
-    ]
-    weeks_full_program = weeks
-
-    # meet intern requirements year 1
-    set_requirements_minimum_weeks(
-        eligible_rotations_R1_year, model, relevant_residents, scheduled, weeks_R1_year
-    )
-
-    forbid_ineligible_rotations(
-        categories,
-        model,
-        relevant_residents,
-        "IM-Intern",
-        rotations,
-        scheduled,
-        relevant_weeks=weeks_R1_year,  # for only intern year
-    )
-
-    # meet senior-level residency requirements during the three years
-    # presumes intern requirements all met
-    eligible_rotations_IM_total = pd.merge(
-        categories[categories.pertinent_role == "IM-Senior"],
-        rotations,
-        left_on="category_name",
-        right_on="category",
-        suffixes=("_category", "_rotation"),
-    )
-
-    set_requirements_minimum_weeks(
-        eligible_rotations_IM_total,
-        model,
-        relevant_residents,
-        scheduled,
-        weeks_full_program,
-    )
-
-    # seniors' vacation must be 3 years in one and 3 in the other
-    for _, resident in relevant_residents.iterrows():
-        for weeks_active_year in [weeks_R2_year, weeks_R3_year]:
-            model.Add(
-                sum(
-                    scheduled.loc[
-                        pd.IndexSlice[
-                            resident.full_name,
-                            "Vacation",
-                            [
-                                week.monday_date
-                                for _, week in weeks_active_year.iterrows()
-                            ],
-                        ]
-                    ]
-                )
-                == 3
-            )
-
-    # assigned somewhere every week for year 1
-    assign_rotation_every_week(model, relevant_residents, scheduled, weeks_R1_year)
+    return constraints
 
 
 if __name__ == "__main__":

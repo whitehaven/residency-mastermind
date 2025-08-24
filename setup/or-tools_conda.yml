@@ -13,7 +13,9 @@ dependencies:
   - openpyxl
   - pandas
   - pip
+  - polars
   - pytest
   - python
   - pip:
+    - cpmpy
     - ortools
