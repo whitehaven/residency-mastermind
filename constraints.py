@@ -184,11 +184,6 @@ def require_one_rotation_per_resident_per_week(
 
     subset_scheduled = subset_scheduled_by(residents, rotations, weeks, scheduled)
 
-    # Somewhat cursed method to pile each group together. This returns subframes and aggregates the decision variables.
-    # Long story short, the group_by elements are the "for each" groups and the non-mentioned ones are "for all."
-    # This constraint is "for each resident, for each week, for all rotations, sum of all should be == 1.
-    # Note `rotations` is never mentioned below, but the `subset_scheduled` already selects out the rotations in question.
-    # MAYBE I wonder if it could be done differently, like with .implode, but this works for now.
     grouped = group_df_by_for_each(subset_scheduled, for_each=["resident", "week"])
 
     # Create exactly-one constraint for each group
@@ -212,7 +207,28 @@ def subset_scheduled_by(residents, rotations, weeks, scheduled):
     return subset_scheduled
 
 
-def group_df_by_for_each(subset_scheduled, for_each: list[str] | str):
+def group_df_by_for_each(subset_scheduled, for_each: list[str] | str) -> pl.DataFrame:
+    """
+    Get grouped subframes containing grouped decision variables by those fields which are "for each" when used for
+    constraint generation.
+
+    Args:
+        subset_scheduled:
+        for_each:
+    Returns:
+        grouped pl.DataFrame
+
+    Somewhat cursed method to pile each group together. This returns subframes and aggregates the decision variables
+    into a pile without actually doing anything to them. Long story short, the group_by elements are the "for each"
+    groups and the non-mentioned ones are "for all."
+
+    Any filtering should have happened before this.
+
+    The 1:1:1 constraint is "for each resident, for each week, for all rotations, sum of all should be == 1
+    for example, so for_each should receive `resident` and `week`. This means the `rotation` field is grouped.
+
+    MAYBE I wonder if it could be done more transparently, like with .implode, but this works for now.
+    """
     grouped = subset_scheduled.group_by(for_each).agg(
         pl.col("is_scheduled_cp_var").alias("rotation_vars")
     )
