@@ -19,3 +19,4 @@ def test_generate_pd_wrapped_boolvar():
 def test_read_bulk_data_sqlite3():
     test_read_tables = read_bulk_data_sqlite3("residency_mastermind.db")
     assert len(test_read_tables) == 5
+    assert test_read_tables["weeks"].monday_date.dtype == "<M8[ns]"

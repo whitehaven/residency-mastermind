@@ -96,3 +96,28 @@ def generate_completed_rotation(
 
 if __name__ == "__main__":
     pass
+
+
+def get_rotations_needing_preferences(
+    residents: pd.DataFrame, rotations: pd.DataFrame, rotation_categories: pd.DataFrame
+) -> pd.DataFrame:
+    fake = Faker()
+
+    rotations_with_categories = pd.merge(
+        left=rotations,
+        right=rotation_categories,
+        left_on="category",
+        right_index=True,
+        how="inner",
+        suffixes=("_rotation", "_category"),
+    )
+
+    elective_rotations = rotations_with_categories.loc[
+        rotations_with_categories.elective == "elective"
+    ]
+
+    return elective_rotations
+
+
+if __name__ == "__main__":
+    pass

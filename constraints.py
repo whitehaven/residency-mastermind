@@ -136,7 +136,7 @@ def set_requirements_minimum_weeks(
 
 
 def enforce_minimum_contiguity(residents, rotations, model, scheduled, relevant_weeks):
-    # TODO may make sense to parse by residents just to cut down on variable creation
+    # MAYBE may make sense to parse by residents just to cut down on variable creation
     rotations_requiring_contiguity = rotations[rotations.minimum_contiguous_weeks > 1]
     for _, rotation in rotations_requiring_contiguity.iterrows():
         for _, resident in residents.iterrows():
@@ -181,15 +181,14 @@ def force_single_weekly_scheduling(
 
     for _, resident in residents.iterrows():
         for _, week in weeks.iterrows():
-            for _, rotation in rotations.iterrows():
-                mask = (
-                    (scheduled["resident"] == resident.full_name)
-                    & (scheduled["week"] == week.monday_date)
-                    & (scheduled["rotation"] == rotation.rotation)
-                )
-                vars_subset = scheduled.loc[mask, "is_scheduled_cp_var"].values
-                if len(vars_subset) > 0:
-                    constraints.append(cp.sum(vars_subset) == 1)
+            mask = (
+                (scheduled["resident"] == resident.full_name)
+                & (scheduled["week"] == week.monday_date)
+                & (scheduled["rotation"] == rotation.rotation)
+            )
+            vars_subset = scheduled.loc[mask, "is_scheduled_cp_var"].values
+            if len(vars_subset) > 0:
+                constraints.append(cp.sum(vars_subset) == 1)
 
     return constraints
 
