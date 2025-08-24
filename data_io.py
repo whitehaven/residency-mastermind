@@ -67,21 +67,24 @@ def generate_pd_wrapped_boolvar(
         for ease of complex indexing by string variables.
     """
 
-    scheduled = pd.Series(  # had to do this way because underlying data is 3D, linearize, then align to 3D labels
-        cp.boolvar(
-            shape=(len(residents), len(rotations), len(weeks)), name="is_scheduled"
-        ).flatten(),
-        index=(
-            pd.MultiIndex.from_product(
-                [residents.full_name, rotations.rotation, weeks.monday_date],
-                names=["resident", "rotation", "week"],
-            )
+    # Create the 3D boolean variable array
+    scheduled_vars = cp.boolvar(
+        shape=(len(residents), len(rotations), len(weeks)), name="is_scheduled"
+    )
+
+    # Create the MultiIndex DataFrame
+    scheduled = pd.DataFrame(
+        scheduled_vars.flatten(),
+        index=pd.MultiIndex.from_product(
+            [residents.full_name, rotations.rotation, weeks.monday_date],
+            names=["resident", "rotation", "week"],
         ),
+        columns=["is_scheduled_cp_var"],
     )
-    scheduled = (
-        scheduled.reset_index()
-        .assign(week=lambda df: pd.to_datetime(df["week"]))
-        .set_index(["resident", "rotation", "week"])
-    )
-    scheduled.columns = ["is_scheduled_cp_var"]
+
+    # Convert week to datetime if needed
+    scheduled = scheduled.reset_index()
+    scheduled["monday_date"] = pd.to_datetime(scheduled["monday_date"])
+    scheduled = scheduled.set_index(["resident", "rotation", "week"])
+
     return scheduled
