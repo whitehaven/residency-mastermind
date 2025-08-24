@@ -213,14 +213,16 @@ def subset_scheduled_by(residents, rotations, weeks, scheduled):
     return subset_scheduled
 
 
-def group_df_by_for_each(subset_scheduled, for_each: list[str] | str) -> pl.DataFrame:
+def group_df_by_for_each(
+    subset_scheduled: pl.DataFrame, for_each: list[str] | str
+) -> pl.DataFrame:
     """
     Get grouped subframes containing grouped decision variables by those fields which are "for each" when used for
     constraint generation.
 
     Args:
-        subset_scheduled:
-        for_each:
+        subset_scheduled: pl.Dataframe subset from `scheduled` to set ranges along axes to place constraint
+        for_each: axis or axes to group by
     Returns:
         grouped pl.DataFrame
 
