@@ -1,24 +1,25 @@
 import polars as pl
 
 
-def print_full_dataframe(df):
+def extract_solved_schedule(scheduled: pl.DataFrame) -> pl.DataFrame:
     """
-    Prints a DataFrame in full, overriding truncation, then resets the option.
-    Source: https://stackoverflow.com/questions/2058552/how-to-print-a-pandas-data
+    Process decision variable through the attached solver and returns the
+
+    Args:
+        scheduled: pl.DataFrame with decision variables
+
+    Returns: scheduled dataframe with a new return column 'is_scheduled_result'
+
     """
-    import pandas as pd
+    # MAYBE could make sense to change to return pl.Series of just is_scheduled_result
 
-    pd.set_option("display.max_rows", len(df))
-    print(df)
-    pd.reset_option("display.max_rows")
-    return None
-
-
-def extract_solved_schedule(scheduled):
     solved_values = []
     for decision_variable in scheduled["is_scheduled_cp_var"]:
         solved_values.append(decision_variable.value())
     scheduled_result = scheduled.with_columns(
-        pl.Series("is_scheduled_value", solved_values).cast(pl.Boolean)
+        pl.Series("is_scheduled_result", solved_values).cast(pl.Boolean)
     )
     return scheduled_result
+
+
+# TODO rotate result dataframe ultimately to emit an Excel table to mimic the original schedule.

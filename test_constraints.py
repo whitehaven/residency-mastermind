@@ -33,7 +33,7 @@ def test_require_one_rotation_per_resident_per_week():
         len(
             solved_schedule.group_by(["resident", "week"])
             .sum()
-            .filter(pl.col("is_scheduled_value") != 1)
+            .filter(pl.col("is_scheduled_result") != 1)
         )
         == 0
     ), "not every (resident -> week => all rotations) pairing has exactly 1 rotation set"
