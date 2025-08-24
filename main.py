@@ -1,6 +1,9 @@
 import cpmpy as cp
 
-from constraints import require_one_rotation_per_resident_per_week
+from constraints import (
+    require_one_rotation_per_resident_per_week,
+    enforce_rotation_capacity_ranges,
+)
 from data_io import (
     read_bulk_data_sqlite3,
     generate_pl_wrapped_boolvar,
@@ -23,9 +26,13 @@ def main():
 
     # TODO Constraints
 
+    # resident-specific
     model += require_one_rotation_per_resident_per_week(
         residents, rotations, weeks, scheduled
     )
+
+    # rotation-specific
+    model += enforce_rotation_capacity_ranges(residents, rotations, weeks, scheduled)
 
     # TODO Optimization
 

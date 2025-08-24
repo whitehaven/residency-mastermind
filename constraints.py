@@ -192,5 +192,48 @@ def require_one_rotation_per_resident_per_week(
     return constraints
 
 
+def enforce_rotation_capacity_ranges(
+    residents: pl.DataFrame,
+    rotations: pl.DataFrame,
+    weeks: pl.DataFrame,
+    scheduled: pl.DataFrame,
+) -> list:
+    """
+    Set minimum and maximum residents on each rotation.
+
+    Minimum is another way of saying "resident-staffed." Maximum is capacity.
+
+    Pure function - does not modify passed variables.
+
+    Returns: list[constraints]
+
+    """
+    # TODO needs testing, not sure this works at all; kinda based on one_rotation above
+    constraints = []
+
+    # Get the subset lists
+    resident_names = residents["full_name"].to_list()
+    rotation_names = rotations["rotation"].to_list()
+    week_dates = weeks["monday_date"].to_list()
+
+    # Filter scheduled to only include our subset
+    subset_scheduled = scheduled.filter(
+        (pl.col("resident").is_in(resident_names))
+        & (pl.col("rotation").is_in(rotation_names))
+        & (pl.col("week").is_in(week_dates))
+    )
+
+    grouped = subset_scheduled.group_by(["resident"]).agg(
+        pl.col("is_scheduled_cp_var").alias("rotation_vars")
+    )
+
+    for row in grouped.iter_rows(named=True):
+        rotation_vars = row["rotation_vars"]
+        if rotation_vars:
+            constraints.append(cp.sum(rotation_vars))
+
+    return constraints
+
+
 if __name__ == "__main__":
     pass
