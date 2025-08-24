@@ -1,7 +1,7 @@
 import sqlite3
 
+import cpmpy as cp
 import pandas as pd
-from icecream import ic
 
 
 def read_bulk_data_sqlite3(
@@ -38,11 +38,6 @@ def read_bulk_data_sqlite3(
                 )
             tables.update({table_name: extracted_df})
     return tables
-
-
-if __name__ == "__main__":
-    test_read_tables = read_data_sqlite3("residency_mastermind.db")
-    ic(test_read_tables)
 
 
 def generate_pd_wrapped_boolvar(

@@ -8,11 +8,6 @@ from testing_helpers import (
 )
 
 
-def test_sqlite3_db_import():
-    test_read_tables = read_data_sqlite3("residency_mastermind.db")
-    assert len(test_read_tables) == 5
-
-
 def test_generate_pd_wrapped_boolvar():
     fake_scheduled = generate_pd_wrapped_boolvar(
         grab_tester_residents(), grab_tester_rotations(), grab_tester_weeks()

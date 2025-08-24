@@ -1,8 +1,9 @@
+import cpmpy as cp
 import pandas as pd
 from ortools.sat.python import cp_model
 
 
-def negated_bounded_span(superspan:pd.Series, start:int, length:int) -> list:
+def negated_bounded_span(superspan: pd.Series, start: int, length: int) -> list:
     # TODO this function may not work, needs to be compared carefully to source
     """Filters an isolated sub-sequence of variables assigned to True.
 
@@ -43,6 +44,7 @@ def force_value(
     rotations: pd.DataFrame,
     weeks: pd.DataFrame,
 ) -> None:
+    # TODO should be mass setter and accept singletons or lists/ranges
     """
     Add a specific constraint to force a value at the slot described by [resident, rotation, week].
 
