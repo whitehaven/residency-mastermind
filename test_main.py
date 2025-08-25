@@ -1,8 +1,10 @@
 import polars as pl
 
+from main import main
 
-# TODO needs testing
-def test_full_solution(solved_schedule: pl.DataFrame) -> dict:
+
+# TODO make total solution tester
+def test_main() -> dict:
     """
     Validate that the solution meets all constraints and provide summary stats.
 
@@ -12,7 +14,9 @@ def test_full_solution(solved_schedule: pl.DataFrame) -> dict:
     Returns:
         Dictionary with validation results and stats
     """
-    scheduled_only = solved_schedule.filter(pl.col("is_scheduled_value") == True)
+    solved_schedule = main(read_db="seniors_only.db")
+
+    scheduled_only = solved_schedule.filter(pl.col("is_scheduled_result") == True)
 
     # Check one rotation per resident per week
     resident_week_counts = scheduled_only.group_by(["resident", "week"]).len()
