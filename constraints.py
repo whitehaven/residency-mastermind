@@ -281,7 +281,9 @@ def enforce_rotation_capacity_minimum(
     for group_dict in grouped.iter_rows(named=True):
         decision_vars = group_dict["is_scheduled_cp_var"]
         if decision_vars:
-            rotation = rotations.filter(pl.col("rotation") == group_dict["rotation"])
+            rotation = rotations_with_minimum_residents.filter(
+                pl.col("rotation") == group_dict["rotation"]
+            )
             constraints.append(
                 cp.sum(decision_vars)
                 >= rotation.select(pl.col("minimum_residents_assigned")).item()
