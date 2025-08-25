@@ -198,7 +198,7 @@ def require_one_rotation_per_resident_per_week(
     return constraints
 
 
-def apply_literal_constraint_to_groups(grouped, constraint: Callable):
+def apply_literal_constraint_to_groups(grouped, constraint: Callable) -> list:
     constraints = list()
     for group in grouped.iter_rows(named=True):
         decision_vars = group["is_scheduled_cp_var"]
@@ -249,22 +249,19 @@ def group_scheduled_df_by_for_each(
     return grouped
 
 
-def enforce_rotation_capacity_ranges(
+def enforce_rotation_capacity_minimum(
     residents: pl.DataFrame,
     rotations: pl.DataFrame,
     weeks: pl.DataFrame,
     scheduled: pl.DataFrame,
 ) -> list:
     """
-    Set minimum and maximum residents on each rotation.
-
-    Minimum is another way of saying "resident-staffed." Maximum is capacity.
+    Set minimum residents on each rotation, equivalent to "resident-staffed."
 
     Returns: list[constraints]
 
     """
-    # TODO test
-    constraints = []
+    # TODO testing
 
     rotations_with_minimum_residents = rotations.filter(
         pl.col("minimum_residents_assigned") > 0
@@ -281,13 +278,13 @@ def enforce_rotation_capacity_ranges(
     )
 
     constraints = list()
-    for group in grouped.iter_rows(named=True):
-        decision_vars = group["is_scheduled_cp_var"]
+    for group_dict in grouped.iter_rows(named=True):
+        decision_vars = group_dict["is_scheduled_cp_var"]
         if decision_vars:
-            rotation = rotations.filter(pl.col("rotation") == group["rotation"])
+            rotation = rotations.filter(pl.col("rotation") == group_dict["rotation"])
             constraints.append(
                 cp.sum(decision_vars)
-                >= rotation.select(pl.col("minimum_residents_assigned"))
+                >= rotation.select(pl.col("minimum_residents_assigned")).item()
             )
     return constraints
 

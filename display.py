@@ -19,7 +19,7 @@ def extract_solved_schedule(scheduled: pl.DataFrame) -> pl.DataFrame:
     scheduled_result = scheduled.with_columns(
         pl.Series("is_scheduled_result", solved_values).cast(pl.Boolean)
     )
-    return scheduled_result
+    return scheduled_result.sort("week")
 
 
 # TODO rotate result dataframe ultimately to emit an Excel table to mimic the original schedule.
