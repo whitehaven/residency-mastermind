@@ -1,3 +1,5 @@
+import argparse
+
 import cpmpy as cp
 import polars as pl
 
@@ -9,7 +11,10 @@ from data_io import (
     read_bulk_data_sqlite3,
     generate_pl_wrapped_boolvar,
 )
-from display import extract_solved_schedule
+from display import (
+    extract_solved_schedule,
+    convert_to_block_schedule,
+)
 
 
 def main():
@@ -52,7 +57,8 @@ def main():
 
     # TODO Visualize
     solved_schedule = extract_solved_schedule(scheduled)
-    print(solved_schedule)
+
+    return solved_schedule
 
 
 if __name__ == "__main__":

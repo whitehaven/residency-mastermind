@@ -22,4 +22,19 @@ def extract_solved_schedule(scheduled: pl.DataFrame) -> pl.DataFrame:
     return scheduled_result.sort("week")
 
 
-# TODO rotate result dataframe ultimately to emit an Excel table to mimic the original schedule.
+def convert_to_block_schedule(solved_schedule: pl.DataFrame) -> pl.DataFrame:
+    """
+    Restructure output into a block schedule with residents as rows and dates as columns with assigned rotation at each intersection.
+
+    Args:
+        solved_schedule: df with solved schedule
+
+    Returns:
+        block_schedule: pivoted df
+    """
+    renderable_df = solved_schedule.select(pl.all().exclude("is_scheduled_cp_var"))
+    filtered_long_format = renderable_df.filter(pl.col("is_scheduled_result"))
+    block_schedule = filtered_long_format.pivot(
+        "week", index="resident", values="rotation"
+    )
+    return block_schedule
