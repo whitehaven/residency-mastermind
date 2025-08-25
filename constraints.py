@@ -227,6 +227,7 @@ def group_scheduled_df_by_for_each(
     constraint generation.
 
     Args:
+        group_on_column: column to aggregate (either "is_scheduled_cp_var" or "is_scheduled_result"
         subset_scheduled: pl.Dataframe subset from `scheduled` to set ranges along axes to place constraint
         for_each: axis or axes to group by
     Returns:
@@ -237,7 +238,8 @@ def group_scheduled_df_by_for_each(
 
         Somewhat cursed method to pile each group together. This returns subframes and "aggregates" the decision
         variables into a pile without actually doing anything to them. Long story short, the group_by elements are
-        the "for each" groups and the non-mentioned ones are "for all." Note if you try to look at it, you just get errors.
+        the "for each" groups and the non-mentioned ones are "for all." Note if you try to look at it, you just get
+        errors.
 
     Examples:
         The 1:1:1 constraint is "for each resident, for each week, for all rotations, sum of all should be == 1
@@ -245,6 +247,10 @@ def group_scheduled_df_by_for_each(
 
     MAYBE I wonder if it could be done more transparently, like with .implode, but this works for now.
     """
+    # TODO test the test
+    assert (
+            group_on_column in subset_scheduled.columns
+    ), f"{group_on_column} not in {subset_scheduled.columns}"
     grouped = subset_scheduled.group_by(for_each).agg(pl.col(group_on_column))
     return grouped
 
