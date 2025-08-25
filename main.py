@@ -17,8 +17,8 @@ from display import (
 )
 
 
-def main():
-    input_tables = read_bulk_data_sqlite3("seniors_only.db")
+def main(args) -> pl.DataFrame:
+    input_tables = read_bulk_data_sqlite3(args.database)
 
     residents = input_tables["residents"]
     rotations = input_tables["rotations"]
@@ -62,4 +62,29 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(
+        prog="Residency Mastermind",
+        description="Constraint-based residency scheduling program",
+        epilog="Alex Conrad Crist, DO",
+    )
+    parser.add_argument(
+        "-d",
+        "--database",
+        type=str,
+        help="sqlite3 database file",
+        required=True,
+    )
+    parser.add_argument(
+        "-b",
+        "--block-output",
+        type=str,
+        help="output block schedule",
+        required=False,
+    )
+    args = parser.parse_args()
+
+    solved_schedule = main(args)
+
+    if args.block_output:
+        block_schedule = convert_to_block_schedule(solved_schedule)
+        block_schedule.write_csv(args.block_output)
