@@ -17,8 +17,15 @@ from display import (
 )
 
 
-def main(args) -> pl.DataFrame:
-    input_tables = read_bulk_data_sqlite3(args.database)
+def main(args_from_commandline=None, read_db: str = None) -> pl.DataFrame:
+    if args_from_commandline is None:
+        db_location = read_db
+    elif read_db is None:
+        db_location = args_from_commandline.database
+    else:
+        assert False, "No input db specified"
+
+    input_tables = read_bulk_data_sqlite3(db_location)
 
     residents = input_tables["residents"]
     rotations = input_tables["rotations"]
@@ -28,7 +35,6 @@ def main(args) -> pl.DataFrame:
     rotations_completed = input_tables["rotations_completed"]
 
     current_academic_starting_year = 2025
-
     weeks_this_acad_year = weeks.filter(
         pl.col("starting_academic_year") == current_academic_starting_year
     )
