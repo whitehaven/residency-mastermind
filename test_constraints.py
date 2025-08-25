@@ -72,18 +72,18 @@ def test_enforce_rotation_capacity_minimum():
 
     solved_schedule = extract_solved_schedule(test_scheduled)
 
-    grouped = group_scheduled_df_by_for_each(
+    grouped_solved_schedule = group_scheduled_df_by_for_each(
         solved_schedule,
         for_each=["rotation", "week"],
-        group_on_column="is_scheduled_cp_var",
+        group_on_column="is_scheduled_result",
     )
 
     constraints = list()
-    for group in grouped.iter_rows(named=True):
-        decision_vars = group["is_scheduled_cp_var"]
+    for group_dict in grouped_solved_schedule.iter_rows(named=True):
+        decision_vars = group_dict["is_scheduled_result"]
         if decision_vars:
             rotation = grab_tester_rotations().filter(
-                pl.col("rotation") == group["rotation"]
+                pl.col("rotation") == group_dict["rotation"]
             )
             assert (
                 sum(decision_vars)
