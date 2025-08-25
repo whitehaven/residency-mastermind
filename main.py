@@ -6,15 +6,15 @@ import polars as pl
 from constraints import (
     require_one_rotation_per_resident_per_week,
     enforce_rotation_capacity_minimum,
-)
+    )
 from data_io import (
     read_bulk_data_sqlite3,
     generate_pl_wrapped_boolvar,
-)
+    )
 from display import (
     extract_solved_schedule,
-    convert_to_block_schedule,
-)
+    convert_melted_to_block_schedule,
+    )
 
 
 def main(args_from_commandline=None, read_db: str = None) -> pl.DataFrame:
