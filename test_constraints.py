@@ -1,7 +1,11 @@
 import cpmpy as cp
 import polars as pl
 
-from constraints import require_one_rotation_per_resident_per_week
+from constraints import (
+    require_one_rotation_per_resident_per_week,
+    enforce_rotation_capacity_minimum,
+    group_scheduled_df_by_for_each,
+)
 from data_io import generate_pl_wrapped_boolvar
 from display import extract_solved_schedule
 from testing_helpers import (

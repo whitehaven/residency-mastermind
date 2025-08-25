@@ -40,7 +40,7 @@ def main():
     )
 
     # rotation-specific
-    model += enforce_rotation_capacity_ranges(residents, rotations, weeks, scheduled)
+    model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
 
     # TODO Optimization
 

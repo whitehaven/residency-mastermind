@@ -185,7 +185,11 @@ def require_one_rotation_per_resident_per_week(
 
     subset_scheduled = subset_scheduled_by(residents, rotations, weeks, scheduled)
 
-    grouped = group_df_by_for_each(subset_scheduled, for_each=["resident", "week"])
+    grouped = group_scheduled_df_by_for_each(
+        subset_scheduled,
+        for_each=["resident", "week"],
+        group_on_column="is_scheduled_cp_var",
+    )
 
     constraints = apply_literal_constraint_to_groups(
         grouped, constraint=lambda group: cp.sum(group) == 1
@@ -215,8 +219,8 @@ def subset_scheduled_by(residents, rotations, weeks, scheduled):
     return subset_scheduled
 
 
-def group_df_by_for_each(
-    subset_scheduled: pl.DataFrame, for_each: list[str] | str
+def group_scheduled_df_by_for_each(
+    subset_scheduled: pl.DataFrame, for_each: list[str] | str, group_on_column: str
 ) -> pl.DataFrame:
     """
     Get grouped subframes containing grouped decision variables by those fields which are "for each" when used for
@@ -228,19 +232,20 @@ def group_df_by_for_each(
     Returns:
         grouped pl.DataFrame
 
-    Note any filtering should have happened before this.
+    Notes:
+        Note any filtering should have happened before this.
 
-    Somewhat cursed method to pile each group together. This returns subframes and "aggregates" the decision variables
-    into a pile without actually doing anything to them. Long story short, the group_by elements are the "for each"
-    groups and the non-mentioned ones are "for all." Note if you try to look at it, you just get errors.
+        Somewhat cursed method to pile each group together. This returns subframes and "aggregates" the decision
+        variables into a pile without actually doing anything to them. Long story short, the group_by elements are
+        the "for each" groups and the non-mentioned ones are "for all." Note if you try to look at it, you just get errors.
 
-    Examples
-    The 1:1:1 constraint is "for each resident, for each week, for all rotations, sum of all should be == 1
-    for example, so for_each should receive `resident` and `week`. This means the `rotation` field is grouped.
+    Examples:
+        The 1:1:1 constraint is "for each resident, for each week, for all rotations, sum of all should be == 1
+        for example, so for_each should receive `resident` and `week`. This means the `rotation` field is grouped.
 
     MAYBE I wonder if it could be done more transparently, like with .implode, but this works for now.
     """
-    grouped = subset_scheduled.group_by(for_each).agg(pl.col("is_scheduled_cp_var"))
+    grouped = subset_scheduled.group_by(for_each).agg(pl.col(group_on_column))
     return grouped
 
 
@@ -269,7 +274,11 @@ def enforce_rotation_capacity_ranges(
         residents, rotations_with_minimum_residents, weeks, scheduled
     )
 
-    grouped = group_df_by_for_each(subset_scheduled, for_each=["rotation", "week"])
+    grouped = group_scheduled_df_by_for_each(
+        subset_scheduled,
+        for_each=["rotation", "week"],
+        group_on_column="is_scheduled_cp_var",
+    )
 
     constraints = list()
     for group in grouped.iter_rows(named=True):
