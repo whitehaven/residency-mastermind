@@ -46,15 +46,24 @@ def test_require_one_rotation_per_resident_per_week():
 
 
 def test_enforce_rotation_capacity_minimum():
+
+    residents = grab_tester_residents()
+    rotations = grab_tester_rotations()
+    weeks = grab_tester_weeks()
+
+    rotations_with_minimum_residents = rotations.filter(
+        pl.col("minimum_residents_assigned") > 0
+    )
+
     test_scheduled = generate_pl_wrapped_boolvar(
-        residents=grab_tester_residents(),
-        rotations=grab_tester_rotations(),
-        weeks=grab_tester_weeks(),
+        residents=residents,
+        rotations=rotations_with_minimum_residents,
+        weeks=weeks,
     )
     test_constraints = enforce_rotation_capacity_minimum(
-        residents=grab_tester_residents(),
-        rotations=grab_tester_rotations(),
-        weeks=grab_tester_weeks(),
+        residents=residents,
+        rotations=rotations_with_minimum_residents,
+        weeks=weeks,
         scheduled=test_scheduled,
     )
     model = cp.Model()
