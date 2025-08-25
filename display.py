@@ -22,7 +22,7 @@ def extract_solved_schedule(scheduled: pl.DataFrame) -> pl.DataFrame:
     return scheduled_result.sort("week")
 
 
-def convert_to_block_schedule(solved_schedule: pl.DataFrame) -> pl.DataFrame:
+def convert_melted_to_block_schedule(solved_schedule: pl.DataFrame) -> pl.DataFrame:
     """
     Restructure output into a block schedule with residents as rows and dates as columns with assigned rotation at each intersection.
 
