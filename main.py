@@ -35,7 +35,7 @@ def main(args) -> pl.DataFrame:
 
     model = cp.Model()
 
-    scheduled = generate_pl_wrapped_boolvar(residents, rotations, weeks)
+    scheduled = generate_pl_wrapped_boolvar(residents, rotations, weeks_this_acad_year)
 
     # TODO Constraints
 
@@ -45,7 +45,9 @@ def main(args) -> pl.DataFrame:
     )
 
     # rotation-specific
-    model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
+    model += enforce_rotation_capacity_minimum(
+        residents, rotations, weeks_this_acad_year, scheduled
+    )
 
     # TODO Optimization
 
