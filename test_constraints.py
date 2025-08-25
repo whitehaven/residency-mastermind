@@ -28,7 +28,9 @@ def test_require_one_rotation_per_resident_per_week():
     model = cp.Model()
     model += test_constraints
     model.solve("ortools", log_search_progress=False)
-    solved_schedule = extract_solved_schedule(test_scheduled).sort("week")
+
+    solved_schedule = extract_solved_schedule(test_scheduled)
+
     assert (
         len(
             solved_schedule.group_by(["resident", "week"])
