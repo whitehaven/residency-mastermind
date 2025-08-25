@@ -39,34 +39,49 @@ def main(args_from_commandline=None, read_db: str = None) -> pl.DataFrame:
         pl.col("starting_academic_year") == current_academic_starting_year
     )
 
-    model = cp.Model()
+    scheduled = solve_schedule(residents, rotations, weeks_this_acad_year)
 
-    scheduled = generate_pl_wrapped_boolvar(residents, rotations, weeks_this_acad_year)
-
-    # TODO Constraints
-
-    # resident-specific
-    model += require_one_rotation_per_resident_per_week(
-        residents, rotations, weeks_this_acad_year, scheduled
-    )
-
-    # rotation-specific
-    model += enforce_rotation_capacity_minimum(
-        residents, rotations, weeks_this_acad_year, scheduled
-    )
-
-    # TODO Optimization
-
-    # TODO Solve model
-
-    is_feasible = model.solve("ortools", log_search_progress=True)
-    if not is_feasible:
-        raise ValueError("Infeasible")
-
-    # TODO Visualize
     solved_schedule = extract_solved_schedule(scheduled)
 
     return solved_schedule
+
+
+def solve_schedule(residents, rotations, weeks):
+    model = cp.Model()
+    scheduled = generate_pl_wrapped_boolvar(residents, rotations, weeks)
+
+    # TODO Constraints
+    # resident-specific
+    model += require_one_rotation_per_resident_per_week(
+            residents, rotations, weeks, scheduled
+            )
+    # R2 needs
+    # vacation
+    # category requirements
+
+    # R3 needs
+    # vacation
+
+    # Super R3 needs
+    # no vacation?
+
+    # rotation-specific
+    model += enforce_rotation_capacity_minimum(
+            residents, rotations, weeks, scheduled
+            )
+    # enforce prerequisites
+    # enforce block transitions
+
+    # category-specific
+    # enforce maximum
+
+    # TODO Optimization
+    # maximize rotation preferences + vacation preferences (? + completion of 2nd year rotations if possible)
+    # Solve model
+    is_feasible = model.solve("ortools", log_search_progress=True)
+    if not is_feasible:
+        raise ValueError("Infeasible")
+    return scheduled
 
 
 if __name__ == "__main__":
