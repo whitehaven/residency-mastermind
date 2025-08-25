@@ -3,62 +3,78 @@
 Satisfiability solver-driven residency scheduler. Ultimately specific to our local situation, but many parts likely to
 be reusable.
 
-## Core Functionality
+## Main Problem
 
-- compartmentalized way to force a value to be true arbitrarily (i.e., for setting first-rotation HS or clinic)
-
-## Variables
+### Decision Variables
 
 - bool for every intersection of Resident, Rotation, and Week
 
-## Constraints
+### Constraints
 
-### TY
+#### By Resident
+
+##### ALl Residents
+
+- 3 weeks vacation must be scheduled for all residents, for all years (except for bonus intern->senior break week)
+- All residents should be scheduled on exactly one rotation for a week
+- All rotations have an upper limit on simultaneous residents
+
+##### TY
 
 - no existing complete rotations
 - must meet requirements
 - unclear order of assignments - their program supplies openings, or do we?
 
-### PMR
+##### PMR
 
 - no existing complete rotations
 - must meet requirements
 - unclear order of assignments - their program supplies openings, or do we?
 
-### current IM R1
+##### FM Intern
+
+- no existing complete rotations
+- must meet requirements
+- unclear order of assignments - their program supplies openings, or do we?
+
+##### current IM R1
 
 - no existing completed rotation
 - year 1: *primary target* : meet requirements for intern year; note intern->senior break week + vacation(3)
 - **year 2**: prove can complete requirements
 - **year 3**: prove can complete requirements
 
-### IM R2
+##### IM R2
 
 - some completed R1 rotations
 - year 1: start on requirements for R2/R3
 - **year 2**: complete requirements
 
-### IM R3
+##### IM R3
 
 - some completed R1 and R2 rotations
 - year 1: complete all requirements for IM program
 
-# Apply to all
+#### By rotations
 
-- All residents should be scheduled on exactly one rotation for a week
-- All rotations have an upper limit on simultaneous residents
 - Some rotations require staffing at all times (this is recorded as minimum_residents)
 - Some rotations have a certain number of weeks of prerequisite rotations beforehand (can schedule, but must be in
   order)
 - Some rotations require that only the interns or senior can change from one week to another to preserve continuity
 - Some rotations require assignments to them be contiguous with a minimum length
 - Some rotations are only available during specific weeks
-- 3 weeks vacation must be scheduled for all residents, for all years (except for bonus intern->senior break week)
 
-## Optimization targets
+#### By Category == Requirement
+
+## Optimization
 
 - [ ] Maximize resident elective preferences
 - [ ] Maximize fit of vacation preferences
+- [ ] ? get as many rotations done R2 as possible
+
+## Auxiliary tools
+
+- compartmentalized way to force a value to be true arbitrarily (i.e., for setting first-rotation HS or clinic)
 
 ## Dev Log
 
@@ -67,7 +83,7 @@ be reusable.
 Getting concerned by how complex this problem is.
 
 - some rotations change over time - how can I change a rotation requirement from one year to another? - fortunately only
-  this year's requirements matter; old rotations just have to count toward existing requirments
+  this year's requirements matter; old rotations just have to count toward existing requirements
 - as above, rotations should generally change on block transition dates to facilitate office work
 
 ### 2025-08-08
