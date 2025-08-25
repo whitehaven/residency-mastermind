@@ -43,3 +43,40 @@ def test_require_one_rotation_per_resident_per_week():
         )
         == 0
     ), "with test data, not every (resident -> week => all rotations) pairing has exactly 1 rotation set"
+
+
+def test_enforce_rotation_capacity_minimum():
+    test_scheduled = generate_pl_wrapped_boolvar(
+        residents=grab_tester_residents(),
+        rotations=grab_tester_rotations(),
+        weeks=grab_tester_weeks(),
+    )
+    test_constraints = enforce_rotation_capacity_minimum(
+        residents=grab_tester_residents(),
+        rotations=grab_tester_rotations(),
+        weeks=grab_tester_weeks(),
+        scheduled=test_scheduled,
+    )
+    model = cp.Model()
+    model += test_constraints
+    model.solve("ortools", log_search_progress=False)
+
+    solved_schedule = extract_solved_schedule(test_scheduled)
+
+    grouped = group_scheduled_df_by_for_each(
+        solved_schedule,
+        for_each=["rotation", "week"],
+        group_on_column="is_scheduled_cp_var",
+    )
+
+    constraints = list()
+    for group in grouped.iter_rows(named=True):
+        decision_vars = group["is_scheduled_cp_var"]
+        if decision_vars:
+            rotation = grab_tester_rotations().filter(
+                pl.col("rotation") == group["rotation"]
+            )
+            assert (
+                sum(decision_vars)
+                >= rotation.select(pl.col("minimum_residents_assigned")).item()
+            ), f"sum decision_vars = {decision_vars} != minimum_residents_assigned for {rotation}"
