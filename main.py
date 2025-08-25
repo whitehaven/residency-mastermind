@@ -106,8 +106,11 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    solved_schedule = main(args)
+    melted_solved_schedule = main(args)
+    block_schedule = convert_melted_to_block_schedule(melted_solved_schedule)
 
     if args.block_output:
-        block_schedule = convert_to_block_schedule(solved_schedule)
         block_schedule.write_csv(args.block_output)
+        print(f"wrote block schedule to {args.block_output}")
+    else:
+        print(block_schedule)
