@@ -11,7 +11,7 @@ from display import extract_solved_schedule
 from testing_helpers import tester_residents, tester_rotations, tester_weeks
 
 
-def test_require_one_rotation_per_resident_per_week():
+def test_require_one_rotation_per_resident_per_week() -> None:
     test_scheduled = generate_pl_wrapped_boolvar(
         tester_residents, tester_rotations, tester_weeks
     )
@@ -29,7 +29,9 @@ def test_require_one_rotation_per_resident_per_week():
 
     solved_schedule = extract_solved_schedule(test_scheduled)
 
-    return verify_one_rotation_per_resident_per_week(solved_schedule)
+    assert verify_one_rotation_per_resident_per_week(
+        solved_schedule,
+            ), "verify_one_rotation_per_resident_per_week == False"
 
 
 def verify_one_rotation_per_resident_per_week(solved_schedule) -> bool:
@@ -52,7 +54,7 @@ def verify_one_rotation_per_resident_per_week(solved_schedule) -> bool:
     ), "with test data, not every (resident -> week => all rotations) pairing has exactly 1 rotation set"
     return True
 
-def test_enforce_rotation_capacity_minimum():
+def test_enforce_rotation_capacity_minimum() -> None:
 
     residents = tester_residents
     rotations = tester_rotations
@@ -79,7 +81,10 @@ def test_enforce_rotation_capacity_minimum():
 
     solved_schedule = extract_solved_schedule(test_scheduled)
 
-    return verify_enforce_rotation_capacity_minimum(rotations, solved_schedule)
+    assert verify_enforce_rotation_capacity_minimum(
+        rotations,
+        solved_schedule,
+            ), "verify_enforce_rotation_capacity_minimum == False"
 
 
 def verify_enforce_rotation_capacity_minimum(rotations, solved_schedule) -> bool:
