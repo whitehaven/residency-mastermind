@@ -7,10 +7,10 @@ import polars as pl
 
 
 def read_bulk_data_sqlite3(
-    db_location: str,
-    tables_to_read: dict[str, str] | None = None,
-    date_fields: dict[str, str] | None = None,
-) -> dict[str, pd.DataFrame]:
+        db_location: str,
+        tables_to_read: tuple[str] | None = None,
+        date_fields: dict[str, str] | None = None,
+        ) -> dict[str, pd.DataFrame]:
     """
     Read data from sqlite3 database, extracting tables as requested. Defaults to pulling all tables normally used in schedule building.
 
@@ -20,14 +20,14 @@ def read_bulk_data_sqlite3(
         dict[str, pd.DataFrame]: extracted tables from db
     """
     if tables_to_read is None:
-        tables_to_read = {
-            "residents",
-            "rotations",
-            "categories",
-            "preferences",
-            "weeks",
-            "rotations_completed",
-        }
+        tables_to_read = (
+                "residents",
+                "rotations",
+                "categories",
+                "preferences",
+                "weeks",
+                "rotations_completed",
+                )
     if date_fields is None:
         date_field = {"weeks": "monday_date"}
 
