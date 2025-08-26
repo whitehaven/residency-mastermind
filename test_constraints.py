@@ -29,16 +29,28 @@ def test_require_one_rotation_per_resident_per_week():
 
     solved_schedule = extract_solved_schedule(test_scheduled)
 
+    return verify_one_rotation_per_resident_per_week(solved_schedule)
+
+
+def verify_one_rotation_per_resident_per_week(solved_schedule) -> bool:
+    """
+    Notes:
+        This will be invalid if it shouldn't apply over the entire solved range.
+    Args:
+        solved_schedule: solved schedule♥
+
+    Returns:
+        bool: True if passes
+    """
     assert (
-        len(
-            solved_schedule.group_by(["resident", "week"])
-            .sum()
-            .filter(pl.col("is_scheduled_result") != 1)
-        )
-        == 0
+            len(
+                    solved_schedule.group_by(["resident", "week"])
+                    .sum()
+                    .filter(pl.col("is_scheduled_result") != 1),
+                    )
+            == 0
     ), "with test data, not every (resident -> week => all rotations) pairing has exactly 1 rotation set"
-
-
+    return True
 
 def test_enforce_rotation_capacity_minimum():
 
