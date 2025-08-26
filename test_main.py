@@ -1,19 +1,18 @@
-import polars as pl
-
+from data_io import read_bulk_data_sqlite3
 from main import main
+from test_constraints import verify_one_rotation_per_resident_per_week, verify_enforce_rotation_capacity_minimum
+
+testing_db_path = "seniors_only.db"
 
 
 # TODO make total solution tester
 def test_main() -> None:
-    """
-    Validate that the solution meets all constraints and provide summary stats.
+    solved_schedule = main(read_db=testing_db_path)
 
-    Args:
-        solved_schedule: DataFrame with solved values
+    input_tables = read_bulk_data_sqlite3(db_location=testing_db_path, tables_to_read=["rotations"])
+    rotations = input_tables["rotations"]
 
-    Returns:
-        Dictionary with validation results and stats
-    """
-    solved_schedule = main(read_db="seniors_only.db")
-
-    scheduled_only = solved_schedule.filter(pl.col("is_scheduled_result") == True)
+    assert verify_one_rotation_per_resident_per_week(
+            solved_schedule, ), "verify_one_rotation_per_resident_per_week failed"
+    assert verify_enforce_rotation_capacity_minimum(
+            rotations, solved_schedule, ), "verify_enforce_rotation_capacity_minimum failed"
