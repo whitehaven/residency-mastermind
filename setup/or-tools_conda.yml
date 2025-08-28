@@ -1,6 +1,5 @@
 name: or-tools
 channels:
-  - conda-forge
   - defaults
   - conda-forge
 dependencies:
