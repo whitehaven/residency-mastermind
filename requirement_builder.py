@@ -24,6 +24,11 @@ class RequirementRule:
         )
         return self
 
+    def range_weeks_in_year(self, min_weeks: int, max_weeks: int, year: str):
+        return self.min_weeks_in_year(min_weeks=min_weeks, year=year).max_weeks_in_year(
+            max_weeks=max_weeks, year=year
+        )
+
     def exact_weeks_in_year(self, exact_weeks: int, year: str):
         self._constraints.append(
             {"type": "exact_by_period", "value": exact_weeks, "filter": {"years": year}}
@@ -100,6 +105,16 @@ class RequirementRule:
         )
         return self
 
+    def never_broken_up(self, year: str):
+        self._constraints.append(
+            {
+                "type": "never_broken_up_total",
+                "value": 1,
+                "filter": None,
+            },
+        )
+        return self
+
     def exclude_weeks_this_year(self, weeks: List[int]):
         """
         Note DOES NOT filter by a resident year - excludes use for purposes of year being solved
@@ -133,6 +148,25 @@ class RequirementRule:
                 "type": "only_include_weeks",
                 "value": 1,
                 "filter": {"weeks": weeks},
+            },
+        )
+        return self
+
+    def must_include_weeks_this_year(self, weeks: List[int], years: str):
+        """
+        Note DOES NOT filter by a resident year - includes only for purposes of year being solved.
+
+        Args:
+            weeks:
+
+        Returns:
+
+        """
+        self._constraints.append(
+            {
+                "type": "only_include_weeks",
+                "value": 1,
+                "filter": {"weeks": weeks, "years": years},
             },
         )
         return self
@@ -192,9 +226,6 @@ class RequirementBuilder:
 
 
 if __name__ == "__main__":
-    import yaml
-    from data_io import dump_polars_df_to_yaml
-
     builder = RequirementBuilder()
 
     (
@@ -219,8 +250,10 @@ if __name__ == "__main__":
         .max_contiguity_in_year(1, "R2")
     )
 
-    (
-        builder.add_requirement(name="Night Senior", fulfilled_by={"Night Senior"})
+    (  # TODO how does early nights backup work? is it R2s?
+        builder.add_requirement(
+            name="Night Senior", fulfilled_by={"Night Senior", "Backup Night R3"}
+        )
         .min_weeks_in_year(4, "R2")
         .never_broken_up_in_year("R2")
         .min_weeks_in_year(1, "R3")
@@ -244,13 +277,26 @@ if __name__ == "__main__":
 
     (
         builder.add_requirement(name="Vacation", fulfilled_by={"Vacation"})
-        .exact_weeks_in_year(3, "R2")
+        .exact_weeks_in_year(4, "R2")
         .exact_weeks_in_year(3, "R3")
+        .must_include_weeks_this_year(
+            weeks=[51, 52], years="R2"
+        )  # TODO need to get number that R1s actually get, or would just go on R1 schedule?
     )
 
-    builder.add_requirement(
-        name="Systems of Medicine", fulfilled_by={"Systems of Medicine"}
-    ).min_weeks_total(2).never_broken_up_in_year()
+    (
+        builder.add_requirement(
+            name="Systems of Medicine", fulfilled_by={"Systems of Medicine"}
+        )
+        .min_weeks_total(2)
+        .min_contiguity_in_year(min_contiguity=2, year="R2")
+    )
+
+    (
+        builder.add_requirement(name="Elective", fulfilled_by={"Elective"})
+        .min_weeks_in_year(min_weeks=20, year="R2")
+        .max_weeks_in_year(max_weeks=30, year="R2")
+    )
 
     # TODO might be better implemented by rotation?
     # (
@@ -263,8 +309,12 @@ if __name__ == "__main__":
 
     ic(builder.requirements)
 
-    ic(builder.generate_constraints_df())
+    ic(
+        builder.generate_constraints_df().with_columns(
+            pl.col("period_filter").struct.unnest()
+        )
+    )
 
-    print(yaml.dump(builder.requirements))
+    # print(yaml.dump(builder.requirements))
 
-    print(dump_polars_df_to_yaml(builder.generate_constraints_df()))
+    # print(dump_polars_df_to_yaml(builder.generate_constraints_df()))

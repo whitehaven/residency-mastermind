@@ -1,5 +1,8 @@
 # To Do List
 
+- [ ] **Import prior completion data**
+    - [ ] try digital method from schedules
+
 - [ ] **Rebuild requirements schema and data**
     - [x] Rebuild final schema - now goes rotation >-- category --< requirement, added conditional contiguity
     - [ ] Rebuild data from program's specifications
