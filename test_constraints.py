@@ -1,14 +1,20 @@
 import cpmpy as cp
 import polars as pl
 
+from config import read_config_file
 from constraints import (
     require_one_rotation_per_resident_per_week,
     enforce_rotation_capacity_minimum,
     group_scheduled_df_by_for_each,
-    )
+)
 from data_io import generate_pl_wrapped_boolvar
 from display import extract_solved_schedule
 from testing_helpers import tester_residents, tester_rotations, tester_weeks
+
+config = read_config_file()
+cpmpy_variable_column = config["cpmpy_variable_column"]
+cpmpy_result_column = config["cpmpy_result_column"]
+default_solver = config["default_cpmpy_solver"]
 
 
 def test_require_one_rotation_per_resident_per_week() -> None:
@@ -25,13 +31,13 @@ def test_require_one_rotation_per_resident_per_week() -> None:
 
     model = cp.Model()
     model += test_constraints
-    model.solve("ortools", log_search_progress=False)
+    model.solve(default_solver, log_search_progress=False)
 
     solved_schedule = extract_solved_schedule(test_scheduled)
 
     assert verify_one_rotation_per_resident_per_week(
         solved_schedule,
-            ), "verify_one_rotation_per_resident_per_week == False"
+    ), "verify_one_rotation_per_resident_per_week == False"
 
 
 def verify_one_rotation_per_resident_per_week(solved_schedule) -> bool:
@@ -45,14 +51,15 @@ def verify_one_rotation_per_resident_per_week(solved_schedule) -> bool:
         bool: True if passes
     """
     assert (
-            len(
-                    solved_schedule.group_by(["resident", "week"])
-                    .sum()
-                    .filter(pl.col("is_scheduled_result") != 1),
-                    )
-            == 0
+        len(
+            solved_schedule.group_by(["resident", "week"])
+            .sum()
+            .filter(pl.col(cpmpy_result_column) != 1),
+        )
+        == 0
     ), "with test data, not every (resident -> week => all rotations) pairing has exactly 1 rotation set"
     return True
+
 
 def test_enforce_rotation_capacity_minimum() -> None:
 
@@ -77,21 +84,24 @@ def test_enforce_rotation_capacity_minimum() -> None:
     )
     model = cp.Model()
     model += test_constraints
-    model.solve("ortools", log_search_progress=False)
+    model.solve(default_solver, log_search_progress=False)
 
     solved_schedule = extract_solved_schedule(test_scheduled)
 
     assert verify_enforce_rotation_capacity_minimum(
         rotations,
         solved_schedule,
-            ), "verify_enforce_rotation_capacity_minimum == False"
+    ), "verify_enforce_rotation_capacity_minimum == False"
 
 
 def verify_enforce_rotation_capacity_minimum(rotations, solved_schedule) -> bool:
     grouped_solved_schedule = group_scheduled_df_by_for_each(
-            solved_schedule, for_each=["rotation", "week"], group_on_column="is_scheduled_result", )
+        solved_schedule,
+        for_each=["rotation", "week"],
+        group_on_column=cpmpy_result_column,
+    )
     for group_dict in grouped_solved_schedule.iter_rows(named=True):
-        decision_vars = group_dict["is_scheduled_result"]
+        decision_vars = group_dict[cpmpy_result_column]
         if decision_vars:
             rotation = rotations.filter(pl.col("rotation") == group_dict["rotation"])
             min_residents_this_rotation = rotation.select(

@@ -2,8 +2,9 @@ allowable_year_options: !!set
   R2: null
   R3: null
   R3 Extended: null
-cpmpy_result_column   : is_scheduled_result
-cpmpy_variable_column : is_scheduled_cp_var
+cpmpy_result_column  : is_scheduled_result
+cpmpy_variable_column: is_scheduled_cp_var
+default_cpmpy_solver : ortools
 residents_primary_label: full_name
 rotations_primary_label: rotation
 weeks_primary_label: monday_date
