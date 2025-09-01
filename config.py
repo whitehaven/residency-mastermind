@@ -42,12 +42,15 @@ def generate_default_config(config_file_path: str | None = None) -> dict:
         "residents_primary_label": "full_name",
         "rotations_primary_label": "rotation",
         "weeks_primary_label": "monday_date",
+        "default_cpmpy_solver": "ortools",
     }
 
     write_config_file(
         config,
         config_file_path=config_file_path,
     )
+
+    print(f"(re)generated default config at {config_file_path}")
 
     return config
 
