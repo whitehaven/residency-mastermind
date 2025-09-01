@@ -93,11 +93,6 @@ def generate_completed_rotation(
         {"resident": [resident], "rotation": [rotation], "weeks": [weeks]}
     )
 
-
-if __name__ == "__main__":
-    pass
-
-
 def get_rotations_needing_preferences(
     residents: pd.DataFrame, rotations: pd.DataFrame, rotation_categories: pd.DataFrame
 ) -> pd.DataFrame:
