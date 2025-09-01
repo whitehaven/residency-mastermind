@@ -92,5 +92,9 @@ def generate_pl_wrapped_boolvar(
     return scheduled
 
 
+def dump_polars_df_to_yaml(df: pl.DataFrame) -> str:
+    return yaml.dump(df.to_dicts())
+
+
 if __name__ == "__main__":
     pass
