@@ -5,16 +5,17 @@ import polars as pl
 
 from constraints import (
     require_one_rotation_per_resident_per_week,
+    enforce_requirement_constraints,
     enforce_rotation_capacity_minimum,
-    )
+)
 from data_io import (
     read_bulk_data_sqlite3,
     generate_pl_wrapped_boolvar,
-    )
+)
 from display import (
     extract_solved_schedule,
     convert_melted_to_block_schedule,
-    )
+)
 
 
 def main(args_from_commandline=None, read_db: str = None) -> pl.DataFrame:
@@ -36,7 +37,7 @@ def main(args_from_commandline=None, read_db: str = None) -> pl.DataFrame:
 
     current_academic_starting_year = 2025
     weeks_this_acad_year = weeks.filter(
-        pl.col("starting_academic_year") == current_academic_starting_year
+        pl.col("starting_academic_year") == current_academic_starting_year  # type: ignore
     )
 
     scheduled = solve_schedule(residents, rotations, weeks_this_acad_year)
@@ -53,22 +54,14 @@ def solve_schedule(residents, rotations, weeks):
     # TODO Constraints
     # resident-specific
     model += require_one_rotation_per_resident_per_week(
-            residents, rotations, weeks, scheduled
-            )
-    # R2 needs
-    # vacation
-    # category requirements
+        residents, rotations, weeks, scheduled
+    )
+    # Requirement-specific
 
-    # R3 needs
-    # vacation
-
-    # Super R3 needs
-    # no vacation?
+    model += enforce_requirement_constraints(residents, rotations, weeks, scheduled)
 
     # rotation-specific
-    model += enforce_rotation_capacity_minimum(
-            residents, rotations, weeks, scheduled
-            )
+    model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
     # enforce prerequisites
     # enforce block transitions
 

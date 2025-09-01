@@ -254,10 +254,21 @@ def group_scheduled_df_by_for_each(
     """
     # TODO test the test
     assert (
-            group_on_column in subset_scheduled.columns
+        group_on_column in subset_scheduled.columns
     ), f"{group_on_column} not in {subset_scheduled.columns}"
     grouped = subset_scheduled.group_by(for_each).agg(pl.col(group_on_column))
     return grouped
+
+
+def enforce_requirement_constraints(
+    residents: pl.DataFrame,
+    rotations: pl.DataFrame,
+    weeks: pl.DataFrame,
+    scheduled: pl.DataFrame,
+) -> list:
+    for resident in residents.iter_rows(named=True):
+        pass
+    return []
 
 
 def enforce_rotation_capacity_minimum(
