@@ -50,6 +50,36 @@ class RequirementRule:
         )
         return self
 
+    def min_weeks_total(
+        self,
+        min_weeks: int,
+    ):
+        self._constraints.append(
+            {"type": "min_total", "value": min_weeks, "filter": None}
+        )
+
+        return self
+
+    def max_weeks_total(
+        self,
+        max_weeks: int,
+    ):
+        self._constraints.append(
+            {"type": "max_total", "value": max_weeks, "filter": None}
+        )
+
+        return self
+
+    def exactly_n_weeks_total(
+        self,
+        n_weeks: int,
+    ):
+        self._constraints.append(
+            {"type": "exactly_n_total", "value": n_weeks, "filter": None}
+        )
+
+        return self
+
     def after_prerequisite(self, prerequisite: str, weeks_completed: int):
         self._constraints.append(
             {
@@ -217,6 +247,10 @@ if __name__ == "__main__":
         .exact_weeks_in_year(3, "R2")
         .exact_weeks_in_year(3, "R3")
     )
+
+    builder.add_requirement(
+        name="Systems of Medicine", fulfilled_by={"Systems of Medicine"}
+    ).min_weeks_total(2).never_broken_up_in_year()
 
     # TODO might be better implemented by rotation?
     # (
