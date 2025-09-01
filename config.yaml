@@ -1,0 +1,5 @@
+allowable_year_options: !!set
+  R2         : null
+  R3         : null
+  R3 Extended: null
+cpmpy_variable_column : is_scheduled_cp_var

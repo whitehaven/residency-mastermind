@@ -5,6 +5,8 @@ import pandas as pd
 import polars as pl
 from ortools.sat.python import cp_model
 
+from data_io import read_config_file
+
 
 def negated_bounded_span(superspan: pd.Series, start: int, length: int) -> list:
     # TODO this function may not work, needs to be compared carefully to source
@@ -185,10 +187,12 @@ def require_one_rotation_per_resident_per_week(
 
     subset_scheduled = subset_scheduled_by(residents, rotations, weeks, scheduled)
 
+    config = read_config_file()
+
     grouped = group_scheduled_df_by_for_each(
         subset_scheduled,
         for_each=["resident", "week"],
-        group_on_column="is_scheduled_cp_var",
+        group_on_column=config["cpmpy_variable_column"],
     )
 
     constraints = apply_literal_constraint_to_groups(
@@ -276,16 +280,16 @@ def enforce_rotation_capacity_minimum(
     subset_scheduled = subset_scheduled_by(
         residents, rotations_with_minimum_residents, weeks, scheduled
     )
-
+    config = read_config_file()
     grouped = group_scheduled_df_by_for_each(
         subset_scheduled,
         for_each=["rotation", "week"],
-        group_on_column="is_scheduled_cp_var",
+        group_on_column=(config["cpmpy_variable_column"]),
     )
 
     constraints = list()
     for group_dict in grouped.iter_rows(named=True):
-        decision_vars = group_dict["is_scheduled_cp_var"]
+        decision_vars = group_dict[config["cpmpy_variable_column"]]
         if decision_vars:
             rotation = rotations_with_minimum_residents.filter(
                 pl.col("rotation") == group_dict["rotation"]
