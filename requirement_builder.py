@@ -72,18 +72,36 @@ class RequirementRule:
 
     def exclude_weeks_this_year(self, weeks: List[int]):
         """
-        Note DOES NOT filter by a resident year - excludes use for purposes of this year.
+        Note DOES NOT filter by a resident year - excludes use for purposes of year being solved
         Args:
             weeks:
 
         Returns:
 
         """
-
         self._constraints.append(
             {
                 "type": "exclude_weeks",
                 "value": 0,
+                "filter": {"weeks": weeks},
+            },
+        )
+        return self
+
+    def only_include_weeks_this_year(self, weeks: List[int]):
+        """
+        Note DOES NOT filter by a resident year - includes only for purposes of year being solved.
+
+        Args:
+            weeks:
+
+        Returns:
+
+        """
+        self._constraints.append(
+            {
+                "type": "only_include_weeks",
+                "value": 1,
                 "filter": {"weeks": weeks},
             },
         )
@@ -155,18 +173,19 @@ if __name__ == "__main__":
             fulfilled_by={"HS Orange Senior", "HS Green Senior"},
         )
         .min_weeks_in_year(2, "R2")
-        .min_weeks_in_year(8, "R3")
-        .min_contiguity_in_year(2, year="R2")
-        .after_prerequisite("HS Admitting Senior", 8)
-        .never_broken_up_in_year("R2")
-        .exclude_weeks_this_year([1])
+        .max_weeks_in_year(4, "R2")
+        .exact_weeks_in_year(8, "R3")
+        .min_contiguity_in_year(2, "R2")
+        .min_contiguity_in_year(2, "R3")
+        .after_prerequisite("HS Admitting Senior", 2)
     )
 
     (
         builder.add_requirement(
             name="HS Admitting Senior", fulfilled_by={"Purple Senior"}
         )
-        .min_weeks_in_year(6, "R2")
+        .min_weeks_in_year(5, "R2")
+        .max_weeks_in_year(6, "R2")
         .max_contiguity_in_year(1, "R2")
     )
 
@@ -198,6 +217,15 @@ if __name__ == "__main__":
         .exact_weeks_in_year(3, "R2")
         .exact_weeks_in_year(3, "R3")
     )
+
+    # TODO might be better implemented by rotation?
+    # (
+    #     builder.add_requirement(
+    #         name="Backup Night Senior", fulfilled_by={"Backup Night Senior"}
+    #     )
+    #     .only_include_weeks_this_year([1, 2, 5, 6])
+    #     .min_weeks_in_year(0, "R3")
+    # )
 
     ic(builder.requirements)
 
