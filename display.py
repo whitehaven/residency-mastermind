@@ -1,5 +1,11 @@
 import polars as pl
 
+from config import read_config_file
+
+config = read_config_file()
+cpmpy_variable_column = config["cpmpy_variable_column"]
+cpmpy_result_column = config["cpmpy_result_column"]
+
 
 def extract_solved_schedule(scheduled: pl.DataFrame) -> pl.DataFrame:
     """
@@ -14,10 +20,12 @@ def extract_solved_schedule(scheduled: pl.DataFrame) -> pl.DataFrame:
     # MAYBE could make sense to change to return pl.Series of just is_scheduled_result
 
     solved_values = []
-    for decision_variable in scheduled["is_scheduled_cp_var"]:
+
+    for decision_variable in scheduled[cpmpy_variable_column]:
         solved_values.append(decision_variable.value())
+
     scheduled_result = scheduled.with_columns(
-        pl.Series("is_scheduled_result", solved_values).cast(pl.Boolean)
+        pl.Series(cpmpy_result_column, solved_values).cast(pl.Boolean)
     )
     return scheduled_result.sort("week")
 
@@ -32,8 +40,9 @@ def convert_melted_to_block_schedule(solved_schedule: pl.DataFrame) -> pl.DataFr
     Returns:
         block_schedule: pivoted df
     """
-    renderable_df = solved_schedule.select(pl.all().exclude("is_scheduled_cp_var"))
-    filtered_long_format = renderable_df.filter(pl.col("is_scheduled_result"))
+
+    renderable_df = solved_schedule.select(pl.all().exclude(cpmpy_variable_column))
+    filtered_long_format = renderable_df.filter(pl.col(cpmpy_result_column))
     block_schedule = filtered_long_format.pivot(
         "week", index="resident", values="rotation"
     )
