@@ -92,5 +92,40 @@ def generate_pl_wrapped_boolvar(
     return scheduled
 
 
+def read_config_file(config_file_path: str | None = None) -> dict:
+    import yaml
+
+    default_file_path = "config.yaml"
+
+    if config_file_path is None:
+        config_file_path = default_file_path
+
+    try:
+        with open(config_file_path, "r") as file:
+            config = yaml.safe_load(file)
+    except FileNotFoundError:
+        print(f"Error: The file '{config_file_path}' was not found.")
+    except yaml.YAMLError as e:
+        print(f"Error parsing YAML file: {e}")
+    return config
+
+
+def write_config_file(config: dict, config_file_path: str | None = None) -> None:
+    import yaml
+
+    assert config is not None, "nothing to write"
+
+    default_file_path = "config.yaml"
+    if config_file_path is None:
+        config_file_path = default_file_path
+
+    try:
+        with open(config_file_path, "w") as file:
+            yaml.dump(data=config, stream=file)
+    except yaml.YAMLError as e:
+        print(f"Error parsing YAML file: {e}")
+    return None
+
+
 if __name__ == "__main__":
     pass
