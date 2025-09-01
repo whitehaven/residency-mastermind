@@ -94,6 +94,13 @@ def verify_enforce_rotation_capacity_minimum(rotations, solved_schedule) -> bool
         decision_vars = group_dict["is_scheduled_result"]
         if decision_vars:
             rotation = rotations.filter(pl.col("rotation") == group_dict["rotation"])
-            assert (sum(decision_vars) >= rotation.select(pl.col("minimum_residents_assigned")).item()
+            min_residents_this_rotation = rotation.select(
+                pl.col("minimum_residents_assigned")
+            ).item()
+            if min_residents_this_rotation is None:
+                min_residents_this_rotation = 0
+
+            assert (
+                sum(decision_vars) >= min_residents_this_rotation
             ), f"sum decision_vars = {decision_vars} != minimum_residents_assigned for {rotation}"
     return True
