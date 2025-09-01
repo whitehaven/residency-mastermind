@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Set
 
 import polars as pl
 from icecream import ic
@@ -9,7 +9,7 @@ from icecream import ic
 class RequirementRule:
 
     name: str
-    fulfilled_by: List[str]
+    fulfilled_by: Set[str]
     _constraints: List[Dict[str, Any]] = field(default_factory=list)
 
     def min_weeks_in_year(self, min_weeks: int, year: str):
@@ -71,6 +71,15 @@ class RequirementRule:
         return self
 
     def exclude_weeks_this_year(self, weeks: List[int]):
+        """
+        Note DOES NOT filter by a resident year - excludes use for purposes of this year.
+        Args:
+            weeks:
+
+        Returns:
+
+        """
+
         self._constraints.append(
             {
                 "type": "exclude_weeks",
@@ -90,7 +99,7 @@ class RequirementBuilder:
     def __init__(self):
         self.requirements: Dict[str, RequirementRule] = {}
 
-    def add_requirement(self, name: str, fulfilled_by: List[str]) -> RequirementRule:
+    def add_requirement(self, name: str, fulfilled_by: Set[str]) -> RequirementRule:
         rule = RequirementRule(name=name, fulfilled_by=fulfilled_by)
         self.requirements[name] = rule
         return rule
@@ -143,18 +152,57 @@ if __name__ == "__main__":
     (
         builder.add_requirement(
             name="HS Rounding Senior",
-            fulfilled_by=["HS Orange Senior", "HS Green Senior"],
+            fulfilled_by={"HS Orange Senior", "HS Green Senior"},
         )
         .min_weeks_in_year(2, "R2")
         .min_weeks_in_year(8, "R3")
         .min_contiguity_in_year(2, year="R2")
-        .after_prerequisite("HS Rounding Intern", 8)
+        .after_prerequisite("HS Admitting Senior", 8)
         .never_broken_up_in_year("R2")
         .exclude_weeks_this_year([1])
     )
 
+    (
+        builder.add_requirement(
+            name="HS Admitting Senior", fulfilled_by={"Purple Senior"}
+        )
+        .min_weeks_in_year(6, "R2")
+        .max_contiguity_in_year(1, "R2")
+    )
+
+    (
+        builder.add_requirement(name="Night Senior", fulfilled_by={"Night Senior"})
+        .min_weeks_in_year(4, "R2")
+        .never_broken_up_in_year("R2")
+        .min_weeks_in_year(1, "R3")
+        .max_weeks_in_year(2, "R3")
+        .never_broken_up_in_year("R3")
+    )
+
+    (
+        builder.add_requirement(
+            name="ICU Senior", fulfilled_by={"SHMC ICU Senior"}
+        ).min_weeks_in_year(4, "R2")
+    )
+
+    (
+        builder.add_requirement(name="Ambulatory Senior", fulfilled_by={"STHC Senior"})
+        .min_weeks_in_year(4, "R2")
+        .min_contiguity_in_year(2, "R2")
+        .min_weeks_in_year(4, "R3")
+        .min_contiguity_in_year(2, "R3")
+    )
+
+    (
+        builder.add_requirement(name="Vacation", fulfilled_by={"Vacation"})
+        .exact_weeks_in_year(3, "R2")
+        .exact_weeks_in_year(3, "R3")
+    )
+
     ic(builder.requirements)
 
-    print(yaml.dump((builder.requirements)))
+    ic(builder.generate_constraints_df())
+
+    print(yaml.dump(builder.requirements))
 
     print(dump_polars_df_to_yaml(builder.generate_constraints_df()))
