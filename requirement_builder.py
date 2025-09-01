@@ -24,6 +24,12 @@ class RequirementRule:
         )
         return self
 
+    def exact_weeks_in_year(self, exact_weeks: int, year: str):
+        self._constraints.append(
+            {"type": "exact_by_period", "value": exact_weeks, "filter": {"years": year}}
+        )
+        return self
+
     def min_contiguity_in_year(self, min_contiguity, year: str):
         self._constraints.append(
             {
