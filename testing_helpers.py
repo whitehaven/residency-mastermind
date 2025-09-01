@@ -1,6 +1,13 @@
 import numpy as np
 import polars as pl
 
+from config import read_config_file
+
+config = read_config_file()
+cpmpy_variable_column = config["cpmpy_variable_column"]
+cpmpy_result_column = config["cpmpy_result_column"]
+default_solver = config["default_cpmpy_solver"]
+
 tester_residents = pl.DataFrame(
     {
         "full_name": ["Fake Person, MD", "Also Fake Person, MD"],
@@ -73,7 +80,7 @@ def get_resident_week_vars(
     """Get all rotation variables for a specific resident and week."""
     return scheduled.filter(
         (pl.col("resident") == resident_name) & (pl.col("week") == week_date)
-    )["is_scheduled_cp_var"].to_list()
+    )[cpmpy_variable_column].to_list()
 
 
 def get_rotation_week_vars(
@@ -83,7 +90,7 @@ def get_rotation_week_vars(
     """Get all resident variables for a specific rotation and week."""
     return scheduled.filter(
         (pl.col("rotation") == rotation_name) & (pl.col("week") == week_date)
-    )["is_scheduled_cp_var"].to_list()
+    )[cpmpy_variable_column].to_list()
 
 
 def get_resident_rotation_vars(
@@ -93,4 +100,4 @@ def get_resident_rotation_vars(
     """Get all week variables for a specific resident and rotation."""
     return scheduled.filter(
         (pl.col("resident") == resident_name) & (pl.col("rotation") == rotation_name)
-    )["is_scheduled_cp_var"].to_list()
+    )[cpmpy_variable_column].to_list()
