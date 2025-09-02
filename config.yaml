@@ -7,4 +7,5 @@ cpmpy_variable_column: is_scheduled_cp_var
 default_cpmpy_solver : ortools
 residents_primary_label: full_name
 rotations_primary_label: rotation
+testing_db_path     : seniors_only.db
 weeks_primary_label: monday_date
