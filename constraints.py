@@ -197,18 +197,29 @@ def require_one_rotation_per_resident_per_week(
     )
 
     constraints = apply_literal_constraint_to_groups(
-        grouped, constraint=lambda group: cp.sum(group) == 1
+        grouped, constraint_applicator=lambda group: cp.sum(group) == 1
     )
 
     return constraints
 
 
-def apply_literal_constraint_to_groups(grouped, constraint: Callable) -> list:
+def apply_literal_constraint_to_groups(
+    grouped: pl.DataFrame, constraint_applicator: Callable
+) -> list:
+    """
+
+    Args:
+        grouped: pl.DataFrame group_by'd by
+        constraint_applicator: Callable that operates on a list() of cpmpy.BoolVar and returns a cpmpy.Comparison
+
+    Returns:
+
+    """
     constraints = list()
     for group in grouped.iter_rows(named=True):
         decision_vars = group[cpmpy_variable_column]
         if decision_vars:
-            constraints.append(constraint(decision_vars))
+            constraints.append(constraint_applicator(decision_vars))
     return constraints
 
 
