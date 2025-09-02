@@ -2,15 +2,15 @@ import itertools
 import sqlite3
 
 import cpmpy as cp
-import pandas as pd
 import polars as pl
+import yaml
 
 
 def read_bulk_data_sqlite3(
     db_location: str,
     tables_to_read: tuple[str] | None = None,
     date_fields: dict[str, str] | None = None,
-) -> dict[str, pd.DataFrame]:
+) -> dict[str, pl.DataFrame]:
     """
     Read data from sqlite3 database, extracting tables as requested. Defaults to pulling all tables normally used in schedule building.
 
