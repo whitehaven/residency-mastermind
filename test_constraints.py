@@ -5,10 +5,10 @@ from config import read_config_file
 from constraints import (
     require_one_rotation_per_resident_per_week,
     enforce_rotation_capacity_minimum,
-    group_scheduled_df_by_for_each,
 )
 from data_io import generate_pl_wrapped_boolvar
 from display import extract_solved_schedule
+from selection import group_scheduled_df_by_for_each
 from testing_helpers import tester_residents, tester_rotations, tester_weeks
 
 config = read_config_file()
