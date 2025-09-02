@@ -35,6 +35,18 @@ class RequirementRule:
         )
         return self
 
+    def exact_weeks_total(
+        self, exact_weeks: int, years: tuple[str, ...] = ("R2", "R3")
+    ):
+        self._constraints.append(
+            {
+                "type": "exact_by_period",
+                "value": exact_weeks,
+                "filter": {"years": years},
+            }
+        )
+        return self
+
     def min_contiguity_in_year(self, min_contiguity, year: str):
         self._constraints.append(
             {
@@ -110,7 +122,7 @@ class RequirementRule:
             {
                 "type": "never_broken_up_total",
                 "value": 1,
-                "filter": None,
+                "filter": {"years": year},
             },
         )
         return self
@@ -296,6 +308,12 @@ if __name__ == "__main__":
         builder.add_requirement(name="Elective", fulfilled_by={"Elective"})
         .min_weeks_in_year(min_weeks=20, year="R2")
         .max_weeks_in_year(max_weeks=30, year="R2")
+    )
+
+    (
+        builder.add_requirement(
+            name="Ethics", fulfilled_by={"Ethics"}
+        ).exact_weeks_total(exact_weeks=1)
     )
 
     # TODO might be better implemented by rotation?
