@@ -44,6 +44,20 @@ def generate_default_config(config_file_path: str | None = None) -> dict:
         "weeks_primary_label": "monday_date",
         "default_cpmpy_solver": "ortools",
         "testing_db_path": "seniors_only.db",
+        "testing_files": {
+            "residents": {
+                "tiny": "test_data/test_residents_tiny.csv",
+                "real_size_seniors": "test_data/test_residents_real_size.csv",
+            },
+            "rotations": {
+                "tiny": "test_data/test_rotations_minimal.csv",
+                "real_size": "test_data/test_rotations_real_size.csv",
+            },
+            "weeks": {
+                "tiny": "test_data/test_weeks_tiny_10wk.csv",
+                "full_year": "test_data/test_weeks_2025_2026_full.csv",
+            },
+        },
     }
 
     write_config_file(

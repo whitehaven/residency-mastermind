@@ -1,10 +1,18 @@
 import polars as pl
 
+from config import read_config_file
 from data_io import (
     read_bulk_data_sqlite3,
     generate_pl_wrapped_boolvar,
-    )
-from testing_helpers import tester_residents, tester_rotations, tester_weeks
+)
+
+config = read_config_file()
+
+tester_residents = pl.read_csv(config["testing_files"]["residents"]["tiny"])
+tester_rotations = pl.read_csv(config["testing_files"]["rotations"]["tiny"])
+tester_weeks = pl.read_csv(
+    config["testing_files"]["weeks"]["tiny"], try_parse_dates=True
+)
 
 
 def test_read_bulk_data_sqlite3():
@@ -23,7 +31,7 @@ def test_read_bulk_data_sqlite3():
 
 def test_generate_pl_wrapped_boolvar():
     fake_scheduled = generate_pl_wrapped_boolvar(
-            tester_residents, tester_rotations, tester_weeks
+        tester_residents, tester_rotations, tester_weeks
     )
     assert isinstance(fake_scheduled, pl.DataFrame)
     assert len(fake_scheduled) == 54
