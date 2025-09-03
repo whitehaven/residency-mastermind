@@ -87,9 +87,9 @@ def apply_literal_constraint_to_groups(
     grouped: pl.DataFrame, constraint_applicator: Callable
 ) -> list:
     """
-
+    Apply constraint function over aggregated constraint variables.
     Args:
-        grouped: pl.DataFrame group_by'd by
+        grouped: pl.DataFrame group_by'd into groups which will have constraint applied across them
         constraint_applicator: Callable that operates on a list() of cpmpy.BoolVar and returns a cpmpy.Comparison
 
     Returns:

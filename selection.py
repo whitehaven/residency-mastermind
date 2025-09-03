@@ -58,25 +58,23 @@ def group_scheduled_df_by_for_each(
     constraint generation.
 
     Args:
-        group_on_column: column to aggregate (either "is_scheduled_cp_var" or "is_scheduled_result"
+        group_on_column: column to aggregate (either cpmpy_variable_column or cpmpy_result_column as found in config)
         subset_scheduled: pl.Dataframe subset from `scheduled` to set ranges along axes to place constraint
         for_each: axis or axes to group by
     Returns:
         grouped pl.DataFrame
 
     Notes:
-        Note any filtering should have happened before this.
+        Note any filtering should have happened before this as it will be hard to do now.
 
-        Somewhat cursed method to pile each group together. This returns subframes and "aggregates" the decision
-        variables into a pile without actually doing anything to them. Long story short, the group_by elements are
-        the "for each" groups and the non-mentioned ones are "for all." Note if you try to look at it, you just get
-        errors.
+        Somewhat cursed method to pile each group together. This returns subframes and applies .agg along the decision variables actually doing anything to them.
+
+        I recognize this is essentially one line, but it's so syntactically weird I think it's worth leaving this way.
 
     Examples:
         The 1:1:1 constraint is "for each resident, for each week, for all rotations, sum of all should be == 1
-        for example, so for_each should receive `resident` and `week`. This means the `rotation` field is grouped.
 
-    MAYBE I wonder if it could be done more transparently, like with .implode, but this works for now.
+        For example, so for_each should receive `resident` and `week`. This means the `rotation` field receives .agg and can then be processed in the next function.
     """
     # TODO test the test
     assert (
