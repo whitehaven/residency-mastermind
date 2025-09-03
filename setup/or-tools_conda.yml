@@ -15,6 +15,7 @@ dependencies:
   - polars
   - pytest
   - python
+  - pyyaml
   - pip:
     - cpmpy
     - ortools
