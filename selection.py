@@ -55,7 +55,7 @@ def group_scheduled_df_by_for_each(
 ) -> pl.DataFrame:
     """
     Get grouped subframes containing grouped decision variables by those fields which are "for each" when used for
-    constraint generation.
+    constraint generation. The returned grouped dataframe is thus siloed into groups which should be manipulated in iterated steps.
 
     Args:
         group_on_column: column to aggregate (either cpmpy_variable_column or cpmpy_result_column as found in config)
@@ -67,16 +67,12 @@ def group_scheduled_df_by_for_each(
     Notes:
         Note any filtering should have happened before this as it will be hard to do now.
 
-        Somewhat cursed method to pile each group together. This returns subframes and applies .agg along the decision variables actually doing anything to them.
-
         I recognize this is essentially one line, but it's so syntactically weird I think it's worth leaving this way.
 
-    Examples:
-        The 1:1:1 constraint is "for each resident, for each week, for all rotations, sum of all should be == 1
-
-        For example, so for_each should receive `resident` and `week`. This means the `rotation` field receives .agg and can then be processed in the next function.
+    Examples: The 1:1:1 constraint is "for each resident, for each week, for all rotations, sum of all should be ==
+    1. In that case, for_each should receive `resident` and `week`. This means the `rotation` field is subject to
+    constraint application and can then be processed in the next function.
     """
-    # TODO test the test
     assert (
         group_on_column in subset_scheduled.columns
     ), f"{group_on_column} not in {subset_scheduled.columns}"

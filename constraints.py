@@ -76,14 +76,14 @@ def require_one_rotation_per_resident_per_week(
         group_on_column=cpmpy_variable_column,
     )
 
-    constraints = apply_literal_constraint_to_groups(
+    constraints = apply_constraint_to_groups(
         grouped, constraint_applicator=lambda group: cp.sum(group) == 1
     )
 
     return constraints
 
 
-def apply_literal_constraint_to_groups(
+def apply_constraint_to_groups(
     grouped: pl.DataFrame, constraint_applicator: Callable
 ) -> list:
     """
