@@ -1,0 +1,4 @@
+rotation,category,required_role,minimum_weeks,maximum_weeks,minimum_residents_assigned,maximum_residents_assigned,minimum_contiguous_weeks,max_contiguous_weeks
+Green HS Senior,HS Rounding Senior,Senior,0,8,1,1,2,NaN
+Orange HS Senior,HS Rounding Senior,Senior,0,8,1,1,2,NaN
+SHMC Consults,Hospitalist,Senior,0,4,0,1,1,NaN
