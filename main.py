@@ -4,8 +4,8 @@ import cpmpy as cp
 import polars as pl
 
 from constraints import (
+    enforce_rotation_capacity_maximum,
     require_one_rotation_per_resident_per_week,
-    enforce_requirement_constraints,
     enforce_rotation_capacity_minimum,
 )
 from data_io import (
@@ -18,7 +18,7 @@ from display import (
 )
 
 
-def main(args_from_commandline=None, read_db: str = None) -> pl.DataFrame:
+def main(args_from_commandline=None, read_db: str | None = None) -> pl.DataFrame:
     if args_from_commandline is None:
         db_location = read_db
     elif read_db is None:
@@ -62,7 +62,8 @@ def solve_schedule(residents, rotations, weeks):
 
     # rotation-specific
     model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
-    # enforce prerequisites
+    model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
+
     # enforce block transitions
 
     # category-specific
