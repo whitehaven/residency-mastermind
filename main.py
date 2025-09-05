@@ -30,10 +30,7 @@ def main(args_from_commandline=None, read_db: str | None = None) -> pl.DataFrame
 
     residents = input_tables["residents"]
     rotations = input_tables["rotations"]
-    categories = input_tables["categories"]
-    preferences = input_tables["preferences"]
     weeks = input_tables["weeks"]
-    rotations_completed = input_tables["rotations_completed"]
 
     current_academic_starting_year = 2025
     weeks_this_acad_year = weeks.filter(
