@@ -1,6 +1,8 @@
+import polars as pl
+
 from config import read_config_file
-from data_io import read_bulk_data_sqlite3
-from main import main
+from display import extract_solved_schedule, convert_melted_to_block_schedule
+from main import solve_schedule
 from test_constraints import (
     verify_enforce_rotation_capacity_maximum,
     verify_one_rotation_per_resident_per_week,
@@ -8,8 +10,9 @@ from test_constraints import (
 )
 
 config = read_config_file()
-
-testing_db_path = config["testing_db_path"]
+test_residents_path = config["testing_files"]["residents"]["real_size_seniors"]
+test_rotations_path = config["testing_files"]["rotations"]["real_size"]
+test_weeks_path = config["testing_files"]["weeks"]["full_year"]
 
 
 def test_main() -> None:
