@@ -25,11 +25,16 @@ tester_weeks = pl.read_csv(
 
 
 def test_require_one_rotation_per_resident_per_week() -> None:
+
+    normal_scheduled_tester_residents = tester_residents.filter(
+        pl.col("year").is_in((["R2", "R3"]))
+    )
+
     test_scheduled = generate_pl_wrapped_boolvar(
-        tester_residents, tester_rotations, tester_weeks
+        normal_scheduled_tester_residents, tester_rotations, tester_weeks
     )
     test_constraints = require_one_rotation_per_resident_per_week(
-        tester_residents,
+        normal_scheduled_tester_residents,
         tester_rotations,
         tester_weeks,
         scheduled=test_scheduled,
@@ -56,14 +61,16 @@ def verify_one_rotation_per_resident_per_week(solved_schedule) -> bool:
     Returns:
         bool: True if passes
     """
-    assert (
-        len(
-            solved_schedule.group_by(["resident", "week"])
-            .sum()
-            .filter(pl.col(cpmpy_result_column) != 1),
-        )
-        == 0
-    ), "with test data, not every (resident -> week => all rotations) pairing has exactly 1 rotation set"
+    grouped_solved_schedule = group_scheduled_df_by_for_each(
+        solved_schedule,
+        for_each=["resident", "week"],
+        group_on_column=cpmpy_result_column,
+    )
+    for group_dict in grouped_solved_schedule.iter_rows(named=True):
+        decision_vars = group_dict[cpmpy_result_column]
+
+        assert sum(decision_vars) == 1, f"sum decision_vars = {decision_vars} != 1"
+
     return True
 
 
@@ -169,7 +176,9 @@ def verify_enforce_rotation_capacity_maximum(rotations, solved_schedule) -> bool
                 pl.col("maximum_residents_assigned")
             ).item()
             if max_residents_this_rotation is None:
-                max_residents_this_rotation = 0
+                assert (
+                    False
+                ), f"max_residents_this_rotation == {max_residents_this_rotation}? Doesn't make sense."
 
             assert (
                 sum(decision_vars) <= max_residents_this_rotation
