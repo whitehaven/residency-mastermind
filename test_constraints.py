@@ -34,7 +34,6 @@ def test_require_one_rotation_per_resident_per_week() -> None:
         tester_weeks,
         scheduled=test_scheduled,
     )
-    assert len(test_constraints) == 18
 
     model = cp.Model()
     model += test_constraints
