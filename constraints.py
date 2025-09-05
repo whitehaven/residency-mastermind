@@ -49,7 +49,7 @@ def require_one_rotation_per_resident_per_week(
     rotations: pl.DataFrame,
     weeks: pl.DataFrame,
     scheduled: pl.DataFrame,
-) -> list:
+) -> list[cp.core.Comparison]:
     """
     Generate constraints that require exactly one True at every resident:rotation:week intersection.
 
@@ -85,7 +85,7 @@ def require_one_rotation_per_resident_per_week(
 
 def apply_constraint_to_groups(
     grouped: pl.DataFrame, constraint_applicator: Callable
-) -> list:
+) -> list[cp.core.Comparison]:
     """
     Apply constraint function over aggregated constraint variables.
     Args:
@@ -119,7 +119,7 @@ def enforce_rotation_capacity_minimum(
     rotations: pl.DataFrame,
     weeks: pl.DataFrame,
     scheduled: pl.DataFrame,
-) -> list:
+) -> list[cp.core.Comparison]:
     """
     Set minimum residents on each rotation, equivalent to "resident-staffed."
 
