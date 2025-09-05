@@ -155,5 +155,46 @@ def enforce_rotation_capacity_minimum(
     return constraints
 
 
+def enforce_rotation_capacity_maximum(
+    residents: pl.DataFrame,
+    rotations: pl.DataFrame,
+    weeks: pl.DataFrame,
+    scheduled: pl.DataFrame,
+) -> list[cp.core.Comparison]:
+    """
+    Set maximum residents on each rotation.
+
+    Returns: list[constraints]
+
+    """
+    # TODO testing
+
+    rotations_with_maximum_residents = rotations.filter(
+        pl.col("maximum_residents_assigned") > 0
+    )
+
+    subset_scheduled = subset_scheduled_by(
+        residents, rotations_with_maximum_residents, weeks, scheduled
+    )
+    grouped = group_scheduled_df_by_for_each(
+        subset_scheduled,
+        for_each=["rotation", "week"],
+        group_on_column=cpmpy_variable_column,
+    )
+
+    constraints = list()
+    for group_dict in grouped.iter_rows(named=True):
+        decision_vars = group_dict[cpmpy_variable_column]
+        if decision_vars:
+            rotation = rotations_with_maximum_residents.filter(
+                pl.col("rotation") == group_dict["rotation"]
+            )
+            constraints.append(
+                cp.sum(decision_vars)
+                <= rotation.select(pl.col("maximum_residents_assigned")).item()
+            )
+    return constraints
+
+
 if __name__ == "__main__":
     pass
