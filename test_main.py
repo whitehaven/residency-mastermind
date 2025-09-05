@@ -15,23 +15,35 @@ test_rotations_path = config["testing_files"]["rotations"]["real_size"]
 test_weeks_path = config["testing_files"]["weeks"]["full_year"]
 
 
-def test_main() -> None:
-    solved_schedule = main(read_db=testing_db_path)
+def test_solve_schedule():
+    residents = pl.read_csv(test_residents_path)
+    rotations = pl.read_csv(test_rotations_path)
+    weeks = pl.read_csv(test_weeks_path, try_parse_dates=True)
 
-    input_tables = read_bulk_data_sqlite3(
-        db_location=testing_db_path, tables_to_read=("rotations",)
+    current_academic_starting_year = 2025
+    weeks_this_acad_year = weeks.filter(
+        pl.col("starting_academic_year") == current_academic_starting_year
     )
-    rotations = input_tables["rotations"]
+
+    non_extended_residents = residents.filter((pl.col("year").is_in({"R2", "R3"})))
+
+    scheduled = solve_schedule(non_extended_residents, rotations, weeks_this_acad_year)
+
+    melted_solved_schedule = extract_solved_schedule(scheduled)
+
+    # melted_solved_schedule.select(pl.col("*").exclude("is_scheduled_cp_var")).sort(
+    #     "rotation"
+    # ).write_csv("wtf.csv")
 
     assert verify_one_rotation_per_resident_per_week(
-        solved_schedule,
+        melted_solved_schedule,
     ), "verify_one_rotation_per_resident_per_week failed"
-    
+
     assert verify_enforce_rotation_capacity_minimum(
         rotations,
-        solved_schedule,
+        melted_solved_schedule,
     ), "verify_enforce_rotation_capacity_minimum failed"
     assert verify_enforce_rotation_capacity_maximum(
         rotations,
-        solved_schedule,
+        melted_solved_schedule,
     ), "verify_enforce_rotation_capacity_maximum failed"
