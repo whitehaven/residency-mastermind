@@ -9,6 +9,9 @@ dependencies:
   - icecream
   - ipympl
   - isort
+  - jupyterlab
+  - jupyterlab-git
+  - jupyterlab_code_formatter
   - numpy
   - openpyxl
   - pip
