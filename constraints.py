@@ -67,7 +67,6 @@ def require_one_rotation_per_resident_per_week(
     Returns:
         list[constraints] that should force a solution which requires exactly one True at every resident:rotation:week intersection.
     """
-
     subset_scheduled = subset_scheduled_by(residents, rotations, weeks, scheduled)
 
     grouped = group_scheduled_df_by_for_each(
@@ -126,8 +125,6 @@ def enforce_rotation_capacity_minimum(
     Returns: list[constraints]
 
     """
-    # TODO testing
-
     rotations_with_minimum_residents = rotations.filter(
         pl.col("minimum_residents_assigned") > 0
     )
@@ -167,8 +164,6 @@ def enforce_rotation_capacity_maximum(
     Returns: list[constraints]
 
     """
-    # TODO testing
-
     rotations_with_maximum_residents = rotations.filter(
         pl.col("maximum_residents_assigned") > 0
     )
