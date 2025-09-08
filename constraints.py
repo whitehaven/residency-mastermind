@@ -9,35 +9,73 @@ from selection import subset_scheduled_by, group_scheduled_df_by_for_each
 config = read_config_file()
 cpmpy_variable_column = config["cpmpy_variable_column"]
 
+residents_primary_label = config["residents_primary_label"]
+rotations_primary_label = config["rotations_primary_label"]
+weeks_primary_label = config["weeks_primary_label"]
+
+
 #     TODO remake the contiguity functions
-# def enforce_minimum_contiguity: <-
-# def negated_bounded_span(superspan: pd.Series, start: int, length: int) -> list:
-#     """Filters an isolated sub-sequence of variables assigned to True.
-#
-#     Extract the span of Boolean variables [start, start + length], negate them,
-#     and if there is variables to the left/right of this span, surround the span by
-#     them in non negated form.
-#
-#     Args:
-#       superspan: a list of variables to extract the span from.
-#       start: the start to the span.
-#       length: the length of the span.
-#
-#     Returns:
-#       a list of variables which conjunction will be false if the sub-list is
-#       assigned to True, and correctly bounded by variables assigned to False,
-#       or by the start or end of superspan.
-#     """
-#     sequence = []
-#     # left border (start of superspan, or superspan[start - 1])
-#     if start > 0:
-#         sequence.append(superspan.iloc[start - 1])
-#     for i in range(length):
-#         sequence.append(~superspan.iloc[start + i])
-#     # right border (end of superspan or superspan[start + length])
-#     if start + length < len(superspan):
-#         sequence.append(superspan.iloc[start + length])
-#     return sequence
+def negated_bounded_span(
+    superspan: list[cp.core.BoolVal], starting_idx: int, minimum_contiguity: int
+) -> list[cp.core.Comparison]:
+    """Filters an isolated sub-sequence of variables assigned to True.
+
+    Extract the span of Boolean variables [start, start + length], negate them,
+    and if there is variables to the left/right of this span, surround the span by
+    them in non negated form.
+
+    Args:
+      superspan: a list of variables to extract the span from.
+      starting_idx: the start to the span.
+      minimum_contiguity: the length of the span.
+
+    Returns:
+      a list of variables which conjunction will be false if the sub-list is
+      assigned to True, and correctly bounded by variables assigned to False,
+      or by the start or end of superspan.
+
+      Adapted from or-tools examples repository, see https://raw.githubusercontent.com/google/or-tools/9b77015d9d7162b560b9e772c06ff262d2780844/examples/python/shift_scheduling_sat.py
+    """
+    sequence = []
+    # left border (start of superspan, or superspan[start - 1])
+    if starting_idx > 0:
+        sequence.append(superspan[starting_idx - 1])
+    for i in range(minimum_contiguity):
+        sequence.append(~superspan[starting_idx + i])
+    # right border (end of superspan or superspan[start + length])
+    if starting_idx + minimum_contiguity < len(superspan):
+        sequence.append(superspan[starting_idx + minimum_contiguity])
+    return sequence
+
+
+def enforce_minimum_contiguity(
+    residents: pl.DataFrame,
+    rotations: pl.DataFrame,
+    weeks: pl.DataFrame,
+    scheduled: pl.DataFrame,
+) -> list[cp.core.Comparison]:
+    constraints = list()
+    for resident_dict in residents.iter_rows(named=True):
+        constraints_for_res_on_rot = list()
+        for rotation_dict in rotations.iter_rows(named=True):
+            is_scheduled_for_res_on_rot = scheduled.filter(
+                (pl.col("resident") == resident_dict[residents_primary_label])
+                & (pl.col("rotation") == rotation_dict[rotations_primary_label])
+            )
+            min_contiguity = rotation_dict["minimum_contiguous_weeks"]
+            for contiguity_n in range(2, min_contiguity + 1):
+                for start_wk_idx in range(
+                    len(is_scheduled_for_res_on_rot) - contiguity_n + 1
+                ):
+                    nbs = negated_bounded_span(
+                        is_scheduled_for_res_on_rot[cpmpy_variable_column].to_list(),
+                        start_wk_idx,
+                        contiguity_n,
+                    )
+                    constraints_for_res_on_rot.append(cp.all(nbs))
+        constraints.extend(constraints_for_res_on_rot)
+    return constraints
+
 
 # TODO replace constraint utility functions
 # def force_value
