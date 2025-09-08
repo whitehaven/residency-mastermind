@@ -1,17 +1,15 @@
 from typing import Callable
 
+import box
 import cpmpy as cp
 import polars as pl
 
-from config import read_config_file
 from selection import subset_scheduled_by, group_scheduled_df_by_for_each
 
-config = read_config_file()
-cpmpy_variable_column = config["cpmpy_variable_column"]
-
-residents_primary_label = config["residents_primary_label"]
-rotations_primary_label = config["rotations_primary_label"]
-weeks_primary_label = config["weeks_primary_label"]
+config = box.box_from_file("config.yaml")
+cpmpy_variable_column = config.cpmpy_variable_column
+residents_primary_label = config.residents_primary_label
+rotations_primary_label = config.rotations_primary_label
 
 
 #     TODO remake the contiguity functions

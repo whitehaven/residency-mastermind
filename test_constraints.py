@@ -1,7 +1,7 @@
+import box
 import cpmpy as cp
 import polars as pl
 
-from config import read_config_file
 from constraints import (
     require_one_rotation_per_resident_per_week,
     enforce_rotation_capacity_minimum,
@@ -12,17 +12,17 @@ from data_io import generate_pl_wrapped_boolvar
 from display import extract_solved_schedule
 from selection import group_scheduled_df_by_for_each
 
-config = read_config_file()
-cpmpy_variable_column = config["cpmpy_variable_column"]
-cpmpy_result_column = config["cpmpy_result_column"]
-default_solver = config["default_cpmpy_solver"]
-tester_residents = pl.read_csv(
-    config["testing_files"]["residents"]["real_size_seniors"]
-)
-tester_rotations = pl.read_csv(config["testing_files"]["rotations"]["real_size"])
+config = box.box_from_file("config.yaml")
+cpmpy_variable_column = config.cpmpy_variable_column
+cpmpy_result_column = config.cpmpy_result_column
+
+tester_residents = pl.read_csv(config.testing_files.residents.real_size_seniors)
+tester_rotations = pl.read_csv(config.testing_files.rotations.real_size)
 tester_weeks = pl.read_csv(
-    config["testing_files"]["weeks"]["full_year"], try_parse_dates=True
+    config.testing_files.weeks.full_academic_year_2025_2026, try_parse_dates=True
 )
+
+default_solver = config.default_cpmpy_solver
 
 
 def test_require_one_rotation_per_resident_per_week() -> None:

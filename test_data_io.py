@@ -1,18 +1,16 @@
+import box
 import polars as pl
 
-from config import read_config_file
 from data_io import (
     read_bulk_data_sqlite3,
     generate_pl_wrapped_boolvar,
 )
 
-config = read_config_file()
+config = box.box_from_file("config.yaml")
 
-tester_residents = pl.read_csv(config["testing_files"]["residents"]["tiny"])
-tester_rotations = pl.read_csv(config["testing_files"]["rotations"]["tiny"])
-tester_weeks = pl.read_csv(
-    config["testing_files"]["weeks"]["tiny"], try_parse_dates=True
-)
+tester_residents = pl.read_csv(config.testing_files.residents.tiny)
+tester_rotations = pl.read_csv(config.testing_files.rotations.tiny)
+tester_weeks = pl.read_csv(config.testing_files.weeks.tiny, try_parse_dates=True)
 
 
 def test_read_bulk_data_sqlite3():

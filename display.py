@@ -1,10 +1,13 @@
+import box
 import polars as pl
 
-from config import read_config_file
+config = box.box_from_file("config.yaml")
 
-config = read_config_file()
-cpmpy_variable_column = config["cpmpy_variable_column"]
-cpmpy_result_column = config["cpmpy_result_column"]
+test_residents_path = config.testing_files.residents.real_size_seniors
+test_rotations_path = config.testing_files.rotations.real_size
+test_weeks_path = config.testing_files.weeks.full_academic_year_2025_2026
+cpmpy_variable_column = config.cpmpy_variable_column
+cpmpy_result_column = config.cpmpy_result_column
 
 
 def extract_solved_schedule(scheduled: pl.DataFrame) -> pl.DataFrame:
@@ -40,7 +43,7 @@ def convert_melted_to_block_schedule(solved_schedule: pl.DataFrame) -> pl.DataFr
     Returns:
         block_schedule: pivoted df
     """
-    #TODO should catch unrenderable/not 1:1 before Polars fails ugly on it
+    # TODO should catch unrenderable/not 1:1 before Polars fails ugly on it
     renderable_df = solved_schedule.select(pl.all().exclude(cpmpy_variable_column))
     filtered_long_format = renderable_df.filter(pl.col(cpmpy_result_column))
     block_schedule = filtered_long_format.pivot(

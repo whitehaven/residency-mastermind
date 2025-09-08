@@ -1,6 +1,6 @@
+import box
 import polars as pl
 
-from config import read_config_file
 from display import extract_solved_schedule, convert_melted_to_block_schedule
 from main import solve_schedule
 from test_constraints import (
@@ -9,10 +9,11 @@ from test_constraints import (
     verify_enforce_rotation_capacity_minimum,
 )
 
-config = read_config_file()
-test_residents_path = config["testing_files"]["residents"]["real_size_seniors"]
-test_rotations_path = config["testing_files"]["rotations"]["real_size"]
-test_weeks_path = config["testing_files"]["weeks"]["full_year"]
+config = box.box_from_file("config.yaml")
+
+test_residents_path = config.testing_files.residents.real_size_seniors
+test_rotations_path = config.testing_files.rotations.real_size
+test_weeks_path = config.testing_files.weeks.full_academic_year_2025_2026
 
 
 def test_solve_schedule():
