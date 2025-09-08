@@ -43,7 +43,7 @@ def generate_default_config(config_file_path: str | None = None) -> dict:
         "rotations_primary_label": "rotation",
         "weeks_primary_label": "monday_date",
         "default_cpmpy_solver": "ortools",
-        "testing_db_path": "seniors_only.db",
+        "testing_db_path": "seniors_only_anonymized.db",
         "testing_files": {
             "residents": {
                 "tiny": "test_data/test_residents_tiny.csv",

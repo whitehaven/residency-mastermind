@@ -7,7 +7,7 @@ cpmpy_variable_column : is_scheduled_cp_var
 default_cpmpy_solver  : ortools
 residents_primary_label: full_name
 rotations_primary_label: rotation
-testing_db_path       : seniors_only.db
+testing_db_path: seniors_only_anonymized.db
 testing_files         :
   residents:
     real_size_seniors: test_data/test_residents_real_size.csv
