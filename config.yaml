@@ -1,21 +1,22 @@
 allowable_year_options: !!set
-  R2: null
-  R3: null
-  R3 Extended: null
-cpmpy_result_column   : is_scheduled_result
+  R3 Extended:
+  R2         :
+  R3         :
 cpmpy_variable_column : is_scheduled_cp_var
-default_cpmpy_solver  : ortools
+cpmpy_result_column   : is_scheduled_result
 residents_primary_label: full_name
 rotations_primary_label: rotation
+weeks_primary_label   : monday_date
+default_cpmpy_solver  : ortools
 testing_db_path: seniors_only_anonymized.db
 testing_files         :
   residents:
+    tiny: test_data/test_residents_tiny.csv
     real_size_seniors: test_data/test_residents_real_size.csv
-    tiny             : test_data/test_residents_tiny.csv
   rotations:
-    real_size: test_data/test_rotations_real_size.csv
     tiny     : test_data/test_rotations_minimal.csv
+    real_size: test_data/test_rotations_real_size.csv
   weeks    :
-    full_year: test_data/test_weeks_2025_2026_full.csv
-    tiny     : test_data/test_weeks_tiny_10wk.csv
-weeks_primary_label   : monday_date
+    tiny                        : test_data/test_weeks_tiny_10wk.csv
+    full_three_years            : test_data/test_weeks_2024_2027_three_years.csv
+    full_academic_year_2025_2026: test_data/test_weeks_2025_2026.csv
