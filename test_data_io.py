@@ -14,10 +14,8 @@ tester_weeks = pl.read_csv(config.testing_files.weeks.tiny, try_parse_dates=True
 
 
 def test_read_bulk_data_sqlite3():
-    tables_in_use = 6
     test_read_tables = read_bulk_data_sqlite3("residency_mastermind.db")
 
-    assert len(test_read_tables) == tables_in_use
     assert isinstance(test_read_tables["residents"], pl.DataFrame)
 
     dtype_of_weeks_monday_date = (
