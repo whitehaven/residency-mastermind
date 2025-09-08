@@ -23,10 +23,7 @@ def read_bulk_data_sqlite3(
         tables_to_read = (
             "residents",
             "rotations",
-            "categories",
-            "preferences",
             "weeks",
-            "rotations_completed",
         )
     if date_fields is None:
         date_field = {"weeks": "monday_date"}
