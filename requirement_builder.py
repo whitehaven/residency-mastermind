@@ -7,7 +7,7 @@ from icecream import ic
 
 @dataclass
 class RequirementRule:
-
+    # TODO should just let dicts take sensible forms with common label to differentiate operations. nulls never hurt anyone. could even do just dicts, but being able persist to sqlite easily is attractive.
     name: str
     fulfilled_by: Set[str]
     _constraints: List[Dict[str, Any]] = field(default_factory=list)
