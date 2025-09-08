@@ -21,20 +21,11 @@ def test_solve_schedule():
     rotations = pl.read_csv(test_rotations_path)
     weeks = pl.read_csv(test_weeks_path, try_parse_dates=True)
 
-    current_academic_starting_year = 2025
-    weeks_this_acad_year = weeks.filter(
-        pl.col("starting_academic_year") == current_academic_starting_year
-    )
-
     non_extended_residents = residents.filter((pl.col("year").is_in({"R2", "R3"})))
 
-    scheduled = solve_schedule(non_extended_residents, rotations, weeks_this_acad_year)
+    scheduled = solve_schedule(non_extended_residents, rotations, weeks)
 
     melted_solved_schedule = extract_solved_schedule(scheduled)
-
-    # melted_solved_schedule.select(pl.col("*").exclude("is_scheduled_cp_var")).sort(
-    #     "rotation"
-    # ).write_csv("wtf.csv")
 
     assert verify_one_rotation_per_resident_per_week(
         melted_solved_schedule,

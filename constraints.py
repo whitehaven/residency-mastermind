@@ -52,15 +52,30 @@ def enforce_minimum_contiguity(
     weeks: pl.DataFrame,
     scheduled: pl.DataFrame,
 ) -> list[cp.core.Comparison]:
-    constraints = list()
-    for resident_dict in residents.iter_rows(named=True):
-        constraints_for_res_on_rot = list()
-        for rotation_dict in rotations.iter_rows(named=True):
+    """
+    Generate constraints that require that at least minimum_contiguity be respected.
+
+    The base case is 1, which means rotation can be scheduled at singletons. Null should be taken to mean 1. (not implemented)
+
+    Args:
+        residents:
+        rotations:
+        weeks:
+        scheduled:
+
+    Returns:
+        cumulative_constraints: list[cp.core.Comparison]: List of comparisons which will be or statements of variables for every possible
+    """
+    cumulative_constraints = list()
+    for rotation_dict in rotations.iter_rows(named=True):
+        constraints_on_this_rotation = list()
+        for resident_dict in residents.iter_rows(named=True):
             is_scheduled_for_res_on_rot = scheduled.filter(
                 (pl.col("resident") == resident_dict[residents_primary_label])
                 & (pl.col("rotation") == rotation_dict[rotations_primary_label])
             )
             min_contiguity = rotation_dict["minimum_contiguous_weeks"]
+
             for contiguity_n in range(2, min_contiguity + 1):
                 for start_wk_idx in range(
                     len(is_scheduled_for_res_on_rot) - contiguity_n + 1
@@ -70,9 +85,10 @@ def enforce_minimum_contiguity(
                         start_wk_idx,
                         contiguity_n,
                     )
-                    constraints_for_res_on_rot.append(cp.all(nbs))
-        constraints.extend(constraints_for_res_on_rot)
-    return constraints
+                    constraints_on_this_rotation.append(cp.any(nbs))
+                # note skipped collection list here - no need to nest, the innermost one here will get them all by rotation with all residents mixed in
+        cumulative_constraints.extend(constraints_on_this_rotation)
+    return cumulative_constraints
 
 
 # TODO replace constraint utility functions
