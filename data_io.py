@@ -8,7 +8,7 @@ import yaml
 
 def read_bulk_data_sqlite3(
     db_location: str,
-    tables_to_read: tuple[str] | None = None,
+    tables_to_read: list[str] | None = None,
     date_fields: dict[str, str] | None = None,
 ) -> dict[str, pl.DataFrame]:
     """
