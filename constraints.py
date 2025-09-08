@@ -202,6 +202,7 @@ def enforce_rotation_capacity_maximum(
     Returns: list[constraints]
 
     """
+    # TODO  should not handle filter here
     rotations_with_maximum_residents = rotations.filter(
         pl.col("maximum_residents_assigned") > 0
     )
