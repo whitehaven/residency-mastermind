@@ -38,7 +38,11 @@ def main(args_from_commandline=None, read_db: str | None = None) -> pl.DataFrame
         pl.col("starting_academic_year") == current_academic_starting_year  # type: ignore
     )
 
-    scheduled = solve_schedule(residents, rotations, weeks_this_acad_year)
+    standard_scheduled_residents = residents.filter(pl.col("year").is_in(["R2", "R3"]))
+
+    scheduled = solve_schedule(
+        standard_scheduled_residents, rotations, weeks_this_acad_year
+    )
 
     solved_schedule = extract_solved_schedule(scheduled)
 
