@@ -6,6 +6,7 @@ from constraints import (
     require_one_rotation_per_resident_per_week,
     enforce_rotation_capacity_minimum,
     enforce_rotation_capacity_maximum,
+    enforce_minimum_contiguity,
 )
 from data_io import generate_pl_wrapped_boolvar
 from display import extract_solved_schedule
@@ -184,3 +185,46 @@ def verify_enforce_rotation_capacity_maximum(rotations, solved_schedule) -> bool
                 sum(decision_vars) <= max_residents_this_rotation
             ), f"sum decision_vars = {decision_vars} != maximum_residents_assigned for {rotation}"
     return True
+
+
+def test_enforce_minimum_contiguity() -> None:
+    # TODO complete test
+    residents = tester_residents
+    rotations = tester_rotations
+    weeks = tester_weeks
+
+    rotations_with_minimum_contiguity = tester_rotations.filter(
+        pl.col("minimum_contiguous_weeks") > 1
+    )
+
+    current_academic_starting_year = 2025
+    weeks_this_acad_year = weeks.filter(
+        pl.col("starting_academic_year") == current_academic_starting_year  # type: ignore
+    )
+
+    test_scheduled = generate_pl_wrapped_boolvar(
+        residents=residents,
+        rotations=rotations_with_minimum_contiguity,
+        weeks=weeks_this_acad_year,
+    )
+
+    test_constraints = enforce_minimum_contiguity(
+        residents,
+        rotations_with_minimum_contiguity,
+        weeks_this_acad_year,
+        scheduled=test_scheduled,
+    )
+
+    model = cp.Model()
+    model += test_constraints
+    model.solve(default_solver, log_search_progress=False)
+
+    solved_schedule = extract_solved_schedule(test_scheduled)
+
+    assert verify_minimum_contiguity(
+        rotations_with_minimum_contiguity, solved_schedule=solved_schedule
+    )
+
+
+def verify_minimum_contiguity(rotations, solved_schedule):
+    assert False

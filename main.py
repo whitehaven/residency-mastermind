@@ -7,6 +7,7 @@ from constraints import (
     enforce_rotation_capacity_maximum,
     require_one_rotation_per_resident_per_week,
     enforce_rotation_capacity_minimum,
+    enforce_minimum_contiguity,
 )
 from data_io import (
     read_bulk_data_sqlite3,
@@ -55,7 +56,14 @@ def solve_schedule(residents, rotations, weeks):
     )
     # Requirement-specific
 
-    model += enforce_requirement_constraints(residents, rotations, weeks, scheduled)
+    rotations_with_min_contiguity_reqs = rotations.filter(
+        (pl.col("minimum_contiguous_weeks") > 1)
+    )
+    model += enforce_minimum_contiguity(
+        residents, rotations_with_min_contiguity_reqs, weeks, scheduled
+    )
+
+    # model += enforce_requirement_constraints(residents, rotations, weeks, scheduled)
 
     # rotation-specific
     model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
