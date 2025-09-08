@@ -38,10 +38,45 @@ def get_resident_rotation_vars(
     )[cpmpy_variable_column].to_list()
 
 
-def subset_scheduled_by(residents, rotations, weeks, scheduled):
-    resident_names = residents["full_name"].to_list()
-    rotation_names = rotations["rotation"].to_list()
-    week_dates = weeks["monday_date"].to_list()
+def subset_scheduled_by(
+    residents: pl.DataFrame | list[str],
+    rotations: pl.DataFrame | list[str],
+    weeks: pl.DataFrame | list[str],
+    scheduled: pl.DataFrame,
+) -> pl.DataFrame:
+    """
+    Subset the scheduled dataframe of cpmpy variables by supplied residents, rotations, and weeks.
+    They can be supplied as str or as dataframes.
+
+    Supply the full dataframe for any group to not perform any filtering by that element.
+
+    Notes:
+        You can always just filter manually. This is just a shorthand for a frequent operation.
+
+    Args:
+        residents:
+        rotations:
+        weeks:
+        scheduled:
+
+    Returns:
+        Subset scheduled dataframe
+    """
+    if isinstance(residents, pl.DataFrame):
+        resident_names = residents["full_name"].to_list()
+    else:
+        resident_names = residents
+
+    if isinstance(rotations, pl.DataFrame):
+        rotation_names = rotations["rotation"].to_list()
+    else:
+        rotation_names = rotations
+
+    if isinstance(weeks, pl.DataFrame):
+        week_dates = weeks["monday_date"].to_list()
+    else:
+        week_dates = weeks
+
     subset_scheduled = scheduled.filter(
         (pl.col("resident").is_in(resident_names))
         & (pl.col("rotation").is_in(rotation_names))
