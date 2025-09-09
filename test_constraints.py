@@ -208,6 +208,7 @@ def test_enforce_minimum_contiguity() -> None:
         weeks=weeks_this_acad_year,
     )
 
+    # TODO check what returns, should be 1D list of or(each combination)
     test_constraints = enforce_minimum_contiguity(
         residents,
         rotations_with_minimum_contiguity,

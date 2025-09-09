@@ -15,10 +15,10 @@ rotations_primary_label = config.rotations_primary_label
 #     TODO remake the contiguity functions
 def negated_bounded_span(
     superspan: list[cp.core.BoolVal], starting_idx: int, minimum_contiguity: int
-) -> list[cp.core.Comparison]:
+) -> list[cp.core.BoolVal]:
     """Filters an isolated sub-sequence of variables assigned to True.
 
-    Extract the span of Boolean variables [start, start + length], negate them,
+    Extract the span of Boolean variables [start, start + length]
     and if there is variables to the left/right of this span, surround the span by
     them in non negated form.
 
@@ -28,21 +28,21 @@ def negated_bounded_span(
       minimum_contiguity: the length of the span.
 
     Returns:
-      a list of variables which conjunction will be false if the sub-list is
+      list of cp.core.BoolVal which union (or) will be True if the sub-list is
       assigned to True, and correctly bounded by variables assigned to False,
-      or by the start or end of superspan.
+      or by the start or end of the superspan.
 
-      Adapted from or-tools examples repository, see https://raw.githubusercontent.com/google/or-tools/9b77015d9d7162b560b9e772c06ff262d2780844/examples/python/shift_scheduling_sat.py
+      Adapted (and negated) from or-tools examples repository, see https://raw.githubusercontent.com/google/or-tools/9b77015d9d7162b560b9e772c06ff262d2780844/examples/python/shift_scheduling_sat.py
     """
     sequence = []
     # left border (start of superspan, or superspan[start - 1])
     if starting_idx > 0:
-        sequence.append(superspan[starting_idx - 1])
+        sequence.append(~superspan[starting_idx - 1])
     for i in range(minimum_contiguity):
-        sequence.append(~superspan[starting_idx + i])
+        sequence.append(superspan[starting_idx + i])
     # right border (end of superspan or superspan[start + length])
     if starting_idx + minimum_contiguity < len(superspan):
-        sequence.append(superspan[starting_idx + minimum_contiguity])
+        sequence.append(~superspan[starting_idx + minimum_contiguity])
     return sequence
 
 
@@ -55,7 +55,9 @@ def enforce_minimum_contiguity(
     """
     Generate constraints that require that at least minimum_contiguity be respected.
 
-    The base case is 1, which means rotation can be scheduled at singletons. Null should be taken to mean 1. (not implemented)
+    The base case is 1, which means rotation can be scheduled at singletons. No constraints are needed in that case. Null should be taken to mean 1.
+
+    I filter here as well for sanity checking, which may be a waste.
 
     Args:
         residents:
@@ -66,8 +68,13 @@ def enforce_minimum_contiguity(
     Returns:
         cumulative_constraints: list[cp.core.Comparison]: List of comparisons which will be or statements of variables for every possible
     """
+    rotations_with_min_contig = rotations.filter(
+        ~(pl.col("minimum_contiguous_weeks") <= 1)
+        | ~(pl.col("minimum_contiguous_weeks").is_null())
+    )
+
     cumulative_constraints = list()
-    for rotation_dict in rotations.iter_rows(named=True):
+    for rotation_dict in rotations_with_min_contig.iter_rows(named=True):
         constraints_on_this_rotation = list()
         for resident_dict in residents.iter_rows(named=True):
             is_scheduled_for_res_on_rot = scheduled.filter(
@@ -76,7 +83,7 @@ def enforce_minimum_contiguity(
             )
             min_contiguity = rotation_dict["minimum_contiguous_weeks"]
 
-            for contiguity_n in range(2, min_contiguity + 1):
+            for contiguity_n in range(1, min_contiguity):
                 for start_wk_idx in range(
                     len(is_scheduled_for_res_on_rot) - contiguity_n + 1
                 ):
@@ -85,9 +92,10 @@ def enforce_minimum_contiguity(
                         start_wk_idx,
                         contiguity_n,
                     )
-                    constraints_on_this_rotation.append(cp.any(nbs))
+
+                    constraints_on_this_rotation.append(cp.all(nbs))
                 # note skipped collection list here - no need to nest, the innermost one here will get them all by rotation with all residents mixed in
-        cumulative_constraints.extend(constraints_on_this_rotation)
+        cumulative_constraints.append(cp.sum(constraints_on_this_rotation) == 0)
     return cumulative_constraints
 
 
