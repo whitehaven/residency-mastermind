@@ -40,7 +40,22 @@ def main(args_from_commandline=None) -> pl.DataFrame:
     return solved_schedule
 
 
-def solve_schedule(residents, rotations, weeks):
+def solve_schedule(
+    residents: pl.DataFrame, rotations: pl.DataFrame, weeks: pl.DataFrame
+) -> pl.DataFrame:
+    """
+    Solve schedule as represented by residents, rotations, and weeks.
+
+    This should handle all filtering before dispatching for efficiency.
+
+    Args:
+        residents:
+        rotations:
+        weeks:
+
+    Returns:
+        scheduled: pl.DataFrame containing the cartesian product of residents, rotations, and weeks along with cpmpy variables and their results
+    """
     model = cp.Model()
 
     # TODO handle R3-extended (just filtered out immediately here)
