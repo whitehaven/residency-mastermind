@@ -39,3 +39,7 @@ def test_solve_schedule():
         rotations,
         melted_solved_schedule,
     ), "verify_enforce_rotation_capacity_maximum failed"
+
+    block_schedule = convert_melted_to_block_schedule(melted_solved_schedule)
+    print(block_schedule)
+    block_schedule.write_csv("block.csv")
