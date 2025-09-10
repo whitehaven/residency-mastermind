@@ -35,13 +35,7 @@ def main(args_from_commandline=None) -> pl.DataFrame:
         pl.col("starting_academic_year") == current_academic_starting_year  # type: ignore
     )
 
-    standard_scheduled_residents = residents.filter(pl.col("year").is_in(["R2", "R3"]))
-
-    scheduled = solve_schedule(
-        standard_scheduled_residents, rotations, weeks_this_acad_year
-    )
-
-    solved_schedule = extract_solved_schedule(scheduled)
+    solved_schedule = solve_schedule(residents, rotations, weeks_this_acad_year)
 
     return solved_schedule
 
@@ -81,7 +75,10 @@ def solve_schedule(residents, rotations, weeks):
     is_feasible = model.solve("ortools", log_search_progress=True)
     if not is_feasible:
         raise ValueError("Infeasible")
-    return scheduled
+
+    solved_schedule = extract_solved_schedule(scheduled)
+
+    return solved_schedule
 
 
 if __name__ == "__main__":
