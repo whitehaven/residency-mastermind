@@ -9,7 +9,7 @@ from constraints import (
     enforce_minimum_contiguity,
 )
 from data_io import generate_pl_wrapped_boolvar
-from display import extract_solved_schedule
+from display import extract_solved_schedule, convert_melted_to_block_schedule
 from selection import group_scheduled_df_by_for_each
 
 config = box.box_from_file("config.yaml")
@@ -190,42 +190,43 @@ def verify_enforce_rotation_capacity_maximum(rotations, solved_schedule) -> bool
 def test_enforce_minimum_contiguity() -> None:
     # TODO complete test
     residents = tester_residents
-    rotations = tester_rotations
+    rotations = pl.read_csv(config.testing_files.rotations.tiny)
     weeks = tester_weeks
 
-    rotations_with_minimum_contiguity = tester_rotations.filter(
+    rotations_with_minimum_contiguity = rotations.filter(
         pl.col("minimum_contiguous_weeks") > 1
     )
 
-    current_academic_starting_year = 2025
-    weeks_this_acad_year = weeks.filter(
-        pl.col("starting_academic_year") == current_academic_starting_year  # type: ignore
-    )
-
-    test_scheduled = generate_pl_wrapped_boolvar(
+    scheduled = generate_pl_wrapped_boolvar(
         residents=residents,
         rotations=rotations_with_minimum_contiguity,
-        weeks=weeks_this_acad_year,
-    )
-
-    # TODO check what returns, should be 1D list of or(each combination)
-    test_constraints = enforce_minimum_contiguity(
-        residents,
-        rotations_with_minimum_contiguity,
-        weeks_this_acad_year,
-        scheduled=test_scheduled,
+        weeks=weeks,
     )
 
     model = cp.Model()
-    model += test_constraints
+
+    # TODO check what returns, should be 1D list of or(each combination)
+    model += enforce_minimum_contiguity(
+        residents,
+        rotations_with_minimum_contiguity,
+        weeks,
+        scheduled,
+    )
+    model += require_one_rotation_per_resident_per_week(
+        residents, rotations, weeks, scheduled=scheduled
+    )
+    model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
+
     model.solve(default_solver, log_search_progress=False)
 
-    solved_schedule = extract_solved_schedule(test_scheduled)
+    melted_solved_schedule = extract_solved_schedule(scheduled)
 
+    block_schedule = convert_melted_to_block_schedule(melted_solved_schedule)
+    block_schedule.write_csv("contig_block.csv")
     assert verify_minimum_contiguity(
-        rotations_with_minimum_contiguity, solved_schedule=solved_schedule
+        rotations_with_minimum_contiguity, solved_schedule=melted_solved_schedule
     )
 
 
-def verify_minimum_contiguity(rotations, solved_schedule):
-    assert False
+def verify_minimum_contiguity(rotations, solved_schedule) -> bool:
+    return False
