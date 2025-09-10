@@ -19,13 +19,10 @@ from display import (
 )
 
 
-def main(args_from_commandline=None, read_db: str | None = None) -> pl.DataFrame:
+def main(args_from_commandline=None) -> pl.DataFrame:
     if args_from_commandline is None:
-        db_location = read_db
-    elif read_db is None:
-        db_location = args_from_commandline.database
-    else:
-        assert False, "No input db specified"
+        raise ValueError("No db specified")
+    db_location = args_from_commandline.database
 
     input_tables = read_bulk_data_sqlite3(db_location)
 
