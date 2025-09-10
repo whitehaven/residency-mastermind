@@ -42,31 +42,58 @@ def main(args_from_commandline=None) -> pl.DataFrame:
 
 def solve_schedule(residents, rotations, weeks):
     model = cp.Model()
-    scheduled = generate_pl_wrapped_boolvar(residents, rotations, weeks)
+
+    # TODO handle R3-extended (just filtered out immediately here)
+    standard_scheduled_residents = residents.filter(pl.col("year").is_in(["R2", "R3"]))
+
+    scheduled = generate_pl_wrapped_boolvar(
+        standard_scheduled_residents, rotations, weeks
+    )
 
     # TODO Constraints
     # resident-specific
     model += require_one_rotation_per_resident_per_week(
-        residents, rotations, weeks, scheduled
+        standard_scheduled_residents, rotations, weeks, scheduled
     )
+
+    # R3-extended scheduling
+
     # Requirement-specific
+    # integrate
+
+    # contiguity
 
     rotations_with_min_contiguity_reqs = rotations.filter(
         (pl.col("minimum_contiguous_weeks") > 1)
     )
     model += enforce_minimum_contiguity(
-        residents, rotations_with_min_contiguity_reqs, weeks, scheduled
+        standard_scheduled_residents,
+        rotations_with_min_contiguity_reqs,
+        weeks,
+        scheduled,
     )
 
     # model += enforce_requirement_constraints(residents, rotations, weeks, scheduled)
 
-    # rotation-specific
-    model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
-    model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
+    # rotation-specific (to physical site, not requirement)
+    rotations_with_capacity_minimum = rotations.filter(
+        pl.col("minimum_residents_assigned") > 0
+    )
+    model += enforce_rotation_capacity_minimum(
+        standard_scheduled_residents, rotations_with_capacity_minimum, weeks, scheduled
+    )
+
+    rotations_with_capacity_maximum = rotations.filter(
+        pl.col("maximum_residents_assigned").is_not_null()
+    )
+    model += enforce_rotation_capacity_maximum(
+        standard_scheduled_residents, rotations_with_capacity_maximum, weeks, scheduled
+    )
 
     # enforce block transitions
 
-    # category-specific
+    # requirement-specific
+    # enforce prerequisites
     # enforce maximum
 
     # TODO Optimization
