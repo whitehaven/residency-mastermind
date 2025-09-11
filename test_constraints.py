@@ -205,6 +205,25 @@ def test_enforce_minimum_contiguity() -> None:
         (pl.col("minimum_contiguous_weeks") > 1)
         & (pl.col("minimum_contiguous_weeks").is_not_null())
     )
+    contiguity_constraints = enforce_minimum_contiguity(
+        residents,
+        rotations_with_minimum_contiguity,
+        weeks,
+        scheduled,
+    )
+
+    assert len(contiguity_constraints) == len(
+        rotations_with_minimum_contiguity
+    ), f"{len(contiguity_constraints)} != {len(rotations_with_minimum_contiguity)}, but should"
+    assert all(
+        [
+            isinstance(constraint, cp.core.Comparison)
+            for constraint in contiguity_constraints
+        ]
+    ), "not all returned constraint elements are cp.core.Comparison"
+
+    model += contiguity_constraints
+
     model += require_one_rotation_per_resident_per_week(
         residents, rotations, weeks, scheduled=scheduled
     )
