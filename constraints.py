@@ -79,13 +79,12 @@ def enforce_minimum_contiguity(
     cumulative_constraints = list()
     for rotation_dict in rotations.iter_rows(named=True):
         constraints_on_this_rotation = list()
+        min_contiguity = rotation_dict["minimum_contiguous_weeks"]
         for resident_dict in residents.iter_rows(named=True):
             is_scheduled_for_res_on_rot = scheduled.filter(
                 (pl.col("resident") == resident_dict[residents_primary_label])
                 & (pl.col("rotation") == rotation_dict[rotations_primary_label])
             )
-            min_contiguity = rotation_dict["minimum_contiguous_weeks"]
-
             for contiguity_n in range(1, min_contiguity):
                 for start_wk_idx in range(
                     len(is_scheduled_for_res_on_rot) - contiguity_n + 1
