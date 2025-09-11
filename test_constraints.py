@@ -229,6 +229,7 @@ def test_enforce_minimum_contiguity() -> None:
         residents, rotations, weeks, scheduled=scheduled
     )
     model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
+    model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
 
     is_feasible = model.solve(config.default_cpmpy_solver, log_search_progress=False)
     if not is_feasible:

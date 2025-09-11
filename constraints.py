@@ -76,6 +76,7 @@ def enforce_minimum_contiguity(
     Returns:
         cumulative_constraints: list[cp.core.Comparison]: List of comparisons which will be or statements of variables for every possible
     """
+    # FIXME strange problem where only rotations touching first and last weeks reliably obey contiguity rules
     cumulative_constraints = list()
     for rotation_dict in rotations.iter_rows(named=True):
         constraints_on_this_rotation = list()
