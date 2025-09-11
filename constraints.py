@@ -12,43 +12,6 @@ residents_primary_label = config.residents_primary_label
 rotations_primary_label = config.rotations_primary_label
 
 
-#     TODO remake the contiguity functions
-def negated_bounded_span(
-    superspan: list[cp.core.BoolVal], starting_idx: int, length: int
-) -> list[cp.core.BoolVal]:
-    """
-    Generate a sequence that returns False when an isolated span of given length occurs.
-
-    This is a corrected version of the original documentation with clearer rationale and naming.
-
-    Args:
-        superspan: List of boolean variables
-        starting_idx: Start index of the span to check
-        length: Length of the span
-
-    Returns:
-        List of boolean expressions that conjunction evaluates to False
-        when the isolated span occurs
-
-      Adapted (and negated) from or-tools examples repository, see https://raw.githubusercontent.com/google/or-tools/9b77015d9d7162b560b9e772c06ff262d2780844/examples/python/shift_scheduling_sat.py
-    """
-    sequence = []
-
-    # Left border: should be False if exists (prevents extension leftward)
-    if starting_idx > 0:
-        sequence.append(superspan[starting_idx - 1])
-
-    # The span itself: negate all variables (so they can't all be True)
-    for i in range(length):
-        sequence.append(~superspan[starting_idx + i])
-
-    # Right border: should be False if exists (prevents extension rightward)
-    if starting_idx + length < len(superspan):
-        sequence.append(superspan[starting_idx + length])
-
-    return sequence
-
-
 def enforce_minimum_contiguity(
     residents: pl.DataFrame,
     rotations: pl.DataFrame,
@@ -60,12 +23,6 @@ def enforce_minimum_contiguity(
 
     Only rotations with meaningful minimum_contiguity should be passed in.
     Filter for minimum_contiguity > 2 and not null.
-
-        The constraint is violated if:
-    - Left boundary is True (or doesn't exist)
-    - All sequence variables are True
-    - Right boundary is True (or doesn't exist)
-    So we negate this: NOT(left_ok AND all_sequence_true AND right_ok)
 
     Notes:
         The base case is 1, which means rotation can be scheduled at singletons.
@@ -80,30 +37,82 @@ def enforce_minimum_contiguity(
     Returns:
         List of constraints preventing unacceptable contiguity patterns
     """
-    # FIXME strange problem where only rotations touching first and last weeks reliably obey contiguity rules
     cumulative_constraints = list()
     for rotation_dict in rotations.iter_rows(named=True):
-        constraints_on_this_rotation = list()
         min_contiguity = rotation_dict["minimum_contiguous_weeks"]
+
         for resident_dict in residents.iter_rows(named=True):
             is_scheduled_for_res_on_rot = scheduled.filter(
                 (pl.col("resident") == resident_dict[residents_primary_label])
                 & (pl.col("rotation") == rotation_dict[rotations_primary_label])
             )
-            for contiguity_n in range(1, min_contiguity):
-                for start_wk_idx in range(
-                    len(is_scheduled_for_res_on_rot) - contiguity_n + 1
-                ):
-                    nbs = negated_bounded_span(
-                        is_scheduled_for_res_on_rot[cpmpy_variable_column].to_list(),
-                        start_wk_idx,
-                        contiguity_n,
+            schedule_vars = is_scheduled_for_res_on_rot[cpmpy_variable_column].to_list()
+            for forbidden_length in range(1, min_contiguity):
+                for start_idx in range(len(schedule_vars) - forbidden_length + 1):
+                    constraint = prevent_isolated_sequence(
+                        schedule_vars, start_idx, forbidden_length
                     )
+                    cumulative_constraints.append(constraint)
 
-                    constraints_on_this_rotation.append(cp.all(nbs))
-                # note skipped collection list here - no need to nest, the innermost one here will get them all by rotation with all residents mixed in
-        cumulative_constraints.append(cp.sum(constraints_on_this_rotation) == 0)
     return cumulative_constraints
+
+
+def prevent_isolated_sequence(
+    variables: list[cp.core.BoolVal], start_idx: int, length: int
+) -> cp.core.Comparison:
+    """
+    Create a constraint that prevents an isolated sequence of `length` of all True values at start_idx.
+
+    An isolated sequence is one that:
+    1. Has all variables in [start_idx, start_idx + length) set to True
+    2. Is bounded by False values (or array boundaries)
+
+    The constraint is violated if:
+    - Left boundary is True (or doesn't exist)
+    - All sequence variables are True
+    - Right boundary is True (or doesn't exist)
+    So we negate this: NOT(left_ok AND all_sequence_true AND right_ok)
+
+    Args:
+        variables: List of boolean variables
+        start_idx: Starting index of the sequence to prevent
+        length: Length of the sequence to prevent
+
+    Returns:
+        A constraint that evaluates to True when this pattern is NOT present
+
+    References:
+        This is based on an or-tools example under negated_bounded_span. This is a DeMorgan inversion of that.
+        See https://github.com/google/or-tools/blob/stable/examples/python/shift_scheduling_sat.py.
+
+    """
+    sequence_vars = []
+
+    # Left boundary: if not at start, the previous variable should be False
+    if start_idx > 0:
+        sequence_vars.append(~variables[start_idx - 1])
+
+    # The sequence itself should not all be True
+    sequence_vars.extend(variables[start_idx : start_idx + length])
+
+    # Right boundary: if not at end, the next variable should be False
+    if start_idx + length < len(variables):
+        sequence_vars.append(~variables[start_idx + length])
+
+    if len(sequence_vars) == length:
+        # No boundaries, just prevent all variables in sequence being True
+        return ~cp.all(sequence_vars)
+    else:
+        # With boundaries: prevent the specific isolated pattern
+        left_ok = sequence_vars[0] if start_idx > 0 else True
+        sequence_true = cp.all(
+            sequence_vars[
+                1 if start_idx > 0 else 0 : 1 + length if start_idx > 0 else length
+            ]
+        )
+        right_ok = sequence_vars[-1] if start_idx + length < len(variables) else True
+
+        return ~(left_ok & sequence_true & right_ok)
 
 
 # TODO replace constraint utility functions
