@@ -17,39 +17,35 @@ def negated_bounded_span(
     superspan: list[cp.core.BoolVal], starting_idx: int, length: int
 ) -> list[cp.core.BoolVal]:
     """
-    Generate negated series which would return false if it matches an underlying sequence of BoolVals. A list of these series is splayed out over every possible place that sequence could occur.
+    Generate a sequence that returns False when an isolated span of given length occurs.
 
-    In conjunction ("and") / Union, this returns False - this establishes there are no sequences of `length`
-    contiguity. This must be done for each unacceptable length (e.g., minimum_contiguity = 2 => exclude 1;
-    minimum_contiguity = 3 => exclude 1, 2)
-
-    Original documentation: "Filters an isolated sub-sequence of variables assigned to True.
-
-    Extract the span of Boolean variables [start, start + length]
-    and if there is variables to the left/right of this span, surround the span by
-    them in non-negated form."
+    This is a corrected version of the original documentation with clearer rationale and naming.
 
     Args:
-      superspan: a list of variables to extract the span from.
-      starting_idx: the start to the span.
-      length: the length of the span to extract
+        superspan: List of boolean variables
+        starting_idx: Start index of the span to check
+        length: Length of the span
 
     Returns:
-      Original documentation: "a list of variables which conjunction will be false if the sub-list is
-      assigned to True, and correctly bounded by variables assigned to False,
-      or by the start or end of works."
+        List of boolean expressions that conjunction evaluates to False
+        when the isolated span occurs
 
       Adapted (and negated) from or-tools examples repository, see https://raw.githubusercontent.com/google/or-tools/9b77015d9d7162b560b9e772c06ff262d2780844/examples/python/shift_scheduling_sat.py
     """
     sequence = []
-    # left border (start of superspan, or superspan[start - 1])
+
+    # Left border: should be False if exists (prevents extension leftward)
     if starting_idx > 0:
         sequence.append(superspan[starting_idx - 1])
+
+    # The span itself: negate all variables (so they can't all be True)
     for i in range(length):
         sequence.append(~superspan[starting_idx + i])
-    # right border (end of superspan or superspan[start + length])
+
+    # Right border: should be False if exists (prevents extension rightward)
     if starting_idx + length < len(superspan):
         sequence.append(superspan[starting_idx + length])
+
     return sequence
 
 
@@ -62,19 +58,27 @@ def enforce_minimum_contiguity(
     """
     Generate constraints that require that at least minimum_contiguity be respected.
 
-    Only rotations with meaningful minimum_contiguity should be passed in.  Filter for minimum_contiguity > 2 and not null.
+    Only rotations with meaningful minimum_contiguity should be passed in.
+    Filter for minimum_contiguity > 2 and not null.
+
+        The constraint is violated if:
+    - Left boundary is True (or doesn't exist)
+    - All sequence variables are True
+    - Right boundary is True (or doesn't exist)
+    So we negate this: NOT(left_ok AND all_sequence_true AND right_ok)
 
     Notes:
-        The base case is 1, which means rotation can be scheduled at singletons. No constraints are needed in that case. Null should be taken to mean 1.
+        The base case is 1, which means rotation can be scheduled at singletons.
+        No constraints are needed in that case. Null should be taken to mean 1.
 
     Args:
-        residents:
-        rotations:
-        weeks:
-        scheduled:
+        residents: DataFrame of residents
+        rotations: DataFrame of rotations with minimum_contiguous_weeks
+        weeks: DataFrame of weeks
+        scheduled: DataFrame with boolean variables for scheduling
 
     Returns:
-        cumulative_constraints: list[cp.core.Comparison]: List of comparisons which will be or statements of variables for every possible
+        List of constraints preventing unacceptable contiguity patterns
     """
     # FIXME strange problem where only rotations touching first and last weeks reliably obey contiguity rules
     cumulative_constraints = list()
