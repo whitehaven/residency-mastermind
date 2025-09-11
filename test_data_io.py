@@ -21,8 +21,9 @@ def test_read_bulk_data_sqlite3():
     dtype_of_weeks_monday_date = (
         test_read_tables["weeks"].select("monday_date").dtypes[0]
     )
-
-    assert isinstance(dtype_of_weeks_monday_date, pl.Date)
+    assert isinstance(
+        dtype_of_weeks_monday_date, pl.Date
+    ), "weeks monday_date column type != pl.Date"
 
 
 def test_generate_pl_wrapped_boolvar():

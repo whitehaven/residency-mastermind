@@ -26,15 +26,15 @@ def read_bulk_data_sqlite3(
             "weeks",
         )
     if date_fields is None:
-        date_field = {"weeks": "monday_date"}
+        date_fields = {"weeks": "monday_date"}
 
     tables = dict()
     with sqlite3.connect(db_location) as con:
         for table_name in tables_to_read:
             extracted_df = pl.read_database(f"SELECT * FROM {table_name}", con)
-            if table_name == "weeks":
+            if table_name in date_fields:
                 extracted_df = extracted_df.with_columns(
-                    pl.col("monday_date").str.to_date()
+                    pl.col(date_fields[table_name]).str.to_date()
                 )
             tables.update({table_name: extracted_df})
     return tables
