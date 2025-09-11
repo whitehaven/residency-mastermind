@@ -230,7 +230,9 @@ def test_enforce_minimum_contiguity() -> None:
     )
     model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
 
-    model.solve(default_solver, log_search_progress=False)
+    is_feasible = model.solve(config.default_cpmpy_solver, log_search_progress=False)
+    if not is_feasible:
+        raise ValueError("Infeasible")
 
     melted_solved_schedule = extract_solved_schedule(scheduled)
 
