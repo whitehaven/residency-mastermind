@@ -190,7 +190,8 @@ def verify_enforce_rotation_capacity_maximum(rotations, solved_schedule) -> bool
 def test_enforce_minimum_contiguity() -> None:
     # TODO complete test
     residents = tester_residents
-    rotations = pl.read_csv(config.testing_files.rotations.tiny)
+    residents = residents.filter(pl.col("year").is_in(["R2", "R3"]))
+    rotations = tester_rotations
     weeks = tester_weeks
 
     scheduled = generate_pl_wrapped_boolvar(
