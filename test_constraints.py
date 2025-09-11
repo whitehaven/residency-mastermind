@@ -199,18 +199,15 @@ def test_enforce_minimum_contiguity() -> None:
 
     scheduled = generate_pl_wrapped_boolvar(
         residents=residents,
-        rotations=rotations_with_minimum_contiguity,
+        rotations=rotations,
         weeks=weeks,
     )
 
     model = cp.Model()
 
-    # TODO check what returns, should be 1D list of or(each combination)
-    model += enforce_minimum_contiguity(
-        residents,
-        rotations_with_minimum_contiguity,
-        weeks,
-        scheduled,
+    rotations_with_minimum_contiguity = rotations.filter(
+        (pl.col("minimum_contiguous_weeks") > 1)
+        & (pl.col("minimum_contiguous_weeks").is_not_null())
     )
     model += require_one_rotation_per_resident_per_week(
         residents, rotations, weeks, scheduled=scheduled
