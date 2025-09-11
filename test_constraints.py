@@ -193,10 +193,6 @@ def test_enforce_minimum_contiguity() -> None:
     rotations = pl.read_csv(config.testing_files.rotations.tiny)
     weeks = tester_weeks
 
-    rotations_with_minimum_contiguity = rotations.filter(
-        pl.col("minimum_contiguous_weeks") > 1
-    )
-
     scheduled = generate_pl_wrapped_boolvar(
         residents=residents,
         rotations=rotations,

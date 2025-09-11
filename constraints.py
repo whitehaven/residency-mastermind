@@ -76,13 +76,8 @@ def enforce_minimum_contiguity(
     Returns:
         cumulative_constraints: list[cp.core.Comparison]: List of comparisons which will be or statements of variables for every possible
     """
-    rotations_with_min_contig = rotations.filter(
-        ~(pl.col("minimum_contiguous_weeks") <= 1)
-        | ~(pl.col("minimum_contiguous_weeks").is_null())
-    )
-
     cumulative_constraints = list()
-    for rotation_dict in rotations_with_min_contig.iter_rows(named=True):
+    for rotation_dict in rotations.iter_rows(named=True):
         constraints_on_this_rotation = list()
         for resident_dict in residents.iter_rows(named=True):
             is_scheduled_for_res_on_rot = scheduled.filter(
