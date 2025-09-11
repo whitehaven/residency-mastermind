@@ -16,11 +16,18 @@ rotations_primary_label = config.rotations_primary_label
 def negated_bounded_span(
     superspan: list[cp.core.BoolVal], starting_idx: int, length: int
 ) -> list[cp.core.BoolVal]:
-    """Filters an isolated sub-sequence of variables assigned to True.
+    """
+    Generate negated series which would return false if it matches an underlying sequence of BoolVals. A list of these series is splayed out over every possible place that sequence could occur.
+
+    In conjunction ("and") / Union, this returns False - this establishes there are no sequences of `length`
+    contiguity. This must be done for each unacceptable length (e.g., minimum_contiguity = 2 => exclude 1;
+    minimum_contiguity = 3 => exclude 1, 2)
+
+    Original documentation: "Filters an isolated sub-sequence of variables assigned to True.
 
     Extract the span of Boolean variables [start, start + length]
     and if there is variables to the left/right of this span, surround the span by
-    them in non-negated form.
+    them in non-negated form."
 
     Args:
       superspan: a list of variables to extract the span from.
@@ -28,9 +35,9 @@ def negated_bounded_span(
       length: the length of the span to extract
 
     Returns:
-      a list of variables which conjunction will be false if the sub-list is
+      Original documentation: "a list of variables which conjunction will be false if the sub-list is
       assigned to True, and correctly bounded by variables assigned to False,
-      or by the start or end of works.
+      or by the start or end of works."
 
       Adapted (and negated) from or-tools examples repository, see https://raw.githubusercontent.com/google/or-tools/9b77015d9d7162b560b9e772c06ff262d2780844/examples/python/shift_scheduling_sat.py
     """
@@ -55,9 +62,10 @@ def enforce_minimum_contiguity(
     """
     Generate constraints that require that at least minimum_contiguity be respected.
 
-    The base case is 1, which means rotation can be scheduled at singletons. No constraints are needed in that case. Null should be taken to mean 1.
+    Only rotations with meaningful minimum_contiguity should be passed in.  Filter for minimum_contiguity > 2 and not null.
 
-    I filter here as well for sanity checking, which may be a waste.
+    Notes:
+        The base case is 1, which means rotation can be scheduled at singletons. No constraints are needed in that case. Null should be taken to mean 1.
 
     Args:
         residents:
