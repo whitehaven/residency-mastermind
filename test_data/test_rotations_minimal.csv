@@ -1,4 +1,6 @@
 rotation,category,required_role,minimum_weeks,maximum_weeks,minimum_residents_assigned,maximum_residents_assigned,minimum_contiguous_weeks,max_contiguous_weeks
-Green HS Senior,HS Rounding Senior,Senior,0,8,1,1,2,NaN
-Orange HS Senior,HS Rounding Senior,Senior,0,8,1,1,2,NaN
-SHMC Consults,Hospitalist,Senior,0,4,0,1,1,NaN
+Green HS Senior,HS Rounding Senior,Senior,0,8,1,1,2,
+Orange HS Senior,HS Rounding Senior,Senior,0,8,1,1,2,
+SHMC Consults,Hospitalist,Senior,0,4,0,1,1,
+SHMC ICU,ICU Senior,Senior,4,4,1,1,4,
+Rheum to Grow Modules,Elective,Senior,0,1,0,15,,
