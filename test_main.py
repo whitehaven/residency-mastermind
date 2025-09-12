@@ -7,6 +7,7 @@ from test_constraints import (
     verify_enforce_rotation_capacity_maximum,
     verify_one_rotation_per_resident_per_week,
     verify_enforce_rotation_capacity_minimum,
+    verify_minimum_contiguity,
 )
 
 config = box.box_from_file("config.yaml")
@@ -39,7 +40,8 @@ def test_solve_schedule():
         rotations,
         melted_solved_schedule,
     ), "verify_enforce_rotation_capacity_maximum failed"
+    assert verify_minimum_contiguity(
+        rotations, melted_solved_schedule
+    ), "verify_minimum_contiguity failed"
 
     block_schedule = convert_melted_to_block_schedule(melted_solved_schedule)
-    print(block_schedule)
-    block_schedule.write_csv("block.csv")

@@ -11,7 +11,7 @@ from constraints import (
     enforce_minimum_contiguity,
 )
 from data_io import generate_pl_wrapped_boolvar
-from display import extract_solved_schedule, convert_melted_to_block_schedule
+from display import extract_solved_schedule
 from selection import group_scheduled_df_by_for_each
 
 config = box.box_from_file("config.yaml")
@@ -228,9 +228,6 @@ def test_enforce_minimum_contiguity() -> None:
         raise ValueError("Infeasible")
 
     melted_solved_schedule = extract_solved_schedule(scheduled)
-
-    block_schedule = convert_melted_to_block_schedule(melted_solved_schedule)
-    block_schedule.write_csv("contig_block.csv")
     assert verify_minimum_contiguity(
         rotations_with_minimum_contiguity, solved_schedule=melted_solved_schedule
     )
