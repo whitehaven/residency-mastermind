@@ -1,3 +1,4 @@
+import json
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -145,6 +146,19 @@ class RequirementBuilder:
             accumulated_constraints.extend(rule.get_constraints())
         return accumulated_constraints
 
+    def write_yaml(self, yaml_path: str = "requirements.yaml") -> None:
+        with open(yaml_path, "w") as reqs:
+            yaml.dump(self.accumulate_constraint_list(), stream=reqs)
+
+    def to_yaml(self) -> str:
+        return yaml.dump(self.accumulate_constraint_list())
+
+    def write_json(self, json_path: str = "requirements.json") -> None:
+        with open(json_path, "w") as reqs_file:
+            json.dump(self.accumulate_constraint_list(), reqs_file)
+
+    def to_json(self) -> str:
+        return json.dumps(self.accumulate_constraint_list(), indent=2)
 
 if __name__ == "__main__":
     builder = RequirementBuilder()
