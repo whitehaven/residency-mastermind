@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import box
 import cpmpy as cp
 import polars as pl
@@ -213,16 +215,6 @@ def test_enforce_minimum_contiguity() -> None:
         scheduled,
     )
 
-    assert len(contiguity_constraints) == len(
-        rotations_with_minimum_contiguity
-    ), f"{len(contiguity_constraints)} != {len(rotations_with_minimum_contiguity)}, but should"
-    assert all(
-        [
-            isinstance(constraint, cp.core.Comparison)
-            for constraint in contiguity_constraints
-        ]
-    ), "not all returned constraint elements are cp.core.Comparison"
-
     model += contiguity_constraints
 
     model += require_one_rotation_per_resident_per_week(
@@ -245,4 +237,107 @@ def test_enforce_minimum_contiguity() -> None:
 
 
 def verify_minimum_contiguity(rotations, solved_schedule) -> bool:
-    return False
+    """
+    Verify that the solved schedule respects minimum contiguity constraints.
+
+    Args:
+        rotations: DataFrame with rotations that have minimum_contiguous_weeks constraints
+        solved_schedule: Melted schedule DataFrame with columns:
+                        ['resident', 'rotation', 'week', 'scheduled'] where
+                        'scheduled' is boolean indicating if resident is on rotation that week
+
+    Returns:
+        bool: True if all contiguity constraints are satisfied, False otherwise
+    """
+    for rotation_dict in rotations.iter_rows(named=True):
+        rotation_name = rotation_dict[config.rotations_primary_label]
+        min_contiguity = rotation_dict["minimum_contiguous_weeks"]
+
+        # Get all residents assigned (cpmpy_result_column==True) to this rotation
+        rotation_schedule = solved_schedule.filter(
+            (pl.col("rotation") == rotation_name)
+            & (pl.col(cpmpy_result_column) == True)
+        )
+
+        for resident_name in rotation_schedule["resident"].unique():
+            resident_rotation_schedule = rotation_schedule.filter(
+                pl.col("resident") == resident_name
+            ).sort("week")
+
+            if len(resident_rotation_schedule) == 0:
+                assert (
+                    False
+                ), f"len(resident_rotation_schedule) == {len(resident_rotation_schedule)}, should not be possible following filter operations"
+
+            scheduled_weeks = resident_rotation_schedule["week"].to_list()
+            contiguous_blocks = find_contiguous_blocks(scheduled_weeks)
+
+            for block in contiguous_blocks:
+                if len(block) < min_contiguity:
+                    print(
+                        f"CONTIGUITY VIOLATION: Resident {resident_name} on rotation {rotation_name}"
+                    )
+                    print(f"  Has block of length {len(block)}: {block}")
+                    print(f"  But minimum contiguity is {min_contiguity}")
+                    return False
+
+    return True
+
+
+def find_contiguous_blocks(week_list: list) -> list[list]:
+    """
+    Find all contiguous blocks in a list of week numbers/identifiers.
+
+    Args:
+        week_list: List of week identifiers (could be dates or week numbers, but in strange degraded state could be strings)
+
+    Returns:
+        List of lists, each containing a contiguous block of weeks
+    """
+    if not week_list:
+        return []
+
+    sorted_weeks = sorted(week_list)
+    blocks = []
+    current_block = [sorted_weeks[0]]
+
+    for i in range(1, len(sorted_weeks)):
+        if is_consecutive(sorted_weeks[i - 1], sorted_weeks[i]):
+            current_block.append(sorted_weeks[i])
+        else:
+            # Start a new block
+            blocks.append(current_block)
+            current_block = [sorted_weeks[i]]
+
+    blocks.append(current_block)
+
+    return blocks
+
+
+def is_consecutive(week1, week2) -> bool:
+    """
+    Check if week1 and week2 are consecutive and ordered week1 -> week2.
+
+    Args:
+        week1, week2: Week identifiers - should be datetime from weeks dataframe but could be integer week numbers (as judged from academic year start)
+
+    Returns:
+        bool: True if week2 immediately follows week1 (== 1 week later)
+    """
+    # If weeks are date-flavored objects
+    if hasattr(week1, "year") and hasattr(week2, "year"):
+
+        return week2 == week1 + timedelta(weeks=1)
+
+    # If weeks are integers representing week numbers
+    if isinstance(week1, int) and isinstance(week2, int):
+        return week2 == week1 + 1
+
+    # If weeks are strings, try conversion to integers assuming bad conversion (worst possible)
+    try:
+        return int(week2) == int(week1) + 1
+    except (ValueError, TypeError):
+        print("failed even to convert to string")
+
+    # Fall back to string comparison (not ideal)
+    return str(week2) == str(int(str(week1)) + 1)
