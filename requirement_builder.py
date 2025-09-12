@@ -96,7 +96,7 @@ class RequirementRule:
                 "fulfilled_by": self.fulfilled_by,
                 "type": "prerequisite",
                 "prerequisite": prerequisite,
-                "weeks": weeks_required,
+                "weeks_required": weeks_required,
             },
         )
         return self
