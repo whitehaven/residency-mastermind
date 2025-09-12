@@ -140,7 +140,7 @@ class RequirementBuilder:
         self.requirements[name] = rule
         return rule
 
-    def accumulate_constraints(self) -> list[dict]:
+    def accumulate_constraint_list(self) -> list[dict]:
         accumulated_constraints = list()
         for rule in self.requirements.values():
             accumulated_constraints.extend(rule.get_constraints())
@@ -160,7 +160,8 @@ class RequirementBuilder:
     def to_json(self) -> str:
         return json.dumps(self.accumulate_constraint_list(), indent=2)
 
-if __name__ == "__main__":
+
+def generate_builder_with_current_requirements() -> RequirementBuilder:
     builder = RequirementBuilder()
 
     (
@@ -219,39 +220,37 @@ if __name__ == "__main__":
         .min_contiguity_over_resident_years(2, "R3")
     )
 
-    # (  # TODO how does early nights backup work? is it R2s?
-    #     builder.add_requirement(
-    #         name="Night Senior", fulfilled_by={"Night Senior", "Backup Night R3"}
-    #     )
-    #     .min_weeks_in_year(4, "R2")
-    #     .never_broken_up_in_year("R2")
-    #     .min_weeks_in_year(1, "R3")
-    #     .max_weeks_in_year(2, "R3")
-    #     .never_broken_up_in_year("R3")
-    # )
-    #
+    (  # TODO how does early nights backup work? is it R2s?
+        builder.add_requirement(
+            name="Night Senior", fulfilled_by=["Night Senior", "Backup Night R3"]
+        )
+        .min_weeks_over_resident_years(4, "R2")
+        .min_contiguity_over_resident_years(4, "R2")
+        .min_weeks_over_resident_years(1, "R3")
+        .max_weeks_over_resident_years(2, "R3")
+        # .never_broken_up_in_year("R3")
+    )
 
-    #
-    # (
-    #     builder.add_requirement(name="Vacation", fulfilled_by={"Vacation"})
-    #     .exact_weeks_in_year(4, "R2")
-    #     .exact_weeks_in_year(3, "R3")
-    #     .must_include_weeks_this_year(
-    #         weeks=[51, 52], years="R2"
-    #     )  # TODO need to get number that R1s actually get, or would just go on R1 schedule?
-    # )
-    #
-
-    # )
+    (
+        builder.add_requirement(name="Vacation", fulfilled_by=["Vacation"])
+        .exact_weeks_over_resident_years(4, "R2")
+        .exact_weeks_over_resident_years(3, "R3")
+        # TODO need to get number that R1s actually get, or would just go on R1 schedule?
+    )
 
     # TODO might be better implemented by rotation?
     # (
-    #     builder.add_requirement(
-    #         name="Backup Night Senior", fulfilled_by={"Backup Night Senior"}
+    #     current_builder.add_requirement(
+    #         name="Backup Night Senior", fulfilled_by=["Backup Night Senior"]
     #     )
     #     .only_include_weeks_this_year([1, 2, 5, 6])
     #     .min_weeks_in_year(0, "R3")
     # )
 
-    with open("requirements.yaml", "w") as reqs:
-        yaml.dump(builder.accumulate_constraints(), stream=reqs)
+    return builder
+
+
+if __name__ == "__main__":
+    current_builder = generate_builder_with_current_requirements()
+    print(current_builder.to_yaml())
+    print(current_builder.to_json())
