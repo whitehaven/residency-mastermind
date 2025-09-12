@@ -16,7 +16,6 @@ class RequirementRule:
     ):
         self._constraints.append(
             {
-                "requirement": self.name,
                 "fulfilled_by": self.fulfilled_by,
                 "type": "min_by_period",
                 "weeks": min_weeks,
@@ -30,7 +29,6 @@ class RequirementRule:
     ):
         self._constraints.append(
             {
-                "requirement": self.name,
                 "fulfilled_by": self.fulfilled_by,
                 "type": "max_by_period",
                 "weeks": max_weeks,
@@ -53,7 +51,6 @@ class RequirementRule:
     ):
         self._constraints.append(
             {
-                "requirement": self.name,
                 "fulfilled_by": self.fulfilled_by,
                 "type": "exact_by_period",
                 "weeks": exact_weeks,
@@ -67,7 +64,6 @@ class RequirementRule:
     ):
         self._constraints.append(
             {
-                "requirement": self.name,
                 "fulfilled_by": self.fulfilled_by,
                 "type": "min_contiguity",
                 "weeks": min_contiguity,
@@ -81,7 +77,6 @@ class RequirementRule:
     ):
         self._constraints.append(
             {
-                "requirement": self.name,
                 "fulfilled_by": self.fulfilled_by,
                 "type": "max_contiguity_in_period",
                 "weeks": max_contiguity,
@@ -93,7 +88,6 @@ class RequirementRule:
     def after_prerequisite(self, prerequisite: str, weeks_required: int):
         self._constraints.append(
             {
-                "requirement": self.name,
                 "fulfilled_by": self.fulfilled_by,
                 "type": "prerequisite",
                 "prerequisite": prerequisite,
@@ -116,7 +110,6 @@ class RequirementRule:
         """
         self._constraints.append(
             {
-                "requirement": self.name,
                 "fulfilled_by": self.fulfilled_by,
                 "type": "exclude_weeks",
                 "excluded_weeks": weeks,
@@ -140,25 +133,27 @@ class RequirementBuilder:
         self.requirements[name] = rule
         return rule
 
-    def accumulate_constraint_list(self) -> list[dict]:
-        accumulated_constraints = list()
-        for rule in self.requirements.values():
-            accumulated_constraints.extend(rule.get_constraints())
+    def accumulate_constraints_by_rule(self) -> dict:
+        accumulated_constraints = dict()
+        for rule_name, rule_constraints in self.requirements.items():
+            accumulated_constraints.update(
+                {rule_name: rule_constraints.get_constraints()}
+            )
         return accumulated_constraints
 
     def write_yaml(self, yaml_path: str = "requirements.yaml") -> None:
         with open(yaml_path, "w") as reqs:
-            yaml.dump(self.accumulate_constraint_list(), stream=reqs)
+            yaml.dump(self.accumulate_constraints_by_rule(), stream=reqs)
 
     def to_yaml(self) -> str:
-        return yaml.dump(self.accumulate_constraint_list())
+        return yaml.dump(self.accumulate_constraints_by_rule())
 
     def write_json(self, json_path: str = "requirements.json") -> None:
         with open(json_path, "w") as reqs_file:
-            json.dump(self.accumulate_constraint_list(), reqs_file)
+            json.dump(self.accumulate_constraints_by_rule(), reqs_file)
 
     def to_json(self) -> str:
-        return json.dumps(self.accumulate_constraint_list(), indent=2)
+        return json.dumps(self.accumulate_constraints_by_rule(), indent=2)
 
 
 def generate_builder_with_current_requirements() -> RequirementBuilder:
