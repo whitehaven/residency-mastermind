@@ -1,0 +1,112 @@
+- fulfilled_by  : &id001
+    - HS Orange Senior
+    - HS Green Senior
+  requirement   : HS Rounding Senior
+  resident_years: R2
+  type          : min_by_period
+  weeks         : 2
+- fulfilled_by  : *id001
+  requirement   : HS Rounding Senior
+  resident_years: R2
+  type          : max_by_period
+  weeks         : 4
+- fulfilled_by  : *id001
+  requirement   : HS Rounding Senior
+  resident_years: R3
+  type          : exact_by_period
+  weeks         : 8
+- fulfilled_by  : *id001
+  requirement   : HS Rounding Senior
+  resident_years: R2
+  type          : min_contiguity
+  weeks         : 2
+- fulfilled_by  : *id001
+  requirement   : HS Rounding Senior
+  resident_years: R3
+  type          : min_contiguity
+  weeks         : 4
+- fulfilled_by  : *id001
+  requirement   : HS Rounding Senior
+  resident_years: R3
+  type          : min_by_period
+  weeks         : 2
+- fulfilled_by: *id001
+  prerequisite: HS Admitting Senior
+  requirement : HS Rounding Senior
+  type        : prerequisite
+  weeks       : 2
+- fulfilled_by  : &id002
+    - Purple Senior
+  requirement   : HS Admitting Senior
+  resident_years: R2
+  type          : min_by_period
+  weeks         : 5
+- fulfilled_by  : *id002
+  requirement   : HS Admitting Senior
+  resident_years: R2
+  type          : max_by_period
+  weeks         : 6
+- fulfilled_by  : *id002
+  requirement   : HS Admitting Senior
+  resident_years:
+    - R2
+    - R3
+  type          : max_contiguity_in_period
+  weeks         : 1
+- fulfilled_by  :
+    - SHMC ICU Senior
+  requirement   : ICU Senior
+  resident_years: R2
+  type          : min_by_period
+  weeks         : 4
+- fulfilled_by  : &id003
+    - Systems of Medicine
+  requirement   : Systems of Medicine
+  resident_years: R2
+  type          : min_by_period
+  weeks         : 2
+- fulfilled_by  : *id003
+  requirement   : Systems of Medicine
+  resident_years: R2
+  type          : min_contiguity
+  weeks         : 2
+- fulfilled_by  : &id004
+    - Elective
+  requirement   : Elective
+  resident_years: R2
+  type          : min_by_period
+  weeks         : 20
+- fulfilled_by  : *id004
+  requirement   : Elective
+  resident_years: R2
+  type          : max_by_period
+  weeks         : 30
+- fulfilled_by  :
+    - Ethics
+  requirement   : Ethics
+  resident_years:
+    - R2
+    - R3
+  type          : exact_by_period
+  weeks         : 1
+- fulfilled_by  : &id005
+    - STHC Senior
+  requirement   : Ambulatory Senior
+  resident_years: R2
+  type          : min_by_period
+  weeks         : 4
+- fulfilled_by  : *id005
+  requirement   : Ambulatory Senior
+  resident_years: R2
+  type          : min_contiguity
+  weeks         : 2
+- fulfilled_by  : *id005
+  requirement   : Ambulatory Senior
+  resident_years: R3
+  type          : min_by_period
+  weeks         : 4
+- fulfilled_by  : *id005
+  requirement   : Ambulatory Senior
+  resident_years: R3
+  type          : min_contiguity
+  weeks         : 2

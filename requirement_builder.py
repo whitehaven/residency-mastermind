@@ -1,13 +1,13 @@
 from dataclasses import dataclass, field
 from typing import Any
 
-from icecream import ic
+import yaml
 
 
 @dataclass
 class RequirementRule:
     name: str
-    fulfilled_by: set[str]
+    fulfilled_by: list[str]
     _constraints: list[dict[str, Any]] = field(default_factory=list)
 
     def min_weeks_over_resident_years(
@@ -16,6 +16,7 @@ class RequirementRule:
         self._constraints.append(
             {
                 "requirement": self.name,
+                "fulfilled_by": self.fulfilled_by,
                 "type": "min_by_period",
                 "weeks": min_weeks,
                 "resident_years": resident_years,
@@ -29,6 +30,7 @@ class RequirementRule:
         self._constraints.append(
             {
                 "requirement": self.name,
+                "fulfilled_by": self.fulfilled_by,
                 "type": "max_by_period",
                 "weeks": max_weeks,
                 "resident_years": resident_years,
@@ -51,6 +53,7 @@ class RequirementRule:
         self._constraints.append(
             {
                 "requirement": self.name,
+                "fulfilled_by": self.fulfilled_by,
                 "type": "exact_by_period",
                 "weeks": exact_weeks,
                 "resident_years": resident_years,
@@ -64,6 +67,7 @@ class RequirementRule:
         self._constraints.append(
             {
                 "requirement": self.name,
+                "fulfilled_by": self.fulfilled_by,
                 "type": "min_contiguity",
                 "weeks": min_contiguity,
                 "resident_years": resident_years,
@@ -77,6 +81,7 @@ class RequirementRule:
         self._constraints.append(
             {
                 "requirement": self.name,
+                "fulfilled_by": self.fulfilled_by,
                 "type": "max_contiguity_in_period",
                 "weeks": max_contiguity,
                 "resident_years": resident_years,
@@ -88,6 +93,7 @@ class RequirementRule:
         self._constraints.append(
             {
                 "requirement": self.name,
+                "fulfilled_by": self.fulfilled_by,
                 "type": "prerequisite",
                 "prerequisite": prerequisite,
                 "weeks": weeks_required,
@@ -110,6 +116,7 @@ class RequirementRule:
         self._constraints.append(
             {
                 "requirement": self.name,
+                "fulfilled_by": self.fulfilled_by,
                 "type": "exclude_weeks",
                 "excluded_weeks": weeks,
                 "resident_years": resident_years,
@@ -127,7 +134,7 @@ class RequirementBuilder:
     def __init__(self):
         self.requirements: dict[str, RequirementRule] = {}
 
-    def add_requirement(self, name: str, fulfilled_by: set[str]) -> RequirementRule:
+    def add_requirement(self, name: str, fulfilled_by: list[str]) -> RequirementRule:
         rule = RequirementRule(name=name, fulfilled_by=fulfilled_by)
         self.requirements[name] = rule
         return rule
@@ -145,7 +152,7 @@ if __name__ == "__main__":
     (
         builder.add_requirement(
             name="HS Rounding Senior",
-            fulfilled_by={"HS Orange Senior", "HS Green Senior"},
+            fulfilled_by=["HS Orange Senior", "HS Green Senior"],
         )
         .min_weeks_over_resident_years(2, "R2")
         .max_weeks_over_resident_years(4, "R2")
@@ -156,15 +163,48 @@ if __name__ == "__main__":
         .after_prerequisite("HS Admitting Senior", 2)
     )
 
-    # (
-    #     builder.add_requirement(
-    #         name="HS Admitting Senior", fulfilled_by={"Purple Senior"}
-    #     )
-    #     .min_weeks_in_year(5, "R2")
-    #     .max_weeks_in_year(6, "R2")
-    #     .max_contiguity_in_year(1, "R2")
-    # )
-    #
+    (
+        builder.add_requirement(
+            name="HS Admitting Senior", fulfilled_by=["Purple Senior"]
+        )
+        .min_weeks_over_resident_years(5, "R2")
+        .max_weeks_over_resident_years(6, "R2")
+        .max_contiguity_over_resident_years(1, ["R2", "R3"])
+    )
+
+    (
+        builder.add_requirement(
+            name="ICU Senior", fulfilled_by=["SHMC ICU Senior"]
+        ).min_weeks_over_resident_years(4, "R2")
+    )
+    (
+        builder.add_requirement(
+            name="Systems of Medicine", fulfilled_by=["Systems of Medicine"]
+        )
+        .min_weeks_over_resident_years(2, "R2")
+        .min_contiguity_over_resident_years(2, "R2")
+    )
+
+    (
+        builder.add_requirement(name="Elective", fulfilled_by=["Elective"])
+        .min_weeks_over_resident_years(20, "R2")
+        .max_weeks_over_resident_years(30, "R2")
+    )
+
+    (
+        builder.add_requirement(
+            name="Ethics", fulfilled_by=["Ethics"]
+        ).exact_weeks_over_resident_years(1, ["R2", "R3"])
+    )
+
+    (
+        builder.add_requirement(name="Ambulatory Senior", fulfilled_by=["STHC Senior"])
+        .min_weeks_over_resident_years(4, "R2")
+        .min_contiguity_over_resident_years(2, "R2")
+        .min_weeks_over_resident_years(4, "R3")
+        .min_contiguity_over_resident_years(2, "R3")
+    )
+
     # (  # TODO how does early nights backup work? is it R2s?
     #     builder.add_requirement(
     #         name="Night Senior", fulfilled_by={"Night Senior", "Backup Night R3"}
@@ -176,19 +216,7 @@ if __name__ == "__main__":
     #     .never_broken_up_in_year("R3")
     # )
     #
-    # (
-    #     builder.add_requirement(
-    #         name="ICU Senior", fulfilled_by={"SHMC ICU Senior"}
-    #     ).min_weeks_in_year(4, "R2")
-    # )
-    #
-    # (
-    #     builder.add_requirement(name="Ambulatory Senior", fulfilled_by={"STHC Senior"})
-    #     .min_weeks_in_year(4, "R2")
-    #     .min_contiguity_in_year(2, "R2")
-    #     .min_weeks_in_year(4, "R3")
-    #     .min_contiguity_in_year(2, "R3")
-    # )
+
     #
     # (
     #     builder.add_requirement(name="Vacation", fulfilled_by={"Vacation"})
@@ -199,24 +227,7 @@ if __name__ == "__main__":
     #     )  # TODO need to get number that R1s actually get, or would just go on R1 schedule?
     # )
     #
-    # (
-    #     builder.add_requirement(
-    #         name="Systems of Medicine", fulfilled_by={"Systems of Medicine"}
-    #     )
-    #     .min_weeks_total(2)
-    #     .min_contiguity_in_year(min_contiguity=2, year="R2")
-    # )
-    #
-    # (
-    #     builder.add_requirement(name="Elective", fulfilled_by={"Elective"})
-    #     .min_weeks_in_year(min_weeks=20, year="R2")
-    #     .max_weeks_in_year(max_weeks=30, year="R2")
-    # )
-    #
-    # (
-    #     builder.add_requirement(
-    #         name="Ethics", fulfilled_by={"Ethics"}
-    #     ).exact_weeks_total(exact_weeks=1)
+
     # )
 
     # TODO might be better implemented by rotation?
@@ -227,8 +238,6 @@ if __name__ == "__main__":
     #     .only_include_weeks_this_year([1, 2, 5, 6])
     #     .min_weeks_in_year(0, "R3")
     # )
-    # print(yaml.dump(builder.requirements))
 
-    # print(dump_polars_df_to_yaml(builder.generate_constraints_df()))
-
-    ic(builder.accumulate_constraints())
+    with open("requirements.yaml", "w") as reqs:
+        yaml.dump(builder.accumulate_constraints(), stream=reqs)
