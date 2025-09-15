@@ -1,8 +1,5 @@
-import json
 from dataclasses import dataclass, field
 from typing import Any
-
-import yaml
 
 
 @dataclass
@@ -141,20 +138,6 @@ class RequirementBuilder:
             )
         return accumulated_constraints
 
-    def write_yaml(self, yaml_path: str = "requirements.yaml") -> None:
-        with open(yaml_path, "w") as reqs:
-            yaml.dump(self.accumulate_constraints_by_rule(), stream=reqs)
-
-    def to_yaml(self) -> str:
-        return yaml.dump(self.accumulate_constraints_by_rule())
-
-    def write_json(self, json_path: str = "requirements.json") -> None:
-        with open(json_path, "w") as reqs_file:
-            json.dump(self.accumulate_constraints_by_rule(), reqs_file)
-
-    def to_json(self) -> str:
-        return json.dumps(self.accumulate_constraints_by_rule(), indent=2)
-
 
 def generate_builder_with_current_requirements() -> RequirementBuilder:
     builder = RequirementBuilder()
@@ -246,6 +229,8 @@ def generate_builder_with_current_requirements() -> RequirementBuilder:
 
 
 if __name__ == "__main__":
+    import box
+
     current_builder = generate_builder_with_current_requirements()
-    current_builder.write_yaml()
-    print(current_builder.to_yaml())
+    builder_box = box.Box(current_builder.accumulate_constraints_by_rule())
+    builder_box.to_yaml("requirements.yaml")
