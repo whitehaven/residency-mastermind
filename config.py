@@ -11,6 +11,7 @@ def reset_to_default_config(config_file_path: str | None = "config.yaml") -> Non
             "rotations_primary_label": "rotation",
             "weeks_primary_label": "monday_date",
             "default_cpmpy_solver": "ortools",
+            "default_maximum_contiguity": 4,
             "testing_db_path": "seniors_only_anonymized.db",
             "testing_files": {
                 "residents": {
