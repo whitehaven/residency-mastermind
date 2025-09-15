@@ -9,6 +9,7 @@ from constraints import (
     enforce_rotation_capacity_minimum,
     enforce_rotation_capacity_maximum,
     enforce_minimum_contiguity,
+    enforce_requirement_constraints,
 )
 from data_io import generate_pl_wrapped_boolvar
 from display import extract_solved_schedule
@@ -338,3 +339,25 @@ def is_consecutive(week1, week2) -> bool:
 
     # Fall back to string comparison (not ideal)
     return str(week2) == str(int(str(week1)) + 1)
+
+
+def test_enforce_requirement_constraints():
+
+    residents = tester_residents
+    residents = residents.filter(
+        pl.col("year").is_in(["R2", "R3"])
+    )  # again, note filtered to exclude extended-R3s
+    rotations = tester_rotations
+    weeks = tester_weeks
+
+    scheduled = generate_pl_wrapped_boolvar(
+        residents=residents,
+        rotations=rotations,
+        weeks=weeks,
+    )
+    requirements = box.box_from_file("requirements.yaml")
+    enforce_requirement_constraints(
+        requirements, tester_residents, tester_rotations, tester_weeks, scheduled
+    )
+
+    assert False

@@ -37,6 +37,7 @@ def enforce_minimum_contiguity(
     Returns:
         List of constraints preventing unacceptable contiguity patterns
     """
+    # TODO hold on, could you just allow the right dimension only?
     cumulative_constraints = list()
     for rotation_dict in rotations.iter_rows(named=True):
         min_contiguity = rotation_dict["minimum_contiguous_weeks"]
@@ -115,6 +116,8 @@ def prevent_isolated_sequence(
         return ~(left_ok & sequence_true & right_ok)
 
 
+# TODO max_contiguity is just inverted, and fixed_contiguity would just be set subtraction
+
 # TODO replace constraint utility functions
 # def force_value
 # def forbid_ineligible_rotations
@@ -176,17 +179,6 @@ def apply_constraint_to_groups(
         if decision_vars:
             constraints.append(constraint_applicator(decision_vars))
     return constraints
-
-
-def enforce_requirement_constraints(
-    residents: pl.DataFrame,
-    rotations: pl.DataFrame,
-    weeks: pl.DataFrame,
-    scheduled: pl.DataFrame,
-) -> list:
-    for resident in residents.iter_rows(named=True):
-        pass
-    return []  # TODO incomplete
 
 
 def enforce_rotation_capacity_minimum(
@@ -268,5 +260,23 @@ def enforce_rotation_capacity_maximum(
     return constraints
 
 
+def enforce_requirement_constraints(
+    requirements: box.Box,
+    residents: pl.DataFrame,
+    rotations: pl.DataFrame,
+    weeks: pl.DataFrame,
+    scheduled: pl.DataFrame,
+) -> list:
+    # for each requirement
+    for requirement in requirements.keys():
+        # for each constraint
+        for constraint in requirements[requirement].values:
+            print(constraint)
+            # dispatch to appropriate function
+
+
 if __name__ == "__main__":
-    pass
+    config = box.box_from_file("config.yaml")
+    requirements = box.box_from_file("requirements.yaml")
+
+    enforce_requirement_constraints(requirements)
