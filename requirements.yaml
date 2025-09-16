@@ -1,128 +1,154 @@
-Ambulatory Senior  :
-  - fulfilled_by: &id001
-      - STHC Senior
-  resident_years: R2
-    type        : min_by_period
-    weeks       : 4
-  - fulfilled_by: *id001
-  resident_years: R2
-    type        : min_contiguity
-    weeks       : 2
-  - fulfilled_by: *id001
-  resident_years: R3
-    type        : min_by_period
-    weeks       : 4
-  - fulfilled_by: *id001
-  resident_years: R3
-    type        : min_contiguity
-    weeks       : 2
-Elective           :
-  - fulfilled_by: &id002
-      - Elective
-  resident_years: R2
-    type        : min_by_period
-    weeks       : 20
-  - fulfilled_by: *id002
-  resident_years: R2
-    type        : max_by_period
-    weeks       : 30
-Ethics             :
+HS Rounding Senior :
   - fulfilled_by:
-      - Ethics
-  resident_years:
-    - R2
-    - R3
-    type        : exact_by_period
-    weeks       : 1
-HS Admitting Senior:
-  - fulfilled_by: &id003
-      - Purple Senior
-  resident_years: R2
+      - HS Orange Senior
+      - HS Green Senior
     type        : min_by_period
-    weeks       : 5
-  - fulfilled_by: *id003
+    weeks       : 2
   resident_years: R2
+  - fulfilled_by:
+      - HS Orange Senior
+      - HS Green Senior
     type        : max_by_period
-    weeks       : 6
-  - fulfilled_by  : *id003
+    weeks       : 4
+  resident_years: R2
+  - fulfilled_by  :
+      - HS Orange Senior
+      - HS Green Senior
+    type          : exact_by_period
+    weeks         : 8
+    resident_years: R3
+  - fulfilled_by  :
+      - HS Orange Senior
+      - HS Green Senior
+    type          : min_contiguity
+    weeks         : 2
+    resident_years: R2
+  - fulfilled_by:
+      - HS Orange Senior
+      - HS Green Senior
+    type        : min_contiguity
+    weeks       : 4
+  resident_years: R3
+  - fulfilled_by  :
+      - HS Orange Senior
+      - HS Green Senior
+    type          : min_by_period
+    weeks         : 2
+    resident_years: R3
+  - fulfilled_by  :
+      - HS Orange Senior
+      - HS Green Senior
+    type          : prerequisite
+    prerequisite  : HS Admitting Senior
+    weeks_required: 2
+HS Admitting Senior:
+  - fulfilled_by  :
+      - Purple Senior
+    type          : min_by_period
+    weeks         : 5
+    resident_years: R2
+  - fulfilled_by  :
+      - Purple Senior
+    type          : max_by_period
+    weeks         : 6
+    resident_years: R2
+  - fulfilled_by  :
+      - Purple Senior
+    type          : max_contiguity_in_period
+    weeks         : 1
     resident_years:
       - R2
       - R3
-    type          : max_contiguity_in_period
-    weeks         : 1
-HS Rounding Senior :
-  - fulfilled_by: &id004
-      - HS Orange Senior
-      - HS Green Senior
-  resident_years: R2
-    type        : min_by_period
-    weeks       : 2
-  - fulfilled_by: *id004
-  resident_years: R2
-    type        : max_by_period
-    weeks       : 4
-  - fulfilled_by  : *id004
-    resident_years: R3
-    type          : exact_by_period
-    weeks         : 8
-  - fulfilled_by  : *id004
-    resident_years: R2
-    type          : min_contiguity
-    weeks         : 2
-  - fulfilled_by  : *id004
-    resident_years: R3
-    type          : min_contiguity
-    weeks         : 4
-  - fulfilled_by  : *id004
-    resident_years: R3
-    type          : min_by_period
-    weeks         : 2
-  - fulfilled_by  : *id004
-    prerequisite  : HS Admitting Senior
-    type          : prerequisite
-    weeks_required: 2
 ICU Senior         :
   - fulfilled_by  :
       - SHMC ICU Senior
-    resident_years: R2
     type          : min_by_period
     weeks         : 4
-Night Senior       :
-  - fulfilled_by: &id005
-      - Night Senior
-      - Backup Night R3
-  resident_years: R2
-    type        : min_by_period
-    weeks       : 4
-  - fulfilled_by: *id005
-  resident_years: R2
-    type        : min_contiguity
-    weeks       : 4
-  - fulfilled_by: *id005
-  resident_years: R3
-    type        : min_by_period
-    weeks       : 1
-  - fulfilled_by: *id005
-  resident_years: R3
-    type        : max_by_period
-    weeks       : 2
-Systems of Medicine:
-  - fulfilled_by  : &id006
-      - Systems of Medicine
     resident_years: R2
+Systems of Medicine:
+  - fulfilled_by  :
+      - Systems of Medicine
     type          : min_by_period
     weeks         : 2
-  - fulfilled_by  : *id006
     resident_years: R2
+  - fulfilled_by  :
+      - Systems of Medicine
     type          : min_contiguity
     weeks         : 2
-Vacation           :
-  - fulfilled_by  : &id007
-      - Vacation
     resident_years: R2
+Elective           :
+  - fulfilled_by:
+      - Elective
+    type        : min_by_period
+    weeks       : 20
+  resident_years: R2
+  - fulfilled_by  :
+      - Elective
+    type          : max_by_period
+    weeks         : 30
+    resident_years: R2
+Ethics             :
+  - fulfilled_by  :
+      - Ethics
+    type          : exact_by_period
+    weeks         : 1
+    resident_years:
+      - R2
+      - R3
+Ambulatory Senior  :
+  - fulfilled_by  :
+      - STHC Senior
+    type          : min_by_period
+    weeks         : 4
+    resident_years: R2
+  - fulfilled_by  :
+      - STHC Senior
+    type          : min_contiguity
+    weeks         : 2
+    resident_years: R2
+  - fulfilled_by  :
+      - STHC Senior
+    type          : min_by_period
+    weeks         : 4
+    resident_years: R3
+  - fulfilled_by  :
+      - STHC Senior
+    type          : min_contiguity
+    weeks         : 2
+    resident_years: R3
+Night Senior       :
+  - fulfilled_by:
+      - Night Senior
+      - Backup Night R3
+    type        : min_by_period
+    weeks       : 4
+  resident_years: R2
+  - fulfilled_by  :
+      - Night Senior
+      - Backup Night R3
+    type          : min_contiguity
+    weeks         : 4
+    resident_years: R2
+  - fulfilled_by:
+      - Night Senior
+      - Backup Night R3
+    type        : min_by_period
+    weeks       : 1
+  resident_years: R3
+  - fulfilled_by  :
+      - Night Senior
+      - Backup Night R3
+    type          : max_by_period
+    weeks         : 2
+    resident_years: R3
+Vacation           :
+  - fulfilled_by  :
+      - Vacation
     type          : exact_by_period
     weeks         : 4
-  - fulfilled_by  : *id007
-    resident_years: R3
+    resident_years: R2
+  - fulfilled_by  :
+      - Vacation
     type          : exact_by_period
     weeks         : 3
+    resident_years: R3
