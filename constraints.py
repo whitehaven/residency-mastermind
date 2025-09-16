@@ -331,16 +331,37 @@ def enforce_requirement_constraints(
     weeks: pl.DataFrame,
     scheduled: pl.DataFrame,
 ) -> list[cp.core.Comparison]:
-    # for each requirement
-    for requirement in requirements.keys():
-        # for each constraint
-        for constraint in requirements[requirement].values:
-            print(constraint)
-            # dispatch to appropriate function
+    cumulative_constraints = []
+
+    constraint_to_callable = {"min_contiguity": enforce_minimum_contiguity}  # etc.
+
+    for requirement_name, requirement_body in current_requirements.items():
+        print(f">{requirement_name=}")
+        for fulfilling_rotation in requirement_body.fulfilled_by:
+            print(f"|-> {fulfilling_rotation=}")
+            for constraint in requirement_body.constraints:
+                print(f"|--> now enforce {constraint=}")
+                # TODO needs min_weeks *per resident*, *prerequisite*
+    return cumulative_constraints
 
 
 if __name__ == "__main__":
     config = box.box_from_file("config.yaml")
-    requirements = box.box_from_file("requirements.yaml")
 
-    enforce_requirement_constraints(requirements)
+    tester_residents = pl.read_csv(config.testing_files.residents.real_size_seniors)
+    tester_rotations = pl.read_csv(config.testing_files.rotations.real_size)
+    tester_weeks = pl.read_csv(
+        config.testing_files.weeks.full_academic_year_2025_2026, try_parse_dates=True
+    )
+    tester_scheduled = generate_pl_wrapped_boolvar(
+        tester_residents, tester_rotations, tester_weeks
+    )
+    current_requirements = box.box_from_file("requirements.yaml")
+
+    enforce_requirement_constraints(
+        current_requirements,
+        tester_residents,
+        tester_rotations,
+        tester_weeks,
+        tester_scheduled,
+    )
