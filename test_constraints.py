@@ -250,6 +250,10 @@ def verify_minimum_contiguity(rotations, solved_schedule) -> bool:
         bool: True if all contiguity constraints are satisfied, False otherwise
     """
     for rotation_dict in rotations.iter_rows(named=True):
+
+        if rotation_dict["minimum_contiguous_weeks"] is None:
+            continue
+
         rotation_name = rotation_dict[config.rotations_primary_label]
         min_contiguity = rotation_dict["minimum_contiguous_weeks"]
 
@@ -265,9 +269,9 @@ def verify_minimum_contiguity(rotations, solved_schedule) -> bool:
             ).sort("week")
 
             if len(resident_rotation_schedule) == 0:
-                assert (
-                    False
-                ), f"len(resident_rotation_schedule) == {len(resident_rotation_schedule)}, should not be possible following filter operations"
+                raise RuntimeError(
+                    f"{len(resident_rotation_schedule)=}, should only be == 0  following filter operations"
+                )
 
             scheduled_weeks = resident_rotation_schedule["week"].to_list()
             contiguous_blocks = find_contiguous_blocks(scheduled_weeks)
