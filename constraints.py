@@ -356,12 +356,45 @@ def enforce_requirement_constraints(
     constraint_to_callable = {"min_contiguity": enforce_minimum_contiguity}  # etc.
 
     for requirement_name, requirement_body in current_requirements.items():
-        print(f">{requirement_name=}")
-        for fulfilling_rotation in requirement_body.fulfilled_by:
-            print(f"|-> {fulfilling_rotation=}")
-            for constraint in requirement_body.constraints:
-                print(f"|--> now enforce {constraint=}")
-                # TODO needs min_weeks *per resident*, *prerequisite*
+        for constraint in requirement_body.constraints:
+            if constraint.type == "min_by_period":
+                residents_subject_to_req = residents.filter(
+                    pl.col("year").is_in(constraint.resident_years)
+                )
+                rotations_fulfilling_req = rotations.filter(
+                    pl.col("rotation").is_in(requirement_body.fulfilled_by)
+                )
+                constraints = enforce_minimum_rotation_weeks_per_resident(
+                    constraint.weeks,
+                    residents_subject_to_req,
+                    rotations_fulfilling_req,
+                    weeks,
+                    scheduled,
+                )
+            elif constraint.type == "max_by_period":
+                raise NotImplementedError
+            elif constraint.type == "exact_by_period":
+                raise NotImplementedError
+            elif constraint.type == "min_contiguity_in_period":
+                residents_subject_to_req = residents.filter(
+                    pl.col("year").is_in(constraint.resident_years)
+                )
+                rotations_fulfilling_req = rotations.filter(
+                    pl.col("rotation").is_in(requirement_body.fulfilled_by)
+                )
+                constraints = enforce_minimum_contiguity(
+                    residents_subject_to_req, rotations_fulfilling_req, weeks, scheduled
+                )
+            elif constraint.type == "max_contiguity_in_period":
+                raise NotImplementedError
+            elif constraint.type == "prerequisite":
+                raise NotImplementedError
+            else:
+                continue
+                raise LookupError(
+                    f"{constraint.type=} is not a known requirement constraint type"
+                )
+            cumulative_constraints.extend(constraints)
     return cumulative_constraints
 
 
