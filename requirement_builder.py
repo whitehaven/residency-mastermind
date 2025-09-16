@@ -195,7 +195,8 @@ def generate_builder_with_current_requirements() -> RequirementBuilder:
 
     (  # TODO how does early nights backup work? is it R2s?
         builder.add_requirement(
-            name="Night Senior", fulfilled_by=["Night Senior", "Backup Night R3"]
+            name="SHMC Night Senior",
+            fulfilled_by=["SHMC Night Senior", "SHMC Backup Night R3"],
         )
         .min_weeks_over_resident_years(4, "R2")
         .min_contiguity_over_resident_years(4, "R2")
