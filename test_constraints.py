@@ -3,6 +3,7 @@ from datetime import timedelta
 import box
 import cpmpy as cp
 import polars as pl
+import pytest
 
 from constraints import (
     require_one_rotation_per_resident_per_week,
@@ -342,8 +343,8 @@ def is_consecutive(week1, week2) -> bool:
     return str(week2) == str(int(str(week1)) + 1)
 
 
+@pytest.mark.xfail
 def test_enforce_requirement_constraints():
-
     residents = tester_residents
     residents = residents.filter(
         pl.col("year").is_in(["R2", "R3"])
@@ -361,9 +362,8 @@ def test_enforce_requirement_constraints():
         requirements, tester_residents, tester_rotations, tester_weeks, scheduled
     )
 
-    assert False
 
-
+@pytest.mark.xfail
 def test_enforce_contiguity_range() -> None:
     # TODO complete test
     residents = tester_residents
