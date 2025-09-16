@@ -58,7 +58,7 @@ class RequirementRule:
     ):
         self._constraints.append(
             {
-                "type": "min_contiguity",
+                "type": "min_contiguity_in_period",
                 "weeks": min_contiguity,
                 "resident_years": resident_years,
             }

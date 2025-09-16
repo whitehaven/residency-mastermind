@@ -1,24 +1,24 @@
 HS Rounding Senior :
   constraints:
-  - type : min_by_period
+  - type: min_by_period
     weeks: 2
     resident_years: R2
-  - type : max_by_period
+  - type: max_by_period
     weeks: 4
     resident_years: R2
-  - type : exact_by_period
+  - type: exact_by_period
     weeks: 8
     resident_years: R3
-  - type : min_contiguity
+  - type: min_contiguity_in_period
     weeks: 2
     resident_years: R2
-  - type : min_contiguity
+  - type: min_contiguity_in_period
     weeks: 4
     resident_years: R3
-  - type : min_by_period
+  - type: min_by_period
     weeks: 2
     resident_years: R3
-  - type        : prerequisite
+  - type: prerequisite
     prerequisite: HS Admitting Senior
     weeks_required: 2
   fulfilled_by:
@@ -26,13 +26,13 @@ HS Rounding Senior :
   - HS Green Senior
 HS Admitting Senior:
   constraints:
-  - type : min_by_period
+  - type: min_by_period
     weeks: 5
     resident_years: R2
-  - type : max_by_period
+  - type: max_by_period
     weeks: 6
     resident_years: R2
-  - type : max_contiguity_in_period
+  - type: max_contiguity_in_period
     weeks: 1
     resident_years:
     - R2
@@ -41,34 +41,34 @@ HS Admitting Senior:
   - Purple Senior
 ICU Senior         :
   constraints:
-  - type : min_by_period
+  - type: min_by_period
     weeks: 4
     resident_years: R2
   fulfilled_by:
   - SHMC ICU Senior
 Systems of Medicine:
   constraints:
-  - type : min_by_period
+  - type: min_by_period
     weeks: 2
     resident_years: R2
-  - type : min_contiguity
+  - type: min_contiguity_in_period
     weeks: 2
     resident_years: R2
   fulfilled_by:
   - Systems of Medicine
 Elective           :
   constraints:
-  - type : min_by_period
+  - type: min_by_period
     weeks: 20
     resident_years: R2
-  - type : max_by_period
+  - type: max_by_period
     weeks: 30
     resident_years: R2
   fulfilled_by:
   - Elective
 Ethics             :
   constraints:
-  - type : exact_by_period
+  - type: exact_by_period
     weeks: 1
     resident_years:
     - R2
@@ -77,32 +77,32 @@ Ethics             :
   - Ethics
 Ambulatory Senior  :
   constraints:
-  - type : min_by_period
+  - type: min_by_period
     weeks: 4
     resident_years: R2
-  - type : min_contiguity
+  - type: min_contiguity_in_period
     weeks: 2
     resident_years: R2
-  - type : min_by_period
+  - type: min_by_period
     weeks: 4
     resident_years: R3
-  - type : min_contiguity
+  - type: min_contiguity_in_period
     weeks: 2
     resident_years: R3
   fulfilled_by:
   - STHC Senior
 SHMC Night Senior  :
-  constraints :
-  - type : min_by_period
+  constraints:
+  - type: min_by_period
     weeks: 4
     resident_years: R2
-  - type : min_contiguity
+  - type: min_contiguity_in_period
     weeks: 4
     resident_years: R2
-  - type : min_by_period
+  - type: min_by_period
     weeks: 1
     resident_years: R3
-  - type : max_by_period
+  - type: max_by_period
     weeks: 2
     resident_years: R3
   fulfilled_by:
@@ -110,10 +110,10 @@ SHMC Night Senior  :
   - SHMC Backup Night R3
 Vacation           :
   constraints:
-  - type : exact_by_period
+  - type: exact_by_period
     weeks: 4
     resident_years: R2
-  - type : exact_by_period
+  - type: exact_by_period
     weeks: 3
     resident_years: R3
   fulfilled_by:
