@@ -43,10 +43,13 @@ def convert_melted_to_block_schedule(solved_schedule: pl.DataFrame) -> pl.DataFr
     Returns:
         block_schedule: pivoted df
     """
-    # TODO should catch unrenderable/not 1:1 before Polars fails ugly on it
     renderable_df = solved_schedule.select(pl.all().exclude(cpmpy_variable_column))
     filtered_long_format = renderable_df.filter(pl.col(cpmpy_result_column))
     block_schedule = filtered_long_format.pivot(
         "week", index="resident", values="rotation"
     )
+    if block_schedule.is_empty():
+        raise ValueError(
+            f"{block_schedule.is_empty()=}, usually occurs because > 1 True rotation slot per resident:week locus"
+        )
     return block_schedule
