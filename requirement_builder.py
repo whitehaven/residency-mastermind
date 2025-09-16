@@ -13,7 +13,6 @@ class RequirementRule:
     ):
         self._constraints.append(
             {
-                "fulfilled_by": self.fulfilled_by,
                 "type": "min_by_period",
                 "weeks": min_weeks,
                 "resident_years": resident_years,
@@ -26,7 +25,6 @@ class RequirementRule:
     ):
         self._constraints.append(
             {
-                "fulfilled_by": self.fulfilled_by,
                 "type": "max_by_period",
                 "weeks": max_weeks,
                 "resident_years": resident_years,
@@ -48,7 +46,6 @@ class RequirementRule:
     ):
         self._constraints.append(
             {
-                "fulfilled_by": self.fulfilled_by,
                 "type": "exact_by_period",
                 "weeks": exact_weeks,
                 "resident_years": resident_years,
@@ -61,7 +58,6 @@ class RequirementRule:
     ):
         self._constraints.append(
             {
-                "fulfilled_by": self.fulfilled_by,
                 "type": "min_contiguity",
                 "weeks": min_contiguity,
                 "resident_years": resident_years,
@@ -74,7 +70,6 @@ class RequirementRule:
     ):
         self._constraints.append(
             {
-                "fulfilled_by": self.fulfilled_by,
                 "type": "max_contiguity_in_period",
                 "weeks": max_contiguity,
                 "resident_years": resident_years,
@@ -85,7 +80,6 @@ class RequirementRule:
     def after_prerequisite(self, prerequisite: str, weeks_required: int):
         self._constraints.append(
             {
-                "fulfilled_by": self.fulfilled_by,
                 "type": "prerequisite",
                 "prerequisite": prerequisite,
                 "weeks_required": weeks_required,
@@ -98,16 +92,12 @@ class RequirementRule:
     ):
         """
         Note DOES NOT filter by a resident year - excludes use for purposes of year being solved
-        Args:
-            resident_years:
-            weeks:
 
         Returns:
 
         """
         self._constraints.append(
             {
-                "fulfilled_by": self.fulfilled_by,
                 "type": "exclude_weeks",
                 "excluded_weeks": weeks,
                 "resident_years": resident_years,
@@ -132,9 +122,14 @@ class RequirementBuilder:
 
     def accumulate_constraints_by_rule(self) -> dict:
         accumulated_constraints = dict()
-        for rule_name, rule_constraints in self.requirements.items():
+        for rule_name, rule_body in self.requirements.items():
             accumulated_constraints.update(
-                {rule_name: rule_constraints.get_constraints()}
+                {
+                    rule_name: {
+                        "constraints": rule_body.get_constraints(),
+                        "fulfilled_by": rule_body.fulfilled_by,
+                    }
+                }
             )
         return accumulated_constraints
 
