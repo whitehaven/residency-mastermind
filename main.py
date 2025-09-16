@@ -80,6 +80,7 @@ def solve_schedule(
 
     rotations_with_min_contiguity_reqs = rotations.filter(
         (pl.col("minimum_contiguous_weeks") > 1)
+        & (pl.col("minimum_contiguous_weeks").is_not_null())
     )
     model += enforce_minimum_contiguity(
         standard_scheduled_residents,
