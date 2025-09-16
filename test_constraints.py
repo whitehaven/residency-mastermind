@@ -10,6 +10,7 @@ from constraints import (
     enforce_rotation_capacity_maximum,
     enforce_minimum_contiguity,
     enforce_requirement_constraints,
+    enforce_contiguity_range,
 )
 from data_io import generate_pl_wrapped_boolvar
 from display import extract_solved_schedule
@@ -361,3 +362,49 @@ def test_enforce_requirement_constraints():
     )
 
     assert False
+
+
+def test_enforce_contiguity_range() -> None:
+    # TODO complete test
+    residents = tester_residents
+    residents = residents.filter(pl.col("year").is_in(["R2", "R3"]))
+    rotations = tester_rotations
+    weeks = tester_weeks
+
+    scheduled = generate_pl_wrapped_boolvar(
+        residents=residents,
+        rotations=rotations,
+        weeks=weeks,
+    )
+
+    model = cp.Model()
+
+    rotations_with_meaningful_contiguity = rotations.filter(
+        ~(
+            (pl.col("max_contiguous_weeks").is_null())
+            & (
+                (pl.col("minimum_contiguous_weeks").is_null())
+                | (pl.col("minimum_contiguous_weeks") <= 1)
+            )
+        )
+    )
+    contiguity_constraints = enforce_contiguity_range(
+        residents, rotations_with_meaningful_contiguity, weeks, scheduled
+    )
+
+    model += contiguity_constraints
+
+    model += require_one_rotation_per_resident_per_week(
+        residents, rotations, weeks, scheduled=scheduled
+    )
+    model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
+    model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
+
+    is_feasible = model.solve(config.default_cpmpy_solver, log_search_progress=False)
+    if not is_feasible:
+        raise ValueError("Infeasible")
+
+    melted_solved_schedule = extract_solved_schedule(scheduled)
+    assert verify_minimum_contiguity(
+        rotations_with_meaningful_contiguity, solved_schedule=melted_solved_schedule
+    )

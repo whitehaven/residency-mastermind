@@ -116,6 +116,70 @@ def prevent_isolated_sequence(
         return ~(left_ok & sequence_true & right_ok)
 
 
+def enforce_contiguity_range(
+    residents: pl.DataFrame,
+    rotations: pl.DataFrame,
+    weeks: pl.DataFrame,
+    scheduled: pl.DataFrame,
+) -> list[cp.core.Comparison]:
+    cumulative_constraints = list()
+    for rotation_dict in rotations.iter_rows(named=True):
+        min_contiguity = (
+            rotation_dict["minimum_contiguous_weeks"]
+            if rotation_dict["minimum_contiguous_weeks"]
+            else 1
+        )
+        max_contiguity = (
+            rotation_dict["max_contiguous_weeks"]
+            if rotation_dict["max_contiguous_weeks"]
+            else config.default_maximum_contiguity
+        )
+
+        for resident_dict in residents.iter_rows(named=True):
+
+            is_scheduled_for_res_on_rot = scheduled.filter(
+                (pl.col("resident") == resident_dict[residents_primary_label])
+                & (pl.col("rotation") == rotation_dict[rotations_primary_label])
+            )
+            schedule_vars = is_scheduled_for_res_on_rot[cpmpy_variable_column].to_list()
+            constraint = create_allowed_sequences(
+                schedule_vars, min_length=min_contiguity, max_length=max_contiguity
+            )
+            cumulative_constraints.append(constraint)
+    return cumulative_constraints
+
+
+def create_allowed_sequences(
+    weeks: list[cp.core.BoolVal], min_length: int, max_length: int
+) -> list[cp.core.Comparison]:
+    """
+    Allow sequences of length between min_length and max_length only.
+    """
+    constraints = []
+
+    for start in range(len(weeks)):
+        # If you start a sequence here, it must be at least min_length
+        # "If weeks[start] is True, then either:
+        #  1. This is part of a sequence of at least min_length, OR
+        #  2. This variable should be False"
+
+        for length in range(min_length, max_length + 1):
+            # Allow sequences of this length starting here
+            can_be_this_length = cp.all(weeks[start : start + length])
+
+            if start + length < len(weeks):
+                # Must be followed by False to be exactly this length
+                can_be_this_length &= ~weeks[start + length]
+
+            if start > 0:
+                # Must be preceded by False to start here
+                can_be_this_length &= ~weeks[start - 1]
+
+            constraints.append(weeks[start].implies(can_be_this_length))
+
+    return constraints
+
+
 # TODO max_contiguity is just inverted, and fixed_contiguity would just be set subtraction
 
 # TODO replace constraint utility functions
@@ -266,7 +330,7 @@ def enforce_requirement_constraints(
     rotations: pl.DataFrame,
     weeks: pl.DataFrame,
     scheduled: pl.DataFrame,
-) -> list:
+) -> list[cp.core.Comparison]:
     # for each requirement
     for requirement in requirements.keys():
         # for each constraint
