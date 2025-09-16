@@ -237,7 +237,9 @@ def enforce_minimum_rotation_weeks_per_resident(
         residents_subject_to_req, rotations_fulfilling_req, weeks, scheduled
     )
     grouped = group_scheduled_df_by_for_each(
-        subset_scheduled, for_each=["resident"], group_on_column=cpmpy_variable_column
+        subset_scheduled,
+        for_each=["resident"],
+        group_on_column=cpmpy_variable_column,
     )
     constraints = apply_constraint_to_groups(
         grouped, constraint_applicator=lambda group: cp.sum(group) >= minimum_weeks
@@ -352,9 +354,6 @@ def enforce_requirement_constraints(
     scheduled: pl.DataFrame,
 ) -> list[cp.core.Comparison]:
     cumulative_constraints = []
-
-    constraint_to_callable = {"min_contiguity": enforce_minimum_contiguity}  # etc.
-
     for requirement_name, requirement_body in current_requirements.items():
         for constraint in requirement_body.constraints:
             if constraint.type == "min_by_period":
