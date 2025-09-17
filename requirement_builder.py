@@ -1,7 +1,12 @@
+import sqlite3
 from dataclasses import dataclass, field
 from typing import Any
 
+import box
 import polars as pl
+import yaml
+
+config = box.box_from_file("config.yaml")
 
 
 @dataclass
@@ -153,12 +158,21 @@ class RequirementBuilder:
                         "prerequisite": constraint.get("prerequisite"),
                         "weeks_required": constraint.get("weeks_required"),
                         "fulfilled_by": (
-                            fulfilled_by
+                            yaml.dump(fulfilled_by)
                         ),  # Convert list to string for storage
                     }
                     rows.append(row)
 
         return pl.DataFrame(rows)
+
+    def write_to_db(self, db_path: str) -> None:
+        builder_as_df = self.to_polars()
+
+        builder_as_df.write_database(
+            table_name="requirements",
+            connection="sqlite:///" + db_path,
+            if_table_exists="replace",
+        )
 
 
 def generate_builder_with_current_requirements() -> RequirementBuilder:
@@ -261,3 +275,10 @@ if __name__ == "__main__":
 
     with pl.Config(tbl_rows=-1):
         print(builder_df)
+
+    current_builder.write_to_db(config.testing_db_path)
+
+    with sqlite3.connect(config.testing_db_path) as con:
+        readback = pl.read_database("SELECT * FROM requirements", con)
+
+    assert readback.equals(builder_df)

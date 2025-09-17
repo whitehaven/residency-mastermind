@@ -3,8 +3,9 @@ channels:
   - defaults
   - conda-forge
 dependencies:
-  - conda-forge::executing # resolves an annoying bug with icecream
   - black
+  - conda-forge::executing # resolves an annoying bug with icecream
+  - conda-forge::python-box
   - faker
   - icecream
   - ipympl
@@ -13,13 +14,13 @@ dependencies:
   - jupyterlab-git
   - jupyterlab_code_formatter
   - numpy
-  - openpyxl
   - pip
   - polars
+  - pyarrow
   - pytest
   - python
   - pyyaml
-  - conda-forge::python-box
+  - sqlalchemy
   - pip:
     - cpmpy
     - ortools

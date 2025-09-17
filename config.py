@@ -12,7 +12,7 @@ def reset_to_default_config(config_file_path: str | None = "config.yaml") -> Non
             "weeks_primary_label": "monday_date",
             "default_cpmpy_solver": "ortools",
             "default_maximum_contiguity": 4,
-            "testing_db_path": "seniors_only_anonymized.db",
+            "testing_db_path": "seniors_only_anonymized_current_reqs.db",
             "testing_files": {
                 "residents": {
                     "tiny": "test_data/test_residents_tiny.csv",
