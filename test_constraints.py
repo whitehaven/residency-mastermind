@@ -352,19 +352,52 @@ def test_enforce_requirement_constraints():
     residents = tester_residents
     residents = residents.filter(
         pl.col("year").is_in(["R2", "R3"])
-    )  # again, note filtered to exclude extended-R3s
+    )  # TODO again, note filtered to exclude extended-R3s
     rotations = tester_rotations
     weeks = tester_weeks
-
     scheduled = generate_pl_wrapped_boolvar(
         residents=residents,
         rotations=rotations,
         weeks=weeks,
     )
-    requirements = box.box_from_file("requirements.yaml")
-    enforce_requirement_constraints(
-        requirements, tester_residents, tester_rotations, tester_weeks, scheduled
+    current_requirements = box.box_from_file("requirements.yaml")
+    model = cp.Model()
+
+    requirement_constraints = enforce_requirement_constraints(
+        current_requirements,
+        residents,
+        rotations,
+        weeks,
+        scheduled,
     )
+    model += requirement_constraints
+
+    model += require_one_rotation_per_resident_per_week(
+        residents, rotations, weeks, scheduled
+    )
+
+    is_feasible = model.solve(config.default_cpmpy_solver, log_search_progress=False)
+    if not is_feasible:
+        raise ValueError("Infeasible")
+
+    melted_solved_schedule = extract_solved_schedule(scheduled)
+    assert verify_enforce_requirement_constraints(
+        current_requirements,
+        residents,
+        rotations,
+        weeks,
+        melted_solved_schedule,
+    ), "verify_enforce_requirement_constraints returns False"
+
+
+def verify_enforce_requirement_constraints(
+    current_requirements,
+    residents: pl.DataFrame,
+    rotations: pl.DataFrame,
+    weeks: pl.DataFrame,
+    solved_schedule: pl.DataFrame,
+) -> bool:
+    return False
 
 
 @pytest.mark.xfail

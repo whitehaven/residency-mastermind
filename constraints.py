@@ -254,6 +254,7 @@ def enforce_maximum_rotation_weeks_per_resident(
     weeks: pl.DataFrame,
     scheduled: pl.DataFrame,
 ) -> list[cp.core.Comparison]:
+
     subset_scheduled = subset_scheduled_by(
         residents_subject_to_req, rotations_fulfilling_req, weeks, scheduled
     )
