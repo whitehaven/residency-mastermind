@@ -1,5 +1,6 @@
 import argparse
 
+import box
 import cpmpy as cp
 import polars as pl
 
@@ -8,6 +9,7 @@ from constraints import (
     require_one_rotation_per_resident_per_week,
     enforce_rotation_capacity_minimum,
     enforce_minimum_contiguity,
+    enforce_requirement_constraints,
 )
 from data_io import (
     read_bulk_data_sqlite3,
@@ -17,6 +19,8 @@ from display import (
     extract_solved_schedule,
     convert_melted_to_block_schedule,
 )
+
+config = box.box_from_file("config.yaml")
 
 
 def main(args_from_commandline=None) -> pl.DataFrame:
@@ -48,11 +52,6 @@ def solve_schedule(
 
     This should handle all filtering before dispatching for efficiency.
 
-    Args:
-        residents:
-        rotations:
-        weeks:
-
     Returns:
         scheduled: pl.DataFrame containing the cartesian product of residents, rotations, and weeks along with cpmpy variables and their results
     """
@@ -67,16 +66,16 @@ def solve_schedule(
 
     # TODO Constraints
     # resident-specific
+
+    current_requirements = box.box_from_file(config.default_requirements_path)
+
+    model += enforce_requirement_constraints(
+        current_requirements, standard_scheduled_residents, rotations, weeks, scheduled
+    )
+
     model += require_one_rotation_per_resident_per_week(
         standard_scheduled_residents, rotations, weeks, scheduled
     )
-
-    # R3-extended scheduling
-
-    # Requirement-specific
-    # integrate
-
-    # contiguity
 
     rotations_with_min_contiguity_reqs = rotations.filter(
         (pl.col("minimum_contiguous_weeks") > 1)
@@ -88,8 +87,6 @@ def solve_schedule(
         weeks,
         scheduled,
     )
-
-    # model += enforce_requirement_constraints(residents, rotations, weeks, scheduled)
 
     # rotation-specific (to physical site, not requirement)
     rotations_with_capacity_minimum = rotations.filter(
@@ -106,11 +103,7 @@ def solve_schedule(
         standard_scheduled_residents, rotations_with_capacity_maximum, weeks, scheduled
     )
 
-    # enforce block transitions
-
-    # requirement-specific
-    # enforce prerequisites
-    # enforce maximum
+    # TODO enforce block transitions
 
     # TODO Optimization
     # maximize rotation preferences + vacation preferences (? + completion of 2nd year rotations if possible)
