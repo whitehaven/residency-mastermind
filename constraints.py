@@ -233,6 +233,7 @@ def enforce_minimum_rotation_weeks_per_resident(
     weeks: pl.DataFrame,
     scheduled: pl.DataFrame,
 ) -> list[cp.core.Comparison]:
+
     subset_scheduled = subset_scheduled_by(
         residents_subject_to_req, rotations_fulfilling_req, weeks, scheduled
     )
@@ -353,6 +354,7 @@ def enforce_requirement_constraints(
     weeks: pl.DataFrame,
     scheduled: pl.DataFrame,
 ) -> list[cp.core.Comparison]:
+
     cumulative_constraints = []
     for requirement_name, requirement_body in current_requirements.items():
         for constraint in requirement_body.constraints:
@@ -395,25 +397,3 @@ def enforce_requirement_constraints(
                 )
             cumulative_constraints.extend(constraints)
     return cumulative_constraints
-
-
-if __name__ == "__main__":
-    config = box.box_from_file("config.yaml")
-
-    tester_residents = pl.read_csv(config.testing_files.residents.real_size_seniors)
-    tester_rotations = pl.read_csv(config.testing_files.rotations.real_size)
-    tester_weeks = pl.read_csv(
-        config.testing_files.weeks.full_academic_year_2025_2026, try_parse_dates=True
-    )
-    tester_scheduled = generate_pl_wrapped_boolvar(
-        tester_residents, tester_rotations, tester_weeks
-    )
-    current_requirements = box.box_from_file("requirements.yaml")
-
-    enforce_requirement_constraints(
-        current_requirements,
-        tester_residents,
-        tester_rotations,
-        tester_weeks,
-        tester_scheduled,
-    )
