@@ -8,6 +8,7 @@ from test_constraints import (
     verify_one_rotation_per_resident_per_week,
     verify_enforce_rotation_capacity_minimum,
     verify_minimum_contiguity,
+    verify_enforce_requirement_constraints,
 )
 
 config = box.box_from_file("config.yaml")
@@ -21,6 +22,7 @@ def test_solve_schedule():
     residents = pl.read_csv(test_residents_path)
     rotations = pl.read_csv(test_rotations_path)
     weeks = pl.read_csv(test_weeks_path, try_parse_dates=True)
+    current_requirements = box.box_from_file(config.default_requirements_path)
 
     non_extended_residents = residents.filter((pl.col("year").is_in({"R2", "R3"})))
 
@@ -31,7 +33,6 @@ def test_solve_schedule():
     assert verify_one_rotation_per_resident_per_week(
         melted_solved_schedule,
     ), "verify_one_rotation_per_resident_per_week failed"
-
     assert verify_enforce_rotation_capacity_minimum(
         rotations,
         melted_solved_schedule,
@@ -43,5 +44,12 @@ def test_solve_schedule():
     assert verify_minimum_contiguity(
         rotations, melted_solved_schedule
     ), "verify_minimum_contiguity failed"
+    assert verify_enforce_requirement_constraints(
+        current_requirements,
+        non_extended_residents,
+        rotations,
+        weeks,
+        melted_solved_schedule,
+    ), "verify_enforce_requirement_constraints failed"
 
     block_schedule = convert_melted_to_block_schedule(melted_solved_schedule)

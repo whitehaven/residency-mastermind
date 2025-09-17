@@ -21,12 +21,14 @@ def enforce_minimum_contiguity(
     """
     Generate constraints that require that at least minimum_contiguity be respected.
 
-    Only rotations with meaningful minimum_contiguity should be passed in.
-    Filter for minimum_contiguity > 2 and not null.
+    Prevents sequences of size lower than minimum contiguity. Any larger contiguity is then allowed.
 
     Notes:
-        The base case is 1, which means rotation can be scheduled at singletons.
+        The base case is 1, which means rotation can be scheduled as singletons.
         No constraints are needed in that case. Null should be taken to mean 1.
+
+        Only rotations with meaningful minimum_contiguity should be passed in.
+        Filter for minimum_contiguity > 2 and not null.
 
     Args:
         residents: DataFrame of residents
@@ -37,7 +39,6 @@ def enforce_minimum_contiguity(
     Returns:
         List of constraints preventing unacceptable contiguity patterns
     """
-    # TODO hold on, could you just allow the right dimension only?
     cumulative_constraints = list()
     for rotation_dict in rotations.iter_rows(named=True):
         min_contiguity = rotation_dict["minimum_contiguous_weeks"]
@@ -116,7 +117,7 @@ def prevent_isolated_sequence(
         return ~(left_ok & sequence_true & right_ok)
 
 
-def enforce_contiguity_range(
+def enforce_maximum_contiguity(
     residents: pl.DataFrame,
     rotations: pl.DataFrame,
     weeks: pl.DataFrame,
@@ -124,60 +125,73 @@ def enforce_contiguity_range(
 ) -> list[cp.core.Comparison]:
     cumulative_constraints = list()
     for rotation_dict in rotations.iter_rows(named=True):
-        min_contiguity = (
-            rotation_dict["minimum_contiguous_weeks"]
-            if rotation_dict["minimum_contiguous_weeks"]
-            else 1
-        )
-        max_contiguity = (
-            rotation_dict["max_contiguous_weeks"]
-            if rotation_dict["max_contiguous_weeks"]
-            else config.default_maximum_contiguity
-        )
+        max_contiguity = rotation_dict["max_contiguous_weeks"]
 
         for resident_dict in residents.iter_rows(named=True):
-
             is_scheduled_for_res_on_rot = scheduled.filter(
                 (pl.col("resident") == resident_dict[residents_primary_label])
                 & (pl.col("rotation") == rotation_dict[rotations_primary_label])
             )
             schedule_vars = is_scheduled_for_res_on_rot[cpmpy_variable_column].to_list()
-            constraint = create_allowed_sequences(
-                schedule_vars, min_length=min_contiguity, max_length=max_contiguity
-            )
-            cumulative_constraints.append(constraint)
+            for allowed_length in range(max_contiguity):
+                for start_idx in range(len(schedule_vars) - allowed_length + 1):
+                    constraint = require_isolated_sequence(
+                        schedule_vars, start_idx, allowed_length
+                    )
+                    cumulative_constraints.append(constraint)
     return cumulative_constraints
 
 
-def create_allowed_sequences(
-    weeks: list[cp.core.BoolVal], min_length: int, max_length: int
-) -> list[cp.core.Comparison]:
+def require_isolated_sequence(
+    variables: list[cp.core.BoolVal], start_idx: int, length: int
+) -> cp.core.Comparison:
     """
-    Allow sequences of length between min_length and max_length only.
+    Create a constraint that requires an isolated sequence of `length` of all True values at start_idx.
+
+    An isolated sequence is one that:
+    1. Has all variables in [start_idx, start_idx + length) set to True
+    2. Is bounded by False values (or array boundaries)
+
+    Args:
+        variables: List of boolean variables
+        start_idx: Starting index of the sequence to allow
+        length: Length of the sequence to allow
+
+    Returns:
+        A constraint that evaluates to True when this pattern is IS present
+
+    References:
+        This is based on an or-tools example under negated_bounded_span. This is a DeMorgan inversion of that.
+        See https://github.com/google/or-tools/blob/stable/examples/python/shift_scheduling_sat.py.
+
     """
-    constraints = []
+    sequence_vars = []
 
-    for start in range(len(weeks)):
-        # If you start a sequence here, it must be at least min_length
-        # "If weeks[start] is True, then either:
-        #  1. This is part of a sequence of at least min_length, OR
-        #  2. This variable should be False"
+    # Left boundary: if not at start, the previous variable should be False
+    if start_idx > 0:
+        sequence_vars.append(~variables[start_idx - 1])
 
-        for length in range(min_length, max_length + 1):
-            # Allow sequences of this length starting here
-            can_be_this_length = cp.all(weeks[start : start + length])
+    # The sequence itself should not all be True
+    sequence_vars.extend(variables[start_idx : start_idx + length])
 
-            if start + length < len(weeks):
-                # Must be followed by False to be exactly this length
-                can_be_this_length &= ~weeks[start + length]
+    # Right boundary: if not at end, the next variable should be False
+    if start_idx + length < len(variables):
+        sequence_vars.append(~variables[start_idx + length])
 
-            if start > 0:
-                # Must be preceded by False to start here
-                can_be_this_length &= ~weeks[start - 1]
+    if len(sequence_vars) == length:
+        # No boundaries, just prevent all variables in sequence being True
+        return ~cp.all(sequence_vars)
+    else:
+        # With boundaries: prevent the specific isolated pattern
+        left_ok = sequence_vars[0] if start_idx > 0 else True
+        sequence_true = cp.all(
+            sequence_vars[
+                1 if start_idx > 0 else 0 : 1 + length if start_idx > 0 else length
+            ]
+        )
+        right_ok = sequence_vars[-1] if start_idx + length < len(variables) else True
 
-            constraints.append(weeks[start].implies(can_be_this_length))
-
-    return constraints
+        return left_ok & sequence_true & right_ok
 
 
 # TODO max_contiguity is just inverted, and fixed_contiguity would just be set subtraction
@@ -402,6 +416,7 @@ def enforce_requirement_constraints(
     cumulative_constraints = []
     for requirement_name, requirement_body in requirements.items():
         for constraint in requirement_body.constraints:
+            # MAYBE could benefit from combining all min/max/exact into one central function
             if constraint.type == "min_by_period":
                 residents_subject_to_req = residents.filter(
                     pl.col("year").is_in(constraint.resident_years)

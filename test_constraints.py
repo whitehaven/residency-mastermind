@@ -11,7 +11,7 @@ from constraints import (
     enforce_rotation_capacity_maximum,
     enforce_minimum_contiguity,
     enforce_requirement_constraints,
-    enforce_contiguity_range,
+    enforce_maximum_contiguity,
 )
 from data_io import generate_pl_wrapped_boolvar
 from display import extract_solved_schedule
@@ -402,8 +402,7 @@ def verify_enforce_requirement_constraints(
 
 
 @pytest.mark.xfail
-def test_enforce_contiguity_range() -> None:
-    # TODO complete test
+def test_enforce_maximum_contiguity():
     residents = tester_residents
     residents = residents.filter(pl.col("year").is_in(["R2", "R3"]))
     rotations = tester_rotations
@@ -415,34 +414,23 @@ def test_enforce_contiguity_range() -> None:
         weeks=weeks,
     )
 
-    model = cp.Model()
-
-    rotations_with_meaningful_contiguity = rotations.filter(
-        ~(
-            (pl.col("max_contiguous_weeks").is_null())
-            & (
-                (pl.col("minimum_contiguous_weeks").is_null())
-                | (pl.col("minimum_contiguous_weeks") <= 1)
-            )
-        )
+    rotations_with_max_contiguity = rotations.filter(
+        pl.col("max_contiguous_weeks").is_not_null()
     )
-    contiguity_constraints = enforce_contiguity_range(
-        residents, rotations_with_meaningful_contiguity, weeks, scheduled
+    enforce_maximum_contiguity(
+        residents, rotations_with_max_contiguity, weeks, scheduled
     )
 
-    model += contiguity_constraints
+    assert verify_enforce_maximum_contiguity(
+        residents, rotations, weeks, scheduled
+    ), "verify_enforce_maximum_contiguity failed"
 
-    model += require_one_rotation_per_resident_per_week(
-        residents, rotations, weeks, scheduled=scheduled
-    )
-    model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
-    model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
 
-    is_feasible = model.solve(config.default_cpmpy_solver, log_search_progress=False)
-    if not is_feasible:
-        raise ValueError("Infeasible")
-
-    melted_solved_schedule = extract_solved_schedule(scheduled)
-    assert verify_minimum_contiguity(
-        rotations_with_meaningful_contiguity, solved_schedule=melted_solved_schedule
-    )
+def verify_enforce_maximum_contiguity(
+    residents: pl.DataFrame,
+    rotations: pl.DataFrame,
+    weeks: pl.DataFrame,
+    solved_schedule: pl.DataFrame,
+) -> bool:
+    # TODO watch out, passing entire rotations df (maybe)
+    return False
