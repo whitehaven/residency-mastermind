@@ -4,7 +4,6 @@ import box
 import cpmpy as cp
 import polars as pl
 
-from data_io import generate_pl_wrapped_boolvar
 from selection import subset_scheduled_by, group_scheduled_df_by_for_each
 
 config = box.box_from_file("config.yaml")
@@ -248,6 +247,27 @@ def enforce_minimum_rotation_weeks_per_resident(
     return constraints
 
 
+def enforce_maximum_rotation_weeks_per_resident(
+    maximum_weeks: int,
+    residents_subject_to_req: pl.DataFrame,
+    rotations_fulfilling_req: pl.DataFrame,
+    weeks: pl.DataFrame,
+    scheduled: pl.DataFrame,
+) -> list[cp.core.Comparison]:
+    subset_scheduled = subset_scheduled_by(
+        residents_subject_to_req, rotations_fulfilling_req, weeks, scheduled
+    )
+    grouped = group_scheduled_df_by_for_each(
+        subset_scheduled,
+        for_each=["resident"],
+        group_on_column=cpmpy_variable_column,
+    )
+    constraints = apply_constraint_to_groups(
+        grouped, constraint_applicator=lambda group: cp.sum(group) <= maximum_weeks
+    )
+    return constraints
+
+
 def apply_constraint_to_groups(
     grouped: pl.DataFrame, constraint_applicator: Callable
 ) -> list[cp.core.Comparison]:
@@ -356,7 +376,7 @@ def enforce_requirement_constraints(
 ) -> list[cp.core.Comparison]:
 
     cumulative_constraints = []
-    for requirement_name, requirement_body in current_requirements.items():
+    for requirement_name, requirement_body in requirements.items():
         for constraint in requirement_body.constraints:
             if constraint.type == "min_by_period":
                 residents_subject_to_req = residents.filter(
@@ -373,7 +393,19 @@ def enforce_requirement_constraints(
                     scheduled,
                 )
             elif constraint.type == "max_by_period":
-                raise NotImplementedError
+                residents_subject_to_req = residents.filter(
+                    pl.col("year").is_in(constraint.resident_years)
+                )
+                rotations_fulfilling_req = rotations.filter(
+                    pl.col("rotation").is_in(requirement_body.fulfilled_by)
+                )
+                constraints = enforce_maximum_rotation_weeks_per_resident(
+                    constraint.weeks,
+                    residents_subject_to_req,
+                    rotations_fulfilling_req,
+                    weeks,
+                    scheduled,
+                )
             elif constraint.type == "exact_by_period":
                 raise NotImplementedError
             elif constraint.type == "min_contiguity_in_period":
@@ -391,7 +423,6 @@ def enforce_requirement_constraints(
             elif constraint.type == "prerequisite":
                 raise NotImplementedError
             else:
-                continue
                 raise LookupError(
                     f"{constraint.type=} is not a known requirement constraint type"
                 )
