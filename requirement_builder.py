@@ -75,12 +75,15 @@ class RequirementRule:
         )
         return self
 
-    def after_prerequisite(self, prerequisite: str, weeks_required: int):
+    def after_prerequisite(
+        self, prerequisite: str, weeks_required: int, resident_years: list[str]
+    ):
         self._constraints.append(
             {
                 "type": "prerequisite",
                 "prerequisite": prerequisite,
-                "weeks_required": weeks_required,
+                "weeks": weeks_required,
+                "resident_years": resident_years,
             },
         )
         return self
@@ -172,7 +175,7 @@ def generate_builder_with_current_requirements() -> RequirementBuilder:
         .min_contiguity_over_resident_years(2, ["R2"])
         .min_contiguity_over_resident_years(4, ["R3"])
         .min_weeks_over_resident_years(2, ["R3"])
-        .after_prerequisite("HS Admitting Senior", 2)
+        .after_prerequisite("HS Admitting Senior", 2, ["R2", "R3"])
     )
 
     (

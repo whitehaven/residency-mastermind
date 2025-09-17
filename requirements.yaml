@@ -1,4 +1,4 @@
-HS Rounding Senior :
+HS Rounding Senior:
   constraints:
   - type: min_by_period
     weeks: 2
@@ -26,7 +26,10 @@ HS Rounding Senior :
     - R3
   - type: prerequisite
     prerequisite: HS Admitting Senior
-    weeks_required: 2
+    weeks         : 2
+    resident_years:
+    - R2
+    - R3
   fulfilled_by:
   - Orange HS Senior
   - Green HS Senior
@@ -47,7 +50,7 @@ HS Admitting Senior:
     - R3
   fulfilled_by:
   - Purple HS Senior
-ICU Senior         :
+ICU Senior        :
   constraints:
   - type: min_by_period
     weeks: 4
@@ -67,7 +70,7 @@ Systems of Medicine:
     - R2
   fulfilled_by:
   - Systems of Medicine
-Elective           :
+Elective          :
   constraints:
   - type: min_by_period
     weeks: 20
@@ -79,7 +82,7 @@ Elective           :
     - R2
   fulfilled_by:
   - Elective
-Ethics             :
+Ethics            :
   constraints:
   - type: exact_by_period
     weeks: 1
@@ -88,7 +91,7 @@ Ethics             :
     - R3
   fulfilled_by:
   - Ethics
-Ambulatory Senior  :
+Ambulatory Senior :
   constraints:
   - type: min_by_period
     weeks: 4
@@ -108,7 +111,7 @@ Ambulatory Senior  :
     - R3
   fulfilled_by:
   - STHC Senior
-SHMC Night Senior  :
+SHMC Night Senior :
   constraints:
   - type: min_by_period
     weeks: 4
@@ -129,7 +132,7 @@ SHMC Night Senior  :
   fulfilled_by:
   - SHMC Night Senior
   - SHMC Backup Night R3
-Vacation           :
+Vacation          :
   constraints:
   - type: exact_by_period
     weeks: 4
