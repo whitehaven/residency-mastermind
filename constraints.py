@@ -269,6 +269,29 @@ def enforce_maximum_rotation_weeks_per_resident(
     return constraints
 
 
+def enforce_exact_rotation_weeks_per_resident(
+    exact_weeks: int,
+    residents_subject_to_req: pl.DataFrame,
+    rotations_fulfilling_req: pl.DataFrame,
+    weeks: pl.DataFrame,
+    scheduled: pl.DataFrame,
+) -> list[cp.core.Comparison]:
+
+    subset_scheduled = subset_scheduled_by(
+        residents_subject_to_req, rotations_fulfilling_req, weeks, scheduled
+    )
+    grouped = group_scheduled_df_by_for_each(
+        subset_scheduled,
+        for_each=["resident"],
+        group_on_column=cpmpy_variable_column,
+    )
+
+    constraints = apply_constraint_to_groups(
+        grouped, constraint_applicator=lambda group: cp.sum(group) == exact_weeks
+    )
+    return constraints
+
+
 def apply_constraint_to_groups(
     grouped: pl.DataFrame, constraint_applicator: Callable
 ) -> list[cp.core.Comparison]:
@@ -408,7 +431,19 @@ def enforce_requirement_constraints(
                     scheduled,
                 )
             elif constraint.type == "exact_by_period":
-                raise NotImplementedError
+                residents_subject_to_req = residents.filter(
+                    pl.col("year").is_in(constraint.resident_years)
+                )
+                rotations_fulfilling_req = rotations.filter(
+                    pl.col("rotation").is_in(requirement_body.fulfilled_by)
+                )
+                constraints = enforce_exact_rotation_weeks_per_resident(
+                    constraint.weeks,
+                    residents_subject_to_req,
+                    rotations_fulfilling_req,
+                    weeks,
+                    scheduled,
+                )
             elif constraint.type == "min_contiguity_in_period":
                 residents_subject_to_req = residents.filter(
                     pl.col("year").is_in(constraint.resident_years)

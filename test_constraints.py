@@ -381,6 +381,7 @@ def test_enforce_requirement_constraints():
         raise ValueError("Infeasible")
 
     melted_solved_schedule = extract_solved_schedule(scheduled)
+
     assert verify_enforce_requirement_constraints(
         current_requirements,
         residents,
