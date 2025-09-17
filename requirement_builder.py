@@ -1,6 +1,8 @@
 from dataclasses import dataclass, field
 from typing import Any
 
+import polars as pl
+
 
 @dataclass
 class RequirementRule:
@@ -129,6 +131,32 @@ class RequirementBuilder:
             )
         return accumulated_constraints
 
+    def to_polars(self) -> pl.DataFrame:
+        rows = []
+        for (
+            rotation_name,
+            rotation_data,
+        ) in self.accumulate_constraints_by_rule().items():
+            fulfilled_by = rotation_data.get("fulfilled_by", [])
+            for constraint in rotation_data.get("constraints", []):
+                # Handle resident_years as a list
+                resident_years = constraint.get("resident_years", [])
+                for resident_year in resident_years:
+                    row = {
+                        "rotation_name": rotation_name,
+                        "constraint_type": constraint["type"],
+                        "weeks": constraint.get("weeks"),
+                        "resident_year": resident_year,
+                        "prerequisite": constraint.get("prerequisite"),
+                        "weeks_required": constraint.get("weeks_required"),
+                        "fulfilled_by": (
+                            fulfilled_by
+                        ),  # Convert list to string for storage
+                    }
+                    rows.append(row)
+
+        return pl.DataFrame(rows)
+
 
 def generate_builder_with_current_requirements() -> RequirementBuilder:
     builder = RequirementBuilder()
@@ -226,3 +254,7 @@ if __name__ == "__main__":
     current_builder = generate_builder_with_current_requirements()
     builder_box = box.Box(current_builder.accumulate_constraints_by_rule())
     builder_box.to_yaml("requirements.yaml")
+    builder_df = current_builder.to_polars()
+
+    with pl.Config(tbl_rows=-1):
+        print(builder_df)
