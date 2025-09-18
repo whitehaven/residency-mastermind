@@ -212,7 +212,7 @@ def generate_builder_with_current_requirements() -> RequirementBuilder:
 
     (
         builder.add_requirement(
-            name="HS Admitting Senior", fulfilled_by=["Purple HS Senior"]
+            name="HS Admitting Senior", fulfilled_by=["Purple/Consults"]
         )
         .min_weeks_over_resident_years(5, ["R2"])
         .max_weeks_over_resident_years(6, ["R2"])
