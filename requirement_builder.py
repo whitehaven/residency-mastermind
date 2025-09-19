@@ -1,10 +1,10 @@
+import json
 import sqlite3
 from dataclasses import dataclass, field
 from typing import Any
 
 import box
 import polars as pl
-import yaml
 
 config = box.box_from_file("config.yaml")
 
@@ -159,21 +159,32 @@ class RequirementBuilder:
                         "weeks": constraint.get("weeks"),
                         "resident_year": resident_year,
                         "prerequisite": constraint.get("prerequisite"),
-                        "fulfilled_by": yaml.dump(
-                            fulfilled_by, default_flow_style=True
-                        ),  # inbuilt list attempted but too annoying
+                        "fulfilled_by": json.dumps(fulfilled_by),
                     }
                     rows.append(row)
         return pl.DataFrame(rows)
 
-    def write_to_db(self, db_path: str) -> None:
+    def write_polars_df_to_sqlite(
+        self, db_path: str, table_name: str = "requirements"
+    ) -> None:
         builder_as_df = self.to_polars()
 
         builder_as_df.write_database(
-            table_name="requirements",
+            table_name=table_name,
             connection="sqlite:///" + db_path,
             if_table_exists="replace",
         )
+
+    def read_polars_df_from_sqlite(
+        self, db_path: str, table_name: str = "requirements"
+    ) -> pl.DataFrame:
+        with sqlite3.connect(config.testing_db_path) as con:
+            builder_df_from_db = pl.read_database("SELECT * FROM requirements", con)
+
+        builder_df_from_db = builder_df_from_db.with_columns(
+            pl.col("fulfilled_by").str.json_decode(pl.List(pl.String))
+        )
+        return builder_df_from_db
 
 
 def generate_builder_with_current_requirements() -> RequirementBuilder:
@@ -277,9 +288,11 @@ if __name__ == "__main__":
     with pl.Config(tbl_rows=-1):
         print(builder_df)
 
-    current_builder.write_to_db(config.testing_db_path)
+    current_builder.write_polars_df_to_sqlite(config.testing_db_path)
 
     with sqlite3.connect(config.testing_db_path) as con:
         readback = pl.read_database("SELECT * FROM requirements", con)
+
+    current_builder.read_polars_df_from_sqlite(config.testing_db_path)
 
     assert readback.equals(builder_df)
