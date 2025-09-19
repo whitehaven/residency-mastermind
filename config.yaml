@@ -9,8 +9,9 @@ rotations_primary_label: rotation
 weeks_primary_label       : monday_date
 default_cpmpy_solver      : ortools
 default_maximum_contiguity: 4
-testing_db_path: seniors_only_anonymized.db
-testing_files             :
+default_requirements_path: requirements.yaml
+testing_db_path          : seniors_only_anonymized_current_reqs.db
+testing_files            :
   residents:
     tiny: test_data/test_residents_tiny.csv
     real_size_seniors: test_data/test_residents_real_size.csv
