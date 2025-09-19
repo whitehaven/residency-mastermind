@@ -151,7 +151,6 @@ class RequirementBuilder:
         ) in self.accumulate_constraints_by_rule().items():
             fulfilled_by = rotation_data.get("fulfilled_by", [])
             for constraint in rotation_data.get("constraints", []):
-                # Handle resident_years as a list
                 resident_years = constraint.get("resident_years", [])
                 for resident_year in resident_years:
                     row = {
@@ -160,9 +159,9 @@ class RequirementBuilder:
                         "weeks": constraint.get("weeks"),
                         "resident_year": resident_year,
                         "prerequisite": constraint.get("prerequisite"),
-                        "fulfilled_by": (
-                            yaml.dump(fulfilled_by)
-                        ),  # Convert list to string for storage
+                        "fulfilled_by": yaml.dump(
+                            fulfilled_by, default_flow_style=True
+                        ),  # inbuilt list attempted but too annoying
                     }
                     rows.append(row)
         return pl.DataFrame(rows)
