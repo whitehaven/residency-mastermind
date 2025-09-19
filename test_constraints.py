@@ -392,45 +392,95 @@ def test_enforce_requirement_constraints():
 
 
 def verify_enforce_requirement_constraints(
-    current_requirements,
+    requirements: box.Box,
     residents: pl.DataFrame,
     rotations: pl.DataFrame,
     weeks: pl.DataFrame,
     solved_schedule: pl.DataFrame,
 ) -> bool:
-    return False
+    for requirement_name, requirement_body in requirements.items():
+        for constraint in requirement_body.constraints:
+            if constraint.type == "min_by_period":
+                residents_subject_to_req = residents.filter(
+                    pl.col("year").is_in(constraint.resident_years)
+                )
+                rotations_fulfilling_req = rotations.filter(
+                    pl.col("rotation").is_in(requirement_body.fulfilled_by)
+                )
+                assert verify_minimum_week_constraint(
+                    constraint,
+                    residents_subject_to_req,
+                    rotations_fulfilling_req,
+                    weeks,
+                    solved_schedule,
+                ), "verify_minimum_week_requirement == False"
+
+            elif constraint.type == "max_by_period":
+                residents_subject_to_req = residents.filter(
+                    pl.col("year").is_in(constraint.resident_years)
+                )
+                rotations_fulfilling_req = rotations.filter(
+                    pl.col("rotation").is_in(requirement_body.fulfilled_by)
+                )
+                constraints = enforce_maximum_rotation_weeks_per_resident(
+                    constraint.weeks,
+                    residents_subject_to_req,
+                    rotations_fulfilling_req,
+                    weeks,
+                    scheduled,
+                )
+            elif constraint.type == "exact_by_period":
+                residents_subject_to_req = residents.filter(
+                    pl.col("year").is_in(constraint.resident_years)
+                )
+                rotations_fulfilling_req = rotations.filter(
+                    pl.col("rotation").is_in(requirement_body.fulfilled_by)
+                )
+                constraints = enforce_exact_rotation_weeks_per_resident(
+                    constraint.weeks,
+                    residents_subject_to_req,
+                    rotations_fulfilling_req,
+                    weeks,
+                    scheduled,
+                )
+            elif constraint.type == "min_contiguity_in_period":
+                residents_subject_to_req = residents.filter(
+                    pl.col("year").is_in(constraint.resident_years)
+                )
+                rotations_fulfilling_req = rotations.filter(
+                    pl.col("rotation").is_in(requirement_body.fulfilled_by)
+                )
+                constraints = enforce_minimum_contiguity(
+                    residents_subject_to_req, rotations_fulfilling_req, weeks, scheduled
+                )
+            elif constraint.type == "max_contiguity_in_period":
+                raise NotImplementedError("Unclear if actually needed")
+            elif constraint.type == "prerequisite":
+                constraints = enforce_prerequisite()
+            else:
+                raise LookupError(
+                    f"{constraint.type=} is not a known requirement constraint type"
+                )
 
 
-@pytest.mark.xfail
-def test_enforce_maximum_contiguity():
-    residents = tester_residents
-    residents = residents.filter(pl.col("year").is_in(["R2", "R3"]))
-    rotations = tester_rotations
-    weeks = tester_weeks
-
-    scheduled = generate_pl_wrapped_boolvar(
-        residents=residents,
-        rotations=rotations,
-        weeks=weeks,
-    )
-
-    rotations_with_max_contiguity = rotations.filter(
-        pl.col("max_contiguous_weeks").is_not_null()
-    )
-    enforce_maximum_contiguity(
-        residents, rotations_with_max_contiguity, weeks, scheduled
-    )
-
-    assert verify_enforce_maximum_contiguity(
-        residents, rotations, weeks, scheduled
-    ), "verify_enforce_maximum_contiguity failed"
-
-
-def verify_enforce_maximum_contiguity(
+def verify_minimum_week_constraint(
+    constraint: box.Box,
     residents: pl.DataFrame,
     rotations: pl.DataFrame,
     weeks: pl.DataFrame,
     solved_schedule: pl.DataFrame,
 ) -> bool:
-    # TODO watch out, passing entire rotations df (maybe)
-    return False
+    relevant_schedule = subset_scheduled_by(residents, rotations, weeks, solved_schedule)
+    grouped_solved_schedule = group_scheduled_df_by_for_each(
+        subset_scheduled=relevant_schedule,
+        for_each="resident",
+        group_on_column=config.cpmpy_result_column,
+    )
+
+    for group_dict in grouped_solved_schedule.iter_rows(named=True):
+        decision_vars = group_dict[cpmpy_result_column]
+
+        if sum(decision_vars) < constraint.weeks:
+            print(f"{sum(decision_vars)=} < {constraint=} !!!")
+            return False
+    return True
