@@ -160,13 +160,11 @@ class RequirementBuilder:
                         "weeks": constraint.get("weeks"),
                         "resident_year": resident_year,
                         "prerequisite": constraint.get("prerequisite"),
-                        "weeks_required": constraint.get("weeks_required"),
                         "fulfilled_by": (
                             yaml.dump(fulfilled_by)
                         ),  # Convert list to string for storage
                     }
                     rows.append(row)
-
         return pl.DataFrame(rows)
 
     def write_to_db(self, db_path: str) -> None:
