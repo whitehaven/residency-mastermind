@@ -18,6 +18,7 @@ def reset_to_default_config(config_file_path: str | None = "config.yaml") -> Non
                 "residents": {
                     "tiny": "test_data/test_residents_tiny.csv",
                     "real_size_seniors": "test_data/test_residents_real_size.csv",
+                    "only_R3s": "test_data/test_residents_real_size_R3_only.csv",
                 },
                 "rotations": {
                     "tiny": "test_data/test_rotations_minimal.csv",
@@ -36,3 +37,4 @@ def reset_to_default_config(config_file_path: str | None = "config.yaml") -> Non
 
 if __name__ == "__main__":
     reset_to_default_config()
+    print(f"default config.yaml restored")
