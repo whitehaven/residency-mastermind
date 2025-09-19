@@ -38,11 +38,15 @@ class RequirementRule:
     def range_weeks_over_resident_years(
         self, min_weeks: int, max_weeks: int, resident_years: list[str]
     ):
-        return self.min_weeks_over_resident_years(
-            min_weeks=min_weeks, resident_years=resident_years
-        ).max_weeks_over_resident_years(
-            max_weeks=max_weeks, resident_years=resident_years
-        )
+        assert min_weeks >= max_weeks, f"{min_weeks=} < {max_weeks=} and shouldn't be"
+        if min_weeks == max_weeks:
+            return self.exact_weeks_over_resident_years(min_weeks, resident_years)
+        else:
+            return self.min_weeks_over_resident_years(
+                min_weeks=min_weeks, resident_years=resident_years
+            ).max_weeks_over_resident_years(
+                max_weeks=max_weeks, resident_years=resident_years
+            )
 
     def exact_weeks_over_resident_years(
         self, exact_weeks: int, resident_years: list[str]
