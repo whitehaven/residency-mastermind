@@ -1,4 +1,3 @@
-import json
 import sqlite3
 from dataclasses import dataclass, field
 from typing import Any
@@ -159,7 +158,7 @@ class RequirementBuilder:
                         "weeks": constraint.get("weeks"),
                         "resident_year": resident_year,
                         "prerequisite": constraint.get("prerequisite"),
-                        "fulfilled_by": json.dumps(fulfilled_by),
+                        "fulfilled_by": fulfilled_by,
                     }
                     rows.append(row)
         return pl.DataFrame(rows)
@@ -168,6 +167,9 @@ class RequirementBuilder:
         self, db_path: str, table_name: str = "requirements"
     ) -> None:
         builder_as_df = self.to_polars()
+        builder_as_df = builder_as_df.with_columns(
+            fulfilled_by='["' + pl.col("fulfilled_by").list.join('","') + '"]'
+        )
 
         builder_as_df.write_database(
             table_name=table_name,
@@ -175,16 +177,20 @@ class RequirementBuilder:
             if_table_exists="replace",
         )
 
-    def read_polars_df_from_sqlite(
-        self, db_path: str, table_name: str = "requirements"
-    ) -> pl.DataFrame:
-        with sqlite3.connect(config.testing_db_path) as con:
-            builder_df_from_db = pl.read_database("SELECT * FROM requirements", con)
+    def write_builder_to_yaml(self, path: str = "requirements.yaml"):
+        builder_box = box.Box(current_builder.accumulate_constraints_by_rule())
+        builder_box.to_yaml(path)
 
-        builder_df_from_db = builder_df_from_db.with_columns(
-            pl.col("fulfilled_by").str.json_decode(pl.List(pl.String))
-        )
-        return builder_df_from_db
+
+def read_builder_polars_df_from_sqlite(
+    db_path: str, table_name: str = "requirements"
+) -> pl.DataFrame:
+    with sqlite3.connect(db_path) as con:
+        builder_df_from_db = pl.read_database(f"SELECT * FROM {table_name}", con)
+    builder_df_from_db = builder_df_from_db.with_columns(
+        pl.col("fulfilled_by").str.json_decode(dtype=pl.List(pl.String))
+    )
+    return builder_df_from_db
 
 
 def generate_builder_with_current_requirements() -> RequirementBuilder:
@@ -278,21 +284,7 @@ def generate_builder_with_current_requirements() -> RequirementBuilder:
 
 
 if __name__ == "__main__":
-    import box
+    config = box.box_from_file("config.yaml")
 
     current_builder = generate_builder_with_current_requirements()
-    builder_box = box.Box(current_builder.accumulate_constraints_by_rule())
-    builder_box.to_yaml("requirements.yaml")
-    builder_df = current_builder.to_polars()
-
-    with pl.Config(tbl_rows=-1):
-        print(builder_df)
-
-    current_builder.write_polars_df_to_sqlite(config.testing_db_path)
-
-    with sqlite3.connect(config.testing_db_path) as con:
-        readback = pl.read_database("SELECT * FROM requirements", con)
-
-    current_builder.read_polars_df_from_sqlite(config.testing_db_path)
-
-    assert readback.equals(builder_df)
+    current_builder.write_builder_to_yaml(config.default_requirements_path)
