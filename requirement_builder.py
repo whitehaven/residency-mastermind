@@ -288,3 +288,4 @@ if __name__ == "__main__":
 
     current_builder = generate_builder_with_current_requirements()
     current_builder.write_builder_to_yaml(config.default_requirements_path)
+    print(f"rebuilt requirements at {config.default_requirements_path}")
