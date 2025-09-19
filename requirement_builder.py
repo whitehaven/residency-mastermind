@@ -206,7 +206,6 @@ def generate_builder_with_current_requirements() -> RequirementBuilder:
         .exact_weeks_over_resident_years(8, ["R3"])
         .min_contiguity_over_resident_years(2, ["R2"])
         .min_contiguity_over_resident_years(4, ["R3"])
-        .min_weeks_over_resident_years(2, ["R3"])
         .after_prerequisite("HS Admitting Senior", 2, ["R2", "R3"])
     )
 
