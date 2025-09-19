@@ -37,7 +37,7 @@ class RequirementRule:
     def range_weeks_over_resident_years(
         self, min_weeks: int, max_weeks: int, resident_years: list[str]
     ):
-        assert min_weeks >= max_weeks, f"{min_weeks=} < {max_weeks=} and shouldn't be"
+        assert min_weeks <= max_weeks, f"{min_weeks=} > {max_weeks=} and shouldn't be"
         if min_weeks == max_weeks:
             return self.exact_weeks_over_resident_years(min_weeks, resident_years)
         else:
