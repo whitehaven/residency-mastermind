@@ -55,21 +55,15 @@ def generate_pl_wrapped_boolvar(
         pl.DataFrame `scheduled`: wrapped around 3D array of residents, rotations, weeks
         for ease of complex indexing by string variables.
     """
-
-    # Create the 3D boolean variable array
     scheduled_vars = cp.boolvar(
         shape=(len(residents), len(rotations), len(weeks)), name="is_scheduled"
     )
 
-    # Create all combinations for the index
     residents_list = residents["full_name"].to_list()
     rotations_list = rotations["rotation"].to_list()
     weeks_list = weeks["monday_date"].to_list()
-
-    # Generate all combinations
     combinations = list(itertools.product(residents_list, rotations_list, weeks_list))
 
-    # Create the Polars DataFrame
     scheduled = pl.DataFrame(
         {
             "resident": [combo[0] for combo in combinations],
@@ -79,19 +73,22 @@ def generate_pl_wrapped_boolvar(
         }
     )
 
-    # Convert week to datetime if it isn't already
     scheduled = scheduled.with_columns(
         pl.col("week").str.to_datetime()
         if scheduled["week"].dtype == pl.Utf8
         else pl.col("week")
     )
 
-    return scheduled
+    years_col = scheduled.join(
+        tester_residents, left_on="resident", right_on="full_name"
+    ).select("year")
+    scheduled_with_resident_year = pl.concat([scheduled, years_col], how="horizontal")
+    scheduled_with_resident_year_and_ordered = scheduled_with_resident_year.select(
+        "resident", "year", "rotation", "week", "is_scheduled_cp_var"
+    )
+
+    return scheduled_with_resident_year_and_ordered
 
 
 def dump_polars_df_to_yaml(df: pl.DataFrame) -> str:
     return yaml.dump(df.to_dicts())
-
-
-if __name__ == "__main__":
-    pass
