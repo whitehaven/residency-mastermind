@@ -116,86 +116,6 @@ def prevent_isolated_sequence(
 
         return ~(left_ok & sequence_true & right_ok)
 
-
-def enforce_maximum_contiguity(
-    residents: pl.DataFrame,
-    rotations: pl.DataFrame,
-    weeks: pl.DataFrame,
-    scheduled: pl.DataFrame,
-) -> list[cp.core.Comparison]:
-    cumulative_constraints = list()
-    for rotation_dict in rotations.iter_rows(named=True):
-        max_contiguity = rotation_dict["max_contiguous_weeks"]
-
-        for resident_dict in residents.iter_rows(named=True):
-            is_scheduled_for_res_on_rot = scheduled.filter(
-                (pl.col("resident") == resident_dict[residents_primary_label])
-                & (pl.col("rotation") == rotation_dict[rotations_primary_label])
-            )
-            schedule_vars = is_scheduled_for_res_on_rot[cpmpy_variable_column].to_list()
-            for allowed_length in range(max_contiguity):
-                for start_idx in range(len(schedule_vars) - allowed_length + 1):
-                    constraint = require_isolated_sequence(
-                        schedule_vars, start_idx, allowed_length
-                    )
-                    cumulative_constraints.append(constraint)
-    return cumulative_constraints
-
-
-def require_isolated_sequence(
-    variables: list[cp.core.BoolVal], start_idx: int, length: int
-) -> cp.core.Comparison:
-    """
-    Create a constraint that requires an isolated sequence of `length` of all True values at start_idx.
-
-    An isolated sequence is one that:
-    1. Has all variables in [start_idx, start_idx + length) set to True
-    2. Is bounded by False values (or array boundaries)
-
-    Args:
-        variables: List of boolean variables
-        start_idx: Starting index of the sequence to allow
-        length: Length of the sequence to allow
-
-    Returns:
-        A constraint that evaluates to True when this pattern is IS present
-
-    References:
-        This is based on an or-tools example under negated_bounded_span. This is a DeMorgan inversion of that.
-        See https://github.com/google/or-tools/blob/stable/examples/python/shift_scheduling_sat.py.
-
-    """
-    sequence_vars = []
-
-    # Left boundary: if not at start, the previous variable should be False
-    if start_idx > 0:
-        sequence_vars.append(~variables[start_idx - 1])
-
-    # The sequence itself should not all be True
-    sequence_vars.extend(variables[start_idx : start_idx + length])
-
-    # Right boundary: if not at end, the next variable should be False
-    if start_idx + length < len(variables):
-        sequence_vars.append(~variables[start_idx + length])
-
-    if len(sequence_vars) == length:
-        # No boundaries, just prevent all variables in sequence being True
-        return ~cp.all(sequence_vars)
-    else:
-        # With boundaries: prevent the specific isolated pattern
-        left_ok = sequence_vars[0] if start_idx > 0 else True
-        sequence_true = cp.all(
-            sequence_vars[
-                1 if start_idx > 0 else 0 : 1 + length if start_idx > 0 else length
-            ]
-        )
-        right_ok = sequence_vars[-1] if start_idx + length < len(variables) else True
-
-        return left_ok & sequence_true & right_ok
-
-
-# TODO max_contiguity is just inverted, and fixed_contiguity would just be set subtraction
-
 # TODO replace constraint utility functions
 # def force_value
 # def forbid_ineligible_rotations
@@ -412,11 +332,15 @@ def enforce_requirement_constraints(
     weeks: pl.DataFrame,
     scheduled: pl.DataFrame,
 ) -> list[cp.core.Comparison]:
+    """
+    Enforce requirements fulfilled by rotations for all included residents over period of weeks, operating on dataframe containing cpmpy 
 
+    Notes:
+        # MAYBE could benefit from combining all min/max/exact into one central function
+    """
     cumulative_constraints = []
     for requirement_name, requirement_body in requirements.items():
         for constraint in requirement_body.constraints:
-            # MAYBE could benefit from combining all min/max/exact into one central function
             if constraint.type == "min_by_period":
                 residents_subject_to_req = residents.filter(
                     pl.col("year").is_in(constraint.resident_years)
@@ -470,12 +394,22 @@ def enforce_requirement_constraints(
                     residents_subject_to_req, rotations_fulfilling_req, weeks, scheduled
                 )
             elif constraint.type == "max_contiguity_in_period":
-                raise NotImplementedError
+                raise NotImplementedError("Unclear if actually needed")
             elif constraint.type == "prerequisite":
-                raise NotImplementedError
+                constraints = enforce_prerequisite(constraint, residents, rotations, weeks, scheduled)
             else:
                 raise LookupError(
                     f"{constraint.type=} is not a known requirement constraint type"
                 )
             cumulative_constraints.extend(constraints)
     return cumulative_constraints
+
+
+def enforce_prerequisite(
+    prerequisite:str,
+    residents: pl.DataFrame,
+    rotations: pl.DataFrame,
+    weeks: pl.DataFrame,
+    scheduled: pl.DataFrame,
+) -> list[cp.core.Comparison]:
+    raise NotImplementedError
