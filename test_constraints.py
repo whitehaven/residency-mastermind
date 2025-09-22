@@ -484,3 +484,63 @@ def verify_minimum_week_constraint(
             print(f"{sum(decision_vars)=} < {constraint=} !!!")
             return False
     return True
+
+
+def verify_maximum_week_constraint(
+    constraint: box.Box,
+    residents: pl.DataFrame,
+    rotations: pl.DataFrame,
+    weeks: pl.DataFrame,
+    solved_schedule: pl.DataFrame,
+) -> bool:
+    relevant_schedule = subset_scheduled_by(
+        residents, rotations, weeks, solved_schedule
+    )
+    grouped_solved_schedule = group_scheduled_df_by_for_each(
+        subset_scheduled=relevant_schedule,
+        for_each="resident",
+        group_on_column=config.cpmpy_result_column,
+    )
+
+    for group_dict in grouped_solved_schedule.iter_rows(named=True):
+        decision_vars = group_dict[cpmpy_result_column]
+
+        if sum(decision_vars) > constraint.weeks:
+            print(f"{sum(decision_vars)=} > {constraint=} !!!")
+            return False
+    return True
+
+
+def verify_exact_week_constraint(
+    constraint: box.Box,
+    residents: pl.DataFrame,
+    rotations: pl.DataFrame,
+    weeks: pl.DataFrame,
+    solved_schedule: pl.DataFrame,
+) -> bool:
+    relevant_schedule = subset_scheduled_by(
+        residents, rotations, weeks, solved_schedule
+    )
+    grouped_solved_schedule = group_scheduled_df_by_for_each(
+        subset_scheduled=relevant_schedule,
+        for_each="resident",
+        group_on_column=config.cpmpy_result_column,
+    )
+
+    for group_dict in grouped_solved_schedule.iter_rows(named=True):
+        decision_vars = group_dict[cpmpy_result_column]
+
+        if sum(decision_vars) != constraint.weeks:
+            print(f"{sum(decision_vars)=} != {constraint=} !!!")
+            return False
+    return True
+
+
+def verify_prerequisite_met(
+    constraint: box.Box,
+    residents: pl.DataFrame,
+    rotations: pl.DataFrame,
+    weeks: pl.DataFrame,
+    solved_schedule: pl.DataFrame,
+) -> bool:
+    raise NotImplementedError
