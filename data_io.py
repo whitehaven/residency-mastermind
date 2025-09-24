@@ -80,7 +80,7 @@ def generate_pl_wrapped_boolvar(
     )
 
     years_col = scheduled.join(
-        tester_residents, left_on="resident", right_on="full_name"
+        residents, left_on="resident", right_on="full_name"
     ).select("year")
     scheduled_with_resident_year = pl.concat([scheduled, years_col], how="horizontal")
     scheduled_with_resident_year_and_ordered = scheduled_with_resident_year.select(
