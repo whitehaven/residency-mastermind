@@ -8,27 +8,17 @@ HS Rounding Senior:
     weeks: 4
     resident_years:
     - R2
-  - type: exact_by_period
-    weeks: 8
-    resident_years:
-    - R3
   - type: min_contiguity_in_period
     weeks: 2
     resident_years:
     - R2
+  - type          : exact_by_period
+    weeks         : 8
+    resident_years:
+    - R3
   - type: min_contiguity_in_period
     weeks: 4
     resident_years:
-    - R3
-  - type: min_by_period
-    weeks: 2
-    resident_years:
-    - R3
-  - type: prerequisite
-    prerequisite: HS Admitting Senior
-    weeks: 2
-    resident_years:
-    - R2
     - R3
   fulfilled_by:
   - Orange HS Senior
@@ -43,17 +33,20 @@ HS Admitting Senior:
     weeks: 6
     resident_years:
     - R2
-  - type: max_contiguity_in_period
-    weeks: 1
+  - type : min_contiguity_in_period
+    weeks: 2
     resident_years:
     - R2
-    - R3
   fulfilled_by:
-  - Purple HS Senior
-ICU Senior        :
+  - Purple/Consults
+ICU Senior:
   constraints:
   - type: min_by_period
     weeks: 4
+    resident_years:
+    - R2
+  - type          : min_contiguity_in_period
+    weeks         : 4
     resident_years:
     - R2
   fulfilled_by:
@@ -70,19 +63,27 @@ Systems of Medicine:
     - R2
   fulfilled_by:
   - Systems of Medicine
-Elective          :
+Elective:
   constraints:
   - type: min_by_period
-    weeks: 20
+    weeks         : 10
     resident_years:
     - R2
+  - type          : max_by_period
+    weeks         : 30
+    resident_years:
+    - R2
+  - type          : min_by_period
+    weeks         : 10
+    resident_years:
+    - R3
   - type: max_by_period
     weeks: 30
     resident_years:
-    - R2
+    - R3
   fulfilled_by:
   - Elective
-Ethics            :
+Ethics:
   constraints:
   - type: exact_by_period
     weeks: 1
@@ -91,7 +92,7 @@ Ethics            :
     - R3
   fulfilled_by:
   - Ethics
-Ambulatory Senior :
+Ambulatory Senior:
   constraints:
   - type: min_by_period
     weeks: 4
@@ -111,9 +112,9 @@ Ambulatory Senior :
     - R3
   fulfilled_by:
   - STHC Senior
-SHMC Night Senior :
+SHMC Night Senior:
   constraints:
-  - type: min_by_period
+  - type: exact_by_period
     weeks: 4
     resident_years:
     - R2
@@ -131,8 +132,7 @@ SHMC Night Senior :
     - R3
   fulfilled_by:
   - SHMC Night Senior
-  - SHMC Backup Night R3
-Vacation          :
+Vacation:
   constraints:
   - type: exact_by_period
     weeks: 4

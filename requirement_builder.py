@@ -201,12 +201,11 @@ def generate_builder_with_current_requirements() -> RequirementBuilder:
             name="HS Rounding Senior",
             fulfilled_by=["Orange HS Senior", "Green HS Senior"],
         )
-        .min_weeks_over_resident_years(2, ["R2"])
-        .max_weeks_over_resident_years(4, ["R2"])
-        .exact_weeks_over_resident_years(8, ["R3"])
+        .range_weeks_over_resident_years(2, 4, ["R2"])
         .min_contiguity_over_resident_years(2, ["R2"])
+        .exact_weeks_over_resident_years(8, ["R3"])
         .min_contiguity_over_resident_years(4, ["R3"])
-        .after_prerequisite("HS Admitting Senior", 2, ["R2", "R3"])
+        # .after_prerequisite("HS Admitting Senior", 2, ["R2", "R3"])
     )
 
     (
@@ -215,13 +214,13 @@ def generate_builder_with_current_requirements() -> RequirementBuilder:
         )
         .min_weeks_over_resident_years(5, ["R2"])
         .max_weeks_over_resident_years(6, ["R2"])
-        .max_contiguity_over_resident_years(1, ["R2", "R3"])
+        .min_contiguity_over_resident_years(2, ["R2"])
     )
 
     (
-        builder.add_requirement(
-            name="ICU Senior", fulfilled_by=["SHMC ICU Senior"]
-        ).min_weeks_over_resident_years(4, ["R2"])
+        builder.add_requirement(name="ICU Senior", fulfilled_by=["SHMC ICU Senior"])
+        .min_weeks_over_resident_years(4, ["R2"])
+        .min_contiguity_over_resident_years(4, ["R2"])
     )
     (
         builder.add_requirement(
@@ -233,8 +232,10 @@ def generate_builder_with_current_requirements() -> RequirementBuilder:
 
     (
         builder.add_requirement(name="Elective", fulfilled_by=["Elective"])
-        .min_weeks_over_resident_years(20, ["R2"])
+        .min_weeks_over_resident_years(10, ["R2"])
         .max_weeks_over_resident_years(30, ["R2"])
+        .min_weeks_over_resident_years(10, ["R3"])
+        .max_weeks_over_resident_years(30, ["R3"])
     )
 
     (
@@ -254,9 +255,9 @@ def generate_builder_with_current_requirements() -> RequirementBuilder:
     (  # TODO how does early nights backup work? is it R2s?
         builder.add_requirement(
             name="SHMC Night Senior",
-            fulfilled_by=["SHMC Night Senior", "SHMC Backup Night R3"],
+            fulfilled_by=["SHMC Night Senior"],
         )
-        .min_weeks_over_resident_years(4, ["R2"])
+        .exact_weeks_over_resident_years(4, ["R2"])
         .min_contiguity_over_resident_years(4, ["R2"])
         .min_weeks_over_resident_years(1, ["R3"])
         .max_weeks_over_resident_years(2, ["R3"])
