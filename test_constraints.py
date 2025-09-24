@@ -1,9 +1,10 @@
+import warnings
 from datetime import timedelta
+from typing import Union
 
 import box
 import cpmpy as cp
 import polars as pl
-import pytest
 
 from constraints import (
     require_one_rotation_per_resident_per_week,
@@ -13,7 +14,7 @@ from constraints import (
     enforce_requirement_constraints,
 )
 from data_io import generate_pl_wrapped_boolvar
-from display import extract_solved_schedule
+from display import extract_solved_schedule, convert_melted_to_block_schedule
 from selection import group_scheduled_df_by_for_each, subset_scheduled_by
 
 config = box.box_from_file("config.yaml")
@@ -231,15 +232,26 @@ def test_enforce_minimum_contiguity() -> None:
 
     melted_solved_schedule = extract_solved_schedule(scheduled)
     assert verify_minimum_contiguity(
-        rotations_with_minimum_contiguity, solved_schedule=melted_solved_schedule
+        "use_rotations_data",
+        residents,
+        rotations_with_minimum_contiguity,
+        weeks,
+        melted_solved_schedule,
     )
 
 
-def verify_minimum_contiguity(rotations, solved_schedule) -> bool:
+def verify_minimum_contiguity(
+    constraint: Union[box.Box, str],
+    residents: pl.DataFrame,
+    rotations: pl.DataFrame,
+    weeks: pl.DataFrame,
+    solved_schedule: pl.DataFrame,
+) -> bool:
     """
     Verify that the solved schedule respects minimum contiguity constraints.
 
     Args:
+        constraint: python-box describing minimum contiguity constraint or "use_rotations_data" which will pull instead from the rotations dataframe. (This is not the intended final function.)
         rotations: DataFrame with rotations that have minimum_contiguous_weeks constraints
         solved_schedule: Melted schedule DataFrame with columns:
                         ['resident', 'rotation', 'week', 'scheduled'] where
@@ -250,13 +262,9 @@ def verify_minimum_contiguity(rotations, solved_schedule) -> bool:
     """
     for rotation_dict in rotations.iter_rows(named=True):
 
-        if rotation_dict["minimum_contiguous_weeks"] is None: # TODO probably don't need this
-            continue
-
         rotation_name = rotation_dict[config.rotations_primary_label]
         min_contiguity = rotation_dict["minimum_contiguous_weeks"]
 
-        # Get all residents assigned (cpmpy_result_column==True) to this rotation
         rotation_schedule = solved_schedule.filter(
             (pl.col("rotation") == rotation_name)
             & (pl.col(cpmpy_result_column) == True)
@@ -266,11 +274,6 @@ def verify_minimum_contiguity(rotations, solved_schedule) -> bool:
             resident_rotation_schedule = rotation_schedule.filter(
                 pl.col("resident") == resident_name
             ).sort("week")
-
-            if len(resident_rotation_schedule) == 0:
-                raise RuntimeError(
-                    f"{len(resident_rotation_schedule)=}, should only be == 0  following filter operations"
-                )
 
             scheduled_weeks = resident_rotation_schedule["week"].to_list()
             contiguous_blocks = find_contiguous_blocks(scheduled_weeks)
