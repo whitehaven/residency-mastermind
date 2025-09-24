@@ -7,10 +7,11 @@ from data_io import (
 )
 
 config = box.box_from_file("config.yaml")
-
-tester_residents = pl.read_csv(config.testing_files.residents.tiny)
-tester_rotations = pl.read_csv(config.testing_files.rotations.tiny)
-tester_weeks = pl.read_csv(config.testing_files.weeks.tiny, try_parse_dates=True)
+tester_residents = pl.read_csv(config.testing_files.residents.real_size_seniors)
+tester_rotations = pl.read_csv(config.testing_files.rotations.real_size)
+tester_weeks = pl.read_csv(
+    config.testing_files.weeks.full_academic_year_2025_2026, try_parse_dates=True
+)
 
 
 def test_read_bulk_data_sqlite3():
