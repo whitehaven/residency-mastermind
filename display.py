@@ -1,7 +1,6 @@
-import box
 import polars as pl
 
-config = box.box_from_file("config.yaml")
+from config import config
 
 test_residents_path = config.testing_files.residents.real_size_seniors
 test_rotations_path = config.testing_files.rotations.real_size

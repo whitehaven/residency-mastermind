@@ -1,16 +1,9 @@
-import box
 import polars as pl
 
+from config import config
 from data_io import (
     read_bulk_data_sqlite3,
     generate_pl_wrapped_boolvar,
-)
-
-config = box.box_from_file("config.yaml")
-tester_residents = pl.read_csv(config.testing_files.residents.real_size_seniors)
-tester_rotations = pl.read_csv(config.testing_files.rotations.real_size)
-tester_weeks = pl.read_csv(
-    config.testing_files.weeks.full_academic_year_2025_2026, try_parse_dates=True
 )
 
 
@@ -27,6 +20,10 @@ def test_read_bulk_data_sqlite3():
 
 
 def test_generate_pl_wrapped_boolvar():
+    tester_residents = pl.read_csv(config.testing_files.residents.real_size_seniors)
+    tester_rotations = pl.read_csv(config.testing_files.rotations.real_size)
+    tester_weeks = pl.read_csv(config.testing_files.weeks.full_academic_year_2025_2026)
+
     fake_scheduled = generate_pl_wrapped_boolvar(
         tester_residents, tester_rotations, tester_weeks
     )

@@ -1,11 +1,8 @@
-import box
-
+from config import config
 from requirement_builder import (
     generate_builder_with_current_requirements,
     read_builder_polars_df_from_sqlite,
 )
-
-config = box.box_from_file("config.yaml")
 
 
 def test_read_builder_polars_df_from_sqlite():

@@ -1,6 +1,7 @@
 import box
 import polars as pl
 
+from config import config
 from display import extract_solved_schedule, convert_melted_to_block_schedule
 from main import solve_schedule
 from test_constraints import (
@@ -10,8 +11,6 @@ from test_constraints import (
     verify_minimum_contiguity,
     verify_enforce_requirement_constraints,
 )
-
-config = box.box_from_file("config.yaml")
 
 test_residents_path = config.testing_files.residents.real_size_seniors
 test_rotations_path = config.testing_files.rotations.real_size

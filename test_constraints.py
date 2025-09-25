@@ -6,6 +6,7 @@ import box
 import cpmpy as cp
 import polars as pl
 
+from config import config
 from constraints import (
     require_one_rotation_per_resident_per_week,
     enforce_rotation_capacity_minimum,
@@ -17,7 +18,6 @@ from data_io import generate_pl_wrapped_boolvar
 from display import extract_solved_schedule, convert_melted_to_block_schedule
 from selection import group_scheduled_df_by_for_each, subset_scheduled_by
 
-config = box.box_from_file("config.yaml")
 cpmpy_variable_column = config.cpmpy_variable_column
 cpmpy_result_column = config.cpmpy_result_column
 

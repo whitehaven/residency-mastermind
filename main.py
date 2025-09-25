@@ -19,8 +19,7 @@ from display import (
     extract_solved_schedule,
     convert_melted_to_block_schedule,
 )
-
-config = box.box_from_file("config.yaml")
+from config import config
 
 
 def main(args_from_commandline=None) -> pl.DataFrame:

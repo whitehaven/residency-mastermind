@@ -4,9 +4,9 @@ import box
 import cpmpy as cp
 import polars as pl
 
+from config import config
 from selection import subset_scheduled_by, group_scheduled_df_by_for_each
 
-config = box.box_from_file("config.yaml")
 cpmpy_variable_column = config.cpmpy_variable_column
 residents_primary_label = config.residents_primary_label
 rotations_primary_label = config.rotations_primary_label
@@ -115,6 +115,7 @@ def prevent_isolated_sequence(
         right_ok = sequence_vars[-1] if start_idx + length < len(variables) else True
 
         return ~(left_ok & sequence_true & right_ok)
+
 
 # TODO replace constraint utility functions
 # def force_value
@@ -333,7 +334,7 @@ def enforce_requirement_constraints(
     scheduled: pl.DataFrame,
 ) -> list[cp.core.Comparison]:
     """
-    Enforce requirements fulfilled by rotations for all included residents over period of weeks, operating on dataframe containing cpmpy 
+    Enforce requirements fulfilled by rotations for all included residents over period of weeks, operating on dataframe containing cpmpy
 
     Notes:
         # MAYBE could benefit from combining all min/max/exact into one central function
@@ -396,7 +397,9 @@ def enforce_requirement_constraints(
             elif constraint.type == "max_contiguity_in_period":
                 raise NotImplementedError("Unclear if actually needed")
             elif constraint.type == "prerequisite":
-                constraints = enforce_prerequisite(constraint, residents, rotations, weeks, scheduled)
+                constraints = enforce_prerequisite(
+                    constraint, residents, rotations, weeks, scheduled
+                )
             else:
                 raise LookupError(
                     f"{constraint.type=} is not a known requirement constraint type"
@@ -406,7 +409,7 @@ def enforce_requirement_constraints(
 
 
 def enforce_prerequisite(
-    prerequisite:str,
+    prerequisite: str,
     residents: pl.DataFrame,
     rotations: pl.DataFrame,
     weeks: pl.DataFrame,

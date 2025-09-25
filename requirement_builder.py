@@ -5,8 +5,6 @@ from typing import Any
 import box
 import polars as pl
 
-config = box.box_from_file("config.yaml")
-
 
 @dataclass
 class RequirementRule:
@@ -284,7 +282,7 @@ def generate_builder_with_current_requirements() -> RequirementBuilder:
 
 
 if __name__ == "__main__":
-    config = box.box_from_file("config.yaml")
+    from config import config
 
     current_builder = generate_builder_with_current_requirements()
     current_builder.write_builder_to_yaml(config.default_requirements_path)

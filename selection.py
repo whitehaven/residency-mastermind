@@ -1,7 +1,7 @@
-import box
 import polars as pl
 
-config = box.box_from_file("config.yaml")
+from config import config
+
 cpmpy_variable_column = config.cpmpy_variable_column
 cpmpy_result_column = config.cpmpy_result_column
 default_solver = config.default_cpmpy_solver
