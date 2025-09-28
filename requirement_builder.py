@@ -127,8 +127,8 @@ class RequirementBuilder:
         self.requirements[name] = rule
         return rule
 
-    def accumulate_constraints_by_rule(self) -> dict:
-        accumulated_constraints = dict()
+    def accumulate_constraints_by_rule(self) -> box.Box:
+        accumulated_constraints = box.Box()
         for rule_name, rule_body in self.requirements.items():
             accumulated_constraints.update(
                 {
