@@ -281,6 +281,49 @@ def generate_builder_with_current_requirements() -> RequirementBuilder:
     return builder
 
 
+def generate_builder_doable_with_R2s_only() -> RequirementBuilder:
+    builder = RequirementBuilder()
+
+    (
+        builder.add_requirement(
+            name="HS Rounding Senior",
+            fulfilled_by=["Orange HS Senior", "Green HS Senior"],
+        )
+        .range_weeks_over_resident_years(2, 4, ["R2"])
+        .min_contiguity_over_resident_years(2, ["R2"])
+    )
+
+    (
+        builder.add_requirement(
+            name="HS Admitting Senior", fulfilled_by=["Purple/Consults"]
+        )
+        .min_weeks_over_resident_years(4, ["R2"])
+        .max_weeks_over_resident_years(8, ["R2"])
+        .min_contiguity_over_resident_years(2, ["R2"])
+    )
+
+    (
+        builder.add_requirement(name="Elective", fulfilled_by=["Elective"])
+        .min_weeks_over_resident_years(10, ["R2"])
+        .max_weeks_over_resident_years(30, ["R2"])
+    )
+
+    (
+        builder.add_requirement(name="Ambulatory Senior", fulfilled_by=["STHC Senior"])
+        .min_weeks_over_resident_years(4, ["R2"])
+        .min_contiguity_over_resident_years(2, ["R2"])
+    )
+
+    (
+        builder.add_requirement(name="Vacation", fulfilled_by=["Vacation"])
+        .exact_weeks_over_resident_years(4, ["R2"])
+        .exact_weeks_over_resident_years(3, ["R3"])
+        # TODO need to get number that R1s actually get, or would just go on R1 schedule?
+    )
+
+    return builder
+
+
 if __name__ == "__main__":
     from config import config
 

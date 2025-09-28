@@ -16,6 +16,7 @@ from constraints import (
 )
 from data_io import generate_pl_wrapped_boolvar
 from display import extract_solved_schedule
+from requirement_builder import generate_builder_doable_with_R2s_only
 from selection import group_scheduled_df_by_for_each, subset_scheduled_by
 
 cpmpy_variable_column = config.cpmpy_variable_column
@@ -387,6 +388,53 @@ def test_enforce_requirement_constraints():
     )
     model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
     model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
+
+    is_feasible = model.solve(config.default_cpmpy_solver, log_search_progress=False)
+    if not is_feasible:
+        raise ValueError("Infeasible")
+
+    melted_solved_schedule = extract_solved_schedule(scheduled)
+
+    assert verify_enforce_requirement_constraints(
+        current_requirements,
+        residents,
+        rotations,
+        weeks,
+        melted_solved_schedule,
+    ), "verify_enforce_requirement_constraints returns False"
+
+
+def test_enforce_requirement_constraints_R2_only():
+    residents = real_size_residents.filter(pl.col("year").is_in(["R2"]))
+    warnings.warn("residents df has filtered extended R3s out")
+
+    rotations = pl.read_csv("test_data/test_rotations_doable_with_R2s.csv")
+    weeks = one_academic_year_weeks
+    scheduled = generate_pl_wrapped_boolvar(
+        residents=residents,
+        rotations=rotations,
+        weeks=weeks,
+    )
+
+    current_requirements = (
+        generate_builder_doable_with_R2s_only().accumulate_constraints_by_rule()
+    )
+    model = cp.Model()
+
+    requirement_constraints = enforce_requirement_constraints(
+        current_requirements,
+        residents,
+        rotations,
+        weeks,
+        scheduled,
+    )
+    model += requirement_constraints
+
+    model += require_one_rotation_per_resident_per_week(
+        residents, rotations, weeks, scheduled
+    )
+    model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
+    # model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
 
     is_feasible = model.solve(config.default_cpmpy_solver, log_search_progress=False)
     if not is_feasible:

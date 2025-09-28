@@ -1,0 +1,7 @@
+rotation,category,required_role,minimum_weeks,maximum_weeks,minimum_residents_assigned,maximum_residents_assigned,minimum_contiguous_weeks,max_contiguous_weeks
+Green HS Senior,HS Rounding Senior,Senior,0,8,1,3,2,
+Orange HS Senior,HS Rounding Senior,Senior,0,8,1,3,2,
+Purple/Consults,HS Admitting Senior,Senior,8,8,1,3,2,
+STHC Senior,Primary Care Senior,Senior,4,4,1,3,1,
+Vacation,Vacation,Any,3,3,0,15,1,
+Elective,Elective,,,,,26,1,
