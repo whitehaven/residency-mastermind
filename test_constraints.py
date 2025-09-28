@@ -21,9 +21,9 @@ from selection import group_scheduled_df_by_for_each, subset_scheduled_by
 cpmpy_variable_column = config.cpmpy_variable_column
 cpmpy_result_column = config.cpmpy_result_column
 
-tester_residents = pl.read_csv(config.testing_files.residents.real_size_seniors)
-tester_rotations = pl.read_csv(config.testing_files.rotations.real_size)
-tester_weeks = pl.read_csv(
+real_size_residents = pl.read_csv(config.testing_files.residents.real_size_seniors)
+real_size_rotations = pl.read_csv(config.testing_files.rotations.real_size)
+one_academic_year_weeks = pl.read_csv(
     config.testing_files.weeks.full_academic_year_2025_2026, try_parse_dates=True
 )
 
@@ -32,23 +32,27 @@ default_solver = config.default_cpmpy_solver
 
 def test_require_one_rotation_per_resident_per_week() -> None:
 
-    normal_scheduled_tester_residents = tester_residents.filter(
-        pl.col("year").is_in((["R2", "R3"]))
-    )
+    rotations = real_size_rotations
+    weeks = one_academic_year_weeks
 
-    test_scheduled = generate_pl_wrapped_boolvar(
-        normal_scheduled_tester_residents, tester_rotations, tester_weeks
-    )
+    residents = real_size_residents
+    residents = residents.filter(pl.col("year").is_in((["R2", "R3"])))
+    warnings.warn("filtering out extended-R3s")
+
+    model = cp.Model()
+
+    test_scheduled = generate_pl_wrapped_boolvar(residents, rotations, weeks)
     test_constraints = require_one_rotation_per_resident_per_week(
-        normal_scheduled_tester_residents,
-        tester_rotations,
-        tester_weeks,
+        residents,
+        rotations,
+        weeks,
         scheduled=test_scheduled,
     )
 
-    model = cp.Model()
     model += test_constraints
-    model.solve(default_solver, log_search_progress=False)
+    is_feasible = model.solve("ortools", log_search_progress=False)
+    if not is_feasible:
+        raise ValueError("Infeasible")
 
     solved_schedule = extract_solved_schedule(test_scheduled)
 
@@ -82,9 +86,9 @@ def verify_one_rotation_per_resident_per_week(solved_schedule) -> bool:
 
 def test_enforce_rotation_capacity_minimum() -> None:
 
-    residents = tester_residents
-    rotations = tester_rotations
-    weeks = tester_weeks
+    residents = real_size_residents
+    rotations = real_size_rotations
+    weeks = one_academic_year_weeks
 
     rotations_with_minimum_residents = rotations.filter(
         pl.col("minimum_residents_assigned") > 0
@@ -137,9 +141,9 @@ def verify_enforce_rotation_capacity_minimum(rotations, solved_schedule) -> bool
 
 def test_enforce_rotation_capacity_maximum() -> None:
 
-    residents = tester_residents
-    rotations = tester_rotations
-    weeks = tester_weeks
+    residents = real_size_residents
+    rotations = real_size_rotations
+    weeks = one_academic_year_weeks
 
     rotations_with_minimum_residents = rotations.filter(
         pl.col("maximum_residents_assigned") > 0
@@ -193,11 +197,11 @@ def verify_enforce_rotation_capacity_maximum(rotations, solved_schedule) -> bool
 
 
 def test_enforce_minimum_contiguity() -> None:
-    # TODO complete test
-    residents = tester_residents
+    residents = real_size_residents
     residents = residents.filter(pl.col("year").is_in(["R2", "R3"]))
-    rotations = tester_rotations
-    weeks = tester_weeks
+
+    rotations = real_size_rotations
+    weeks = one_academic_year_weeks
 
     scheduled = generate_pl_wrapped_boolvar(
         residents=residents,
@@ -350,18 +354,19 @@ def is_consecutive(week1, week2) -> bool:
 
 
 def test_enforce_requirement_constraints():
-    residents = tester_residents
-    residents = residents.filter(
-        pl.col("year").is_in(["R2", "R3"])
-    )  # TODO again, note filtered to exclude extended-R3s
-    rotations = tester_rotations
-    weeks = tester_weeks
+    residents = real_size_residents.filter(pl.col("year").is_in(["R2"]))
+    warnings.warn("residents df has filtered extended R3s out")
+
+    rotations = real_size_rotations
+    weeks = one_academic_year_weeks
     scheduled = generate_pl_wrapped_boolvar(
         residents=residents,
         rotations=rotations,
         weeks=weeks,
     )
-    current_requirements = box.box_from_file("requirements.yaml")
+    current_requirements = box.box_from_file(config.default_requirements_path)
+    if not isinstance(current_requirements, box.Box):
+        raise TypeError
     model = cp.Model()
 
     requirement_constraints = enforce_requirement_constraints(
@@ -374,7 +379,7 @@ def test_enforce_requirement_constraints():
     model += requirement_constraints
 
     model += require_one_rotation_per_resident_per_week(
-        residents, rotations, weeks, scheduled=scheduled
+        residents, rotations, weeks, scheduled
     )
     model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
     model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
