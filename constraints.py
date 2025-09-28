@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Union
 
 import box
 import cpmpy as cp
@@ -13,6 +13,7 @@ rotations_primary_label = config.rotations_primary_label
 
 
 def enforce_minimum_contiguity(
+    constraint: Union[box.Box, str],
     residents: pl.DataFrame,
     rotations: pl.DataFrame,
     weeks: pl.DataFrame,
@@ -31,6 +32,7 @@ def enforce_minimum_contiguity(
         Filter for minimum_contiguity > 2 and not null.
 
     Args:
+        constraint: python-box describing minimum contiguity constraint or "use_rotations_data" which will pull instead from the rotations dataframe. (This is not the intended final function.)
         residents: DataFrame of residents
         rotations: DataFrame of rotations with minimum_contiguous_weeks
         weeks: DataFrame of weeks
@@ -41,20 +43,25 @@ def enforce_minimum_contiguity(
     """
     cumulative_constraints = list()
     for rotation_dict in rotations.iter_rows(named=True):
-        min_contiguity = rotation_dict["minimum_contiguous_weeks"]
+
+        if constraint == "use_rotations_data":
+            min_contiguity = rotation_dict["minimum_contiguous_weeks"]
+        else:
+            min_contiguity = constraint.weeks
 
         for resident_dict in residents.iter_rows(named=True):
             is_scheduled_for_res_on_rot = scheduled.filter(
                 (pl.col("resident") == resident_dict[residents_primary_label])
                 & (pl.col("rotation") == rotation_dict[rotations_primary_label])
             )
+
             schedule_vars = is_scheduled_for_res_on_rot[cpmpy_variable_column].to_list()
             for forbidden_length in range(1, min_contiguity):
                 for start_idx in range(len(schedule_vars) - forbidden_length + 1):
-                    constraint = prevent_isolated_sequence(
+                    constraint_against_sequence = prevent_isolated_sequence(
                         schedule_vars, start_idx, forbidden_length
                     )
-                    cumulative_constraints.append(constraint)
+                    cumulative_constraints.append(constraint_against_sequence)
 
     return cumulative_constraints
 
@@ -392,7 +399,11 @@ def enforce_requirement_constraints(
                     pl.col("rotation").is_in(requirement_body.fulfilled_by)
                 )
                 constraints = enforce_minimum_contiguity(
-                    residents_subject_to_req, rotations_fulfilling_req, weeks, scheduled
+                    constraint,
+                    residents_subject_to_req,
+                    rotations_fulfilling_req,
+                    weeks,
+                    scheduled,
                 )
             elif constraint.type == "max_contiguity_in_period":
                 raise NotImplementedError("Unclear if actually needed")

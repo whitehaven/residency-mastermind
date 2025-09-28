@@ -8,14 +8,14 @@ import polars as pl
 
 from config import config
 from constraints import (
-    require_one_rotation_per_resident_per_week,
-    enforce_rotation_capacity_minimum,
-    enforce_rotation_capacity_maximum,
     enforce_minimum_contiguity,
     enforce_requirement_constraints,
+    enforce_rotation_capacity_maximum,
+    enforce_rotation_capacity_minimum,
+    require_one_rotation_per_resident_per_week,
 )
 from data_io import generate_pl_wrapped_boolvar
-from display import extract_solved_schedule, convert_melted_to_block_schedule
+from display import extract_solved_schedule
 from selection import group_scheduled_df_by_for_each, subset_scheduled_by
 
 cpmpy_variable_column = config.cpmpy_variable_column
@@ -216,6 +216,7 @@ def test_enforce_minimum_contiguity() -> None:
         & (pl.col("minimum_contiguous_weeks").is_not_null())
     )
     contiguity_constraints = enforce_minimum_contiguity(
+        "use_rotations_data",
         residents,
         rotations_with_minimum_contiguity,
         weeks,
@@ -267,16 +268,19 @@ def verify_minimum_contiguity(
     for rotation_dict in rotations.iter_rows(named=True):
 
         rotation_name = rotation_dict[config.rotations_primary_label]
-        min_contiguity = rotation_dict["minimum_contiguous_weeks"]
+        if constraint == "use_rotations_data":
+            min_contiguity = rotation_dict["minimum_contiguous_weeks"]
+        else:
+            min_contiguity = constraint.weeks
 
         rotation_schedule = solved_schedule.filter(
             (pl.col("rotation") == rotation_name)
             & (pl.col(cpmpy_result_column) == True)
         )
 
-        for resident_name in rotation_schedule["resident"].unique():
+        for resident_dict in residents.iter_rows(named=True):
             resident_rotation_schedule = rotation_schedule.filter(
-                pl.col("resident") == resident_name
+                pl.col("resident") == resident_dict
             ).sort("week")
 
             scheduled_weeks = resident_rotation_schedule["week"].to_list()
@@ -285,7 +289,7 @@ def verify_minimum_contiguity(
             for block in contiguous_blocks:
                 if len(block) < min_contiguity:
                     print(
-                        f"CONTIGUITY VIOLATION: Resident {resident_name} on rotation {rotation_name}"
+                        f"CONTIGUITY VIOLATION: Resident {resident_dict} on rotation {rotation_name}"
                     )
                     print(f"  Has block of length {len(block)}: {block}")
                     print(f"  But minimum contiguity is {min_contiguity}")
@@ -461,10 +465,20 @@ def verify_enforce_requirement_constraints(
                     pl.col("rotation").is_in(requirement_body.fulfilled_by)
                 )
                 assert verify_minimum_contiguity(
-                    rotations_fulfilling_req, solved_schedule
+                    constraint,
+                    residents_subject_to_req,
+                    rotations_fulfilling_req,
+                    weeks,
+                    solved_schedule,
                 ), "verify_minimum_contiguity failed"
 
             elif constraint.type == "prerequisite":
+                residents_subject_to_req = residents.filter(
+                    pl.col("year").is_in(constraint.resident_years)
+                )
+                rotations_fulfilling_req = rotations.filter(
+                    pl.col("rotation").is_in(requirement_body.fulfilled_by)
+                )
                 assert verify_prerequisite_met(
                     constraint,
                     residents_subject_to_req,
