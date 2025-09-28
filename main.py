@@ -4,22 +4,15 @@ import box
 import cpmpy as cp
 import polars as pl
 
-from constraints import (
-    enforce_rotation_capacity_maximum,
-    require_one_rotation_per_resident_per_week,
-    enforce_rotation_capacity_minimum,
-    enforce_minimum_contiguity,
-    enforce_requirement_constraints,
-)
-from data_io import (
-    read_bulk_data_sqlite3,
-    generate_pl_wrapped_boolvar,
-)
-from display import (
-    extract_solved_schedule,
-    convert_melted_to_block_schedule,
-)
 from config import config
+from constraints import (
+    enforce_requirement_constraints,
+    enforce_rotation_capacity_maximum,
+    enforce_rotation_capacity_minimum,
+    require_one_rotation_per_resident_per_week,
+)
+from data_io import generate_pl_wrapped_boolvar, read_bulk_data_sqlite3
+from display import convert_melted_to_block_schedule, extract_solved_schedule
 
 
 def main(args_from_commandline=None) -> pl.DataFrame:
@@ -56,35 +49,21 @@ def solve_schedule(
     """
     model = cp.Model()
 
-    # TODO handle R3-extended (just filtered out immediately here)
-    standard_scheduled_residents = residents.filter(pl.col("year").is_in(["R2", "R3"]))
-
-    scheduled = generate_pl_wrapped_boolvar(
-        standard_scheduled_residents, rotations, weeks
-    )
+    scheduled = generate_pl_wrapped_boolvar(residents, rotations, weeks)
 
     # TODO Constraints
     # resident-specific
 
     current_requirements = box.box_from_file(config.default_requirements_path)
+    if not isinstance(current_requirements, box.Box):
+        raise TypeError
 
     model += enforce_requirement_constraints(
-        current_requirements, standard_scheduled_residents, rotations, weeks, scheduled
+        current_requirements, residents, rotations, weeks, scheduled
     )
 
     model += require_one_rotation_per_resident_per_week(
-        standard_scheduled_residents, rotations, weeks, scheduled
-    )
-
-    rotations_with_min_contiguity_reqs = rotations.filter(
-        (pl.col("minimum_contiguous_weeks") > 1)
-        & (pl.col("minimum_contiguous_weeks").is_not_null())
-    )
-    model += enforce_minimum_contiguity(
-        standard_scheduled_residents,
-        rotations_with_min_contiguity_reqs,
-        weeks,
-        scheduled,
+        residents, rotations, weeks, scheduled
     )
 
     # rotation-specific (to physical site, not requirement)
@@ -92,14 +71,14 @@ def solve_schedule(
         pl.col("minimum_residents_assigned") > 0
     )
     model += enforce_rotation_capacity_minimum(
-        standard_scheduled_residents, rotations_with_capacity_minimum, weeks, scheduled
+        residents, rotations_with_capacity_minimum, weeks, scheduled
     )
 
     rotations_with_capacity_maximum = rotations.filter(
         pl.col("maximum_residents_assigned").is_not_null()
     )
     model += enforce_rotation_capacity_maximum(
-        standard_scheduled_residents, rotations_with_capacity_maximum, weeks, scheduled
+        residents, rotations_with_capacity_maximum, weeks, scheduled
     )
 
     # TODO enforce block transitions
