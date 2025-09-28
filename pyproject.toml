@@ -1,0 +1,19 @@
+[project]
+name = "residency-mastermind"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "black>=25.9.0",
+    "cpmpy>=0.9.26",
+    "faker>=37.8.0",
+    "isort>=6.0.1",
+    "ortools>=9.14.6206",
+    "polars>=1.33.1",
+    "pyarrow>=21.0.0",
+    "pytest>=8.4.2",
+    "python-box>=7.3.2",
+    "pyyaml>=6.0.3",
+    "sqlalchemy>=2.0.43",
+]
