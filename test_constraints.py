@@ -271,11 +271,11 @@ def verify_minimum_contiguity(
         if constraint == "use_rotations_data":
             min_contiguity = rotation_dict["minimum_contiguous_weeks"]
         else:
-            min_contiguity = constraint.weeks
+            min_contiguity = constraint.weeks # type: ignore
 
         rotation_schedule = solved_schedule.filter(
             (pl.col("rotation") == rotation_name)
-            & (pl.col(cpmpy_result_column) == True)
+            & (pl.col(cpmpy_result_column) == True)  # noqa: E712
         )
 
         for resident_dict in residents.iter_rows(named=True):

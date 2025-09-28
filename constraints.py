@@ -1,11 +1,11 @@
-from typing import Callable, Union
+from typing import Callable, LiteralString
 
 import box
 import cpmpy as cp
 import polars as pl
 
 from config import config
-from selection import subset_scheduled_by, group_scheduled_df_by_for_each
+from selection import group_scheduled_df_by_for_each, subset_scheduled_by
 
 cpmpy_variable_column = config.cpmpy_variable_column
 residents_primary_label = config.residents_primary_label
@@ -13,7 +13,7 @@ rotations_primary_label = config.rotations_primary_label
 
 
 def enforce_minimum_contiguity(
-    constraint: Union[box.Box, str],
+    constraint_weeks: int | LiteralString,
     residents: pl.DataFrame,
     rotations: pl.DataFrame,
     weeks: pl.DataFrame,
@@ -43,11 +43,14 @@ def enforce_minimum_contiguity(
     """
     cumulative_constraints = list()
     for rotation_dict in rotations.iter_rows(named=True):
-
-        if constraint == "use_rotations_data":
+        if constraint_weeks == "use_rotations_data":
             min_contiguity = rotation_dict["minimum_contiguous_weeks"]
+        elif isinstance(constraint_weeks, int):
+            min_contiguity = constraint_weeks
         else:
-            min_contiguity = constraint.weeks
+            raise ValueError(
+                f"min_contiguity is {type(constraint_weeks)} which is not in int | str"
+            )
 
         for resident_dict in residents.iter_rows(named=True):
             is_scheduled_for_res_on_rot = scheduled.filter(
@@ -110,7 +113,7 @@ def prevent_isolated_sequence(
 
     if len(sequence_vars) == length:
         # No boundaries, just prevent all variables in sequence being True
-        return ~cp.all(sequence_vars)
+        return ~cp.all(sequence_vars)  # type: ignore
     else:
         # With boundaries: prevent the specific isolated pattern
         left_ok = sequence_vars[0] if start_idx > 0 else True
@@ -121,7 +124,7 @@ def prevent_isolated_sequence(
         )
         right_ok = sequence_vars[-1] if start_idx + length < len(variables) else True
 
-        return ~(left_ok & sequence_true & right_ok)
+        return ~(left_ok & sequence_true & right_ok)  # type: ignore
 
 
 # TODO replace constraint utility functions

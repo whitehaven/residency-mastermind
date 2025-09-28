@@ -8,7 +8,7 @@ import yaml
 
 def read_bulk_data_sqlite3(
     db_location: str,
-    tables_to_read: list[str] | None = None,
+    tables_to_read: tuple[str, ...] | None = None,
     date_fields: dict[str, str] | None = None,
 ) -> dict[str, pl.DataFrame]:
     """
@@ -56,7 +56,7 @@ def generate_pl_wrapped_boolvar(
         for ease of complex indexing by string variables.
     """
     scheduled_vars = cp.boolvar(
-        shape=(len(residents), len(rotations), len(weeks)), name="is_scheduled"
+        shape=(len(residents), len(rotations), len(weeks)), name="is_scheduled"  # type: ignore
     )
 
     residents_list = residents["full_name"].to_list()
@@ -69,7 +69,7 @@ def generate_pl_wrapped_boolvar(
             "resident": [combo[0] for combo in combinations],
             "rotation": [combo[1] for combo in combinations],
             "week": [combo[2] for combo in combinations],
-            "is_scheduled_cp_var": scheduled_vars.flatten(),
+            "is_scheduled_cp_var": scheduled_vars.flatten(),  # type: ignore
         }
     )
 
