@@ -402,7 +402,7 @@ def enforce_requirement_constraints(
                     pl.col("rotation").is_in(requirement_body.fulfilled_by)
                 )
                 constraints = enforce_minimum_contiguity(
-                    constraint,
+                    constraint.weeks,
                     residents_subject_to_req,
                     rotations_fulfilling_req,
                     weeks,
