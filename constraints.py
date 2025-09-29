@@ -32,7 +32,7 @@ def enforce_minimum_contiguity(
         Filter for minimum_contiguity > 2 and not null.
 
     Args:
-        constraint: python-box describing minimum contiguity constraint or "use_rotations_data" which will pull instead from the rotations dataframe. (This is not the intended final function.)
+        constraint_weeks: python-box describing minimum contiguity constraint or "use_rotations_data" which will pull instead from the rotations dataframe. (This is not the intended final function.)
         residents: DataFrame of residents
         rotations: DataFrame of rotations with minimum_contiguous_weeks
         weeks: DataFrame of weeks
