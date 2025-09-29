@@ -85,16 +85,18 @@ def subset_scheduled_by(
 
 
 def group_scheduled_df_by_for_each(
-    subset_scheduled: pl.DataFrame, for_each: list[str] | str, group_on_column: str
+    subset_scheduled: pl.DataFrame,
+    for_each_individual: list[str] | str,
+    group_on_column: str,
 ) -> pl.DataFrame:
     """
-    Get grouped subframes containing grouped decision variables by those fields which are "for each" when used for
+    Get grouped subframes containing grouped decision variables by those fields which are "for each (individual)" when used for
     constraint generation. The returned grouped dataframe is thus siloed into groups which should be manipulated in iterated steps.
 
     Args:
         group_on_column: column to aggregate (either cpmpy_variable_column or cpmpy_result_column as found in config)
         subset_scheduled: pl.Dataframe subset from `scheduled` to set ranges along axes to place constraint
-        for_each: axis or axes to group by
+        for_each_individual: axis or axes to group by
     Returns:
         grouped pl.DataFrame
 
