@@ -87,7 +87,6 @@ def verify_one_rotation_per_resident_per_week(solved_schedule) -> bool:
 
 
 def test_enforce_rotation_capacity_minimum() -> None:
-
     residents = real_size_residents
     rotations = real_size_rotations
     weeks = one_academic_year_weeks
@@ -142,7 +141,6 @@ def verify_enforce_rotation_capacity_minimum(rotations, solved_schedule) -> bool
 
 
 def test_enforce_rotation_capacity_maximum() -> None:
-
     residents = real_size_residents
     rotations = real_size_rotations
     weeks = one_academic_year_weeks
@@ -273,7 +271,7 @@ def verify_minimum_contiguity(
         if constraint == "use_rotations_data":
             min_contiguity = rotation_dict["minimum_contiguous_weeks"]
         else:
-            min_contiguity = constraint.weeks # type: ignore
+            min_contiguity = constraint.weeks  # type: ignore
 
         rotation_schedule = solved_schedule.filter(
             (pl.col("rotation") == rotation_name)
@@ -342,7 +340,6 @@ def is_consecutive(week1, week2) -> bool:
     """
     # If weeks are date-flavored objects
     if hasattr(week1, "year") and hasattr(week2, "year"):
-
         return week2 == week1 + timedelta(weeks=1)
 
     # If weeks are integers representing week numbers
