@@ -14,6 +14,7 @@ from constraints import (
     enforce_rotation_capacity_minimum,
     require_one_rotation_per_resident_per_week,
 )
+from constraints import enforce_prerequisite
 from data_io import generate_pl_wrapped_boolvar
 from display import extract_solved_schedule
 from requirement_builder import generate_builder_doable_with_R2s_only
@@ -619,8 +620,36 @@ def verify_exact_week_constraint(
     return True
 
 
+def test_enforce_prerequisite():
+    test_constraint = {
+        "prerequisite": ["Purple/Consults"],
+        "resident_years": ["R2", "R3"],
+        "type": "prerequisite",
+        "weeks": 4,
+    }
+    test_prerequisite_demander = "HS Rounding Senior"
+
+    residents = real_size_residents
+    rotations = real_size_rotations
+    weeks = one_academic_year_weeks
+    scheduled = generate_pl_wrapped_boolvar(residents, rotations, weeks)
+
+    enforce_prerequisite(
+        test_constraint,
+        test_prerequisite_demander,
+        residents,
+        rotations,
+        weeks,
+        scheduled,
+    )
+
+    assert verify_prerequisite_met(
+        test_constraint, residents, rotations, weeks, scheduled
+    ), "verify_prerequisite_met failed"
+
+
 def verify_prerequisite_met(
-    constraint: box.Box,
+    constraint: Union[box.Box, dict],
     residents: pl.DataFrame,
     rotations: pl.DataFrame,
     weeks: pl.DataFrame,

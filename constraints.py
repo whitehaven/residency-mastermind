@@ -1,4 +1,5 @@
-from typing import Callable, LiteralString
+import warnings
+from typing import Callable, LiteralString, Union
 
 import box
 import cpmpy as cp
@@ -10,6 +11,12 @@ from selection import group_scheduled_df_by_for_each, subset_scheduled_by
 cpmpy_variable_column = config.cpmpy_variable_column
 residents_primary_label = config.residents_primary_label
 rotations_primary_label = config.rotations_primary_label
+
+real_size_residents = pl.read_csv(config.testing_files.residents.real_size_seniors)
+real_size_rotations = pl.read_csv(config.testing_files.rotations.real_size)
+one_academic_year_weeks = pl.read_csv(
+    config.testing_files.weeks.full_academic_year_2025_2026, try_parse_dates=True
+)
 
 
 def enforce_minimum_contiguity(
@@ -423,10 +430,33 @@ def enforce_requirement_constraints(
 
 
 def enforce_prerequisite(
-    prerequisite: str,
+    prerequisite_constraint: Union[box.Box | dict],
+    prerequisite_demander: str,
     residents: pl.DataFrame,
     rotations: pl.DataFrame,
     weeks: pl.DataFrame,
     scheduled: pl.DataFrame,
 ) -> list[cp.core.Comparison]:
-    raise NotImplementedError
+    prereq_fulfillers = prerequisite_constraint.get("prerequisite")
+    prereq_weeks_required = prerequisite_constraint.get("weeks")
+
+    rotations_fulfilling_prereq = rotations.filter(
+        pl.col("rotation").is_in(prereq_fulfillers)
+    )
+
+    skips = 0
+
+    for resident_dict in residents.iter_rows(named=True):
+        for week_dict in weeks.iter_rows(named=True):
+            if week_dict["week"] < prereq_weeks_required:
+                continue
+            subset_scheduled_by(
+                resident_dict[residents_primary_label],
+                rotations.filter(pl.col("rotation").is_in(prereq_fulfillers)),
+                weeks,
+                scheduled,
+            )
+
+    # sum of all fulfillers weeks
+
+    raise NotImplementedError("don't think the approach is correct yet")
