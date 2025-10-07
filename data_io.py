@@ -34,7 +34,7 @@ def read_bulk_data_sqlite3(
             extracted_df = pl.read_database(f"SELECT * FROM {table_name}", con)
             if table_name in date_fields:
                 extracted_df = extracted_df.with_columns(
-                    pl.col(date_fields[table_name]).str.to_date()
+                    pl.col(date_fields[table_name]).str.to_date("%m/%d/%Y")
                 )
             tables.update({table_name: extracted_df})
     return tables
