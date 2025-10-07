@@ -75,7 +75,7 @@ def verify_one_rotation_per_resident_per_week(solved_schedule) -> bool:
     """
     grouped_solved_schedule = group_scheduled_df_by_for_each(
         solved_schedule,
-        for_each=["resident", "week"],
+        for_each_individual=["resident", "week"],
         group_on_column=cpmpy_result_column,
     )
     for group_dict in grouped_solved_schedule.iter_rows(named=True):
@@ -121,7 +121,7 @@ def test_enforce_rotation_capacity_minimum() -> None:
 def verify_enforce_rotation_capacity_minimum(rotations, solved_schedule) -> bool:
     grouped_solved_schedule = group_scheduled_df_by_for_each(
         solved_schedule,
-        for_each=["rotation", "week"],
+        for_each_individual=["rotation", "week"],
         group_on_column=cpmpy_result_column,
     )
     for group_dict in grouped_solved_schedule.iter_rows(named=True):
@@ -175,7 +175,7 @@ def test_enforce_rotation_capacity_maximum() -> None:
 def verify_enforce_rotation_capacity_maximum(rotations, solved_schedule) -> bool:
     grouped_solved_schedule = group_scheduled_df_by_for_each(
         solved_schedule,
-        for_each=["rotation", "week"],
+        for_each_individual=["rotation", "week"],
         group_on_column=cpmpy_result_column,
     )
     for group_dict in grouped_solved_schedule.iter_rows(named=True):
@@ -554,7 +554,7 @@ def verify_minimum_week_constraint(
     )
     grouped_solved_schedule = group_scheduled_df_by_for_each(
         subset_scheduled=relevant_schedule,
-        for_each="resident",
+        for_each_individual="resident",
         group_on_column=config.cpmpy_result_column,
     )
 
@@ -579,7 +579,7 @@ def verify_maximum_week_constraint(
     )
     grouped_solved_schedule = group_scheduled_df_by_for_each(
         subset_scheduled=relevant_schedule,
-        for_each="resident",
+        for_each_individual="resident",
         group_on_column=config.cpmpy_result_column,
     )
 
@@ -604,7 +604,7 @@ def verify_exact_week_constraint(
     )
     grouped_solved_schedule = group_scheduled_df_by_for_each(
         subset_scheduled=relevant_schedule,
-        for_each="resident",
+        for_each_individual="resident",
         group_on_column=config.cpmpy_result_column,
     )
 
