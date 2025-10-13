@@ -112,5 +112,7 @@ def group_scheduled_df_by_for_each(
     assert (
         group_on_column in subset_scheduled.columns
     ), f"{group_on_column} not in {subset_scheduled.columns}"
-    grouped = subset_scheduled.group_by(for_each).agg(pl.col(group_on_column))
+    grouped = subset_scheduled.group_by(for_each_individual).agg(
+        pl.col(group_on_column)
+    )
     return grouped

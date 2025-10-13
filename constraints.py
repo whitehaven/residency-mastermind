@@ -169,7 +169,7 @@ def require_one_rotation_per_resident_per_week(
 
     grouped = group_scheduled_df_by_for_each(
         subset_scheduled,
-        for_each=["resident", "week"],
+        for_each_individual=["resident", "week"],
         group_on_column=cpmpy_variable_column,
     )
 
@@ -193,7 +193,7 @@ def enforce_minimum_rotation_weeks_per_resident(
     )
     grouped = group_scheduled_df_by_for_each(
         subset_scheduled,
-        for_each=["resident"],
+        for_each_individual=["resident"],
         group_on_column=cpmpy_variable_column,
     )
     constraints = apply_constraint_to_groups(
@@ -215,7 +215,7 @@ def enforce_maximum_rotation_weeks_per_resident(
     )
     grouped = group_scheduled_df_by_for_each(
         subset_scheduled,
-        for_each=["resident"],
+        for_each_individual=["resident"],
         group_on_column=cpmpy_variable_column,
     )
     constraints = apply_constraint_to_groups(
@@ -237,7 +237,7 @@ def enforce_exact_rotation_weeks_per_resident(
     )
     grouped = group_scheduled_df_by_for_each(
         subset_scheduled,
-        for_each=["resident"],
+        for_each_individual=["resident"],
         group_on_column=cpmpy_variable_column,
     )
 
@@ -288,7 +288,7 @@ def enforce_rotation_capacity_minimum(
     )
     grouped = group_scheduled_df_by_for_each(
         subset_scheduled,
-        for_each=["rotation", "week"],
+        for_each_individual=["rotation", "week"],
         group_on_column=cpmpy_variable_column,
     )
 
@@ -328,7 +328,7 @@ def enforce_rotation_capacity_maximum(
     )
     grouped = group_scheduled_df_by_for_each(
         subset_scheduled,
-        for_each=["rotation", "week"],
+        for_each_individual=["rotation", "week"],
         group_on_column=cpmpy_variable_column,
     )
 
