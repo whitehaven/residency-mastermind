@@ -148,3 +148,16 @@ directly, and polars on its own didn't solve the problem of uninterpretable inte
 easier to understand and reason about. Vectorized constraints are seductive but hard.
 
 This is going well enough that I have merged main to this candidate.
+
+### 2025-10-13
+
+Lots of undocumented work done up to this point.
+
+- constraints.py still needs:
+    - prerequisite constraint with test, possibly including prerequisites from prior years
+    - block alignment for rotations (maybe a type or alternative to existing contiguity code)
+    - force selections of variables to True/False (i.e., to specify weeks rotations are offered)
+
+Was trying to use realistic data, but too unwieldy to test situations which require week-perfect scheduling. Adopting a
+strategy of creating tight test cases which can only succeed if solved exactly right seems to be a better approach.
+

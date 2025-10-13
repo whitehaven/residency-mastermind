@@ -17,7 +17,10 @@ from constraints import (
 from constraints import enforce_prerequisite
 from data_io import generate_pl_wrapped_boolvar
 from display import extract_solved_schedule
-from requirement_builder import generate_builder_doable_with_R2s_only
+from requirement_builder import (
+    generate_builder_doable_with_R2s_only,
+    RequirementBuilder,
+)
 from selection import group_scheduled_df_by_for_each, subset_scheduled_by
 
 cpmpy_variable_column = config.cpmpy_variable_column
@@ -449,6 +452,85 @@ def test_enforce_requirement_constraints_R2_only():
     ), "verify_enforce_requirement_constraints returns False"
 
 
+def test_enforce_requirement_constraints_R2s_barely_fit():
+
+    residents = pl.DataFrame(
+        {
+            "full_name": ["First Guy", "Second Guy", "Third Guy", "Fourth Guy"],
+            "year": ["R2", "R2", "R2", "R2"],
+        }
+    )
+    rotations = pl.DataFrame(
+        {
+            "rotation": ["Green HS Senior", "Orange HS Senior", "Elective"],
+            "category": ["HS Rounding Senior", "HS Rounding Senior", "Elective"],
+            "required_role": ["Senior", "Senior", "Any"],
+            "minimum_residents_assigned": [1, 1, 0],
+            "maximum_residents_assigned": [1, 1, 10],
+            "minimum_contiguous_weeks": [2, 2, None],
+        }
+    )
+    weeks = one_academic_year_weeks.head(n=8)
+
+    builder = RequirementBuilder()
+    (
+        builder.add_requirement(
+            "HS Rounding Senior",
+            fulfilled_by=[
+                "Green HS Senior",
+                "Orange HS Senior",
+            ],
+        )
+        .min_weeks_over_resident_years(4, ["R2"])
+        .min_contiguity_over_resident_years(4, ["R2"])
+    )
+    (
+        builder.add_requirement(
+            name="Elective", fulfilled_by=["Elective"]
+        ).max_weeks_over_resident_years(12, ["R2"])
+    )
+    current_requirements = builder.accumulate_constraints_by_rule()
+
+    scheduled = generate_pl_wrapped_boolvar(
+        residents,
+        rotations,
+        weeks,
+    )
+
+    model = cp.Model()
+
+    requirement_constraints = enforce_requirement_constraints(
+        current_requirements, residents, rotations, weeks, scheduled
+    )
+
+    model += requirement_constraints
+
+    model += require_one_rotation_per_resident_per_week(
+        residents, rotations, weeks, scheduled
+    )
+    model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
+    model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
+
+    is_feasible = model.solve(config.default_cpmpy_solver, log_search_progress=False)
+    if not is_feasible:
+        from cpmpy.tools import mus
+        import pprint
+
+        print()
+        pprint.pprint(mus(model.constraints))
+        raise ValueError("Infeasible")
+
+    melted_solved_schedule = extract_solved_schedule(scheduled)
+
+    assert verify_enforce_requirement_constraints(
+        current_requirements,
+        residents,
+        rotations,
+        weeks,
+        melted_solved_schedule,
+    ), "verify_enforce_requirement_constraints returns False"
+
+
 def verify_enforce_requirement_constraints(
     requirements: box.Box,
     residents: pl.DataFrame,
@@ -458,6 +540,7 @@ def verify_enforce_requirement_constraints(
 ) -> bool:
     for requirement_name, requirement_body in requirements.items():
         for constraint in requirement_body.constraints:
+            # TODO convert this dispatcher to a pattern match
             if constraint.type == "min_by_period":
                 residents_subject_to_req = residents.filter(
                     pl.col("year").is_in(constraint.resident_years)
