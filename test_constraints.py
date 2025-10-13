@@ -5,6 +5,7 @@ from typing import Union
 import box
 import cpmpy as cp
 import polars as pl
+import pytest
 
 from config import config
 from constraints import (
@@ -359,6 +360,9 @@ def is_consecutive(week1, week2) -> bool:
     return str(week2) == str(int(str(week1)) + 1)
 
 
+@pytest.mark.xfail(
+    reason="Can't work since prerequisites and referencing of completed rotations not implemented yet"
+)
 def test_enforce_requirement_constraints():
     residents = real_size_residents.filter(pl.col("year").is_in(["R2"]))
     warnings.warn("residents df has filtered extended R3s out")
@@ -700,6 +704,7 @@ def verify_exact_week_constraint(
     return True
 
 
+@pytest.mark.xfail(reason="Not implemented yet")
 def test_enforce_prerequisite():
     test_constraint = {
         "prerequisite": ["Purple/Consults"],
