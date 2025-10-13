@@ -53,7 +53,7 @@ def enforce_minimum_contiguity(
         if constraint_weeks == "use_rotations_data":
             min_contiguity = rotation_dict["minimum_contiguous_weeks"]
             warnings.warn(
-                "using rotations data - this is not the intended use of this function outside of testing"
+                "using rotations row data directly - this is not the intended use of this function outside of testing"
             )
         elif isinstance(constraint_weeks, int):
             min_contiguity = constraint_weeks
