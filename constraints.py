@@ -362,72 +362,78 @@ def enforce_requirement_constraints(
     cumulative_constraints = []
     for requirement_name, requirement_body in requirements.items():
         for constraint in requirement_body.constraints:
-            if constraint.type == "min_by_period":
-                residents_subject_to_req = residents.filter(
-                    pl.col("year").is_in(constraint.resident_years)
-                )
-                rotations_fulfilling_req = rotations.filter(
-                    pl.col("rotation").is_in(requirement_body.fulfilled_by)
-                )
-                constraints = enforce_minimum_rotation_weeks_per_resident(
-                    constraint.weeks,
-                    residents_subject_to_req,
-                    rotations_fulfilling_req,
-                    weeks,
-                    scheduled,
-                )
-            elif constraint.type == "max_by_period":
-                residents_subject_to_req = residents.filter(
-                    pl.col("year").is_in(constraint.resident_years)
-                )
-                rotations_fulfilling_req = rotations.filter(
-                    pl.col("rotation").is_in(requirement_body.fulfilled_by)
-                )
-                constraints = enforce_maximum_rotation_weeks_per_resident(
-                    constraint.weeks,
-                    residents_subject_to_req,
-                    rotations_fulfilling_req,
-                    weeks,
-                    scheduled,
-                )
-            elif constraint.type == "exact_by_period":
-                residents_subject_to_req = residents.filter(
-                    pl.col("year").is_in(constraint.resident_years)
-                )
-                rotations_fulfilling_req = rotations.filter(
-                    pl.col("rotation").is_in(requirement_body.fulfilled_by)
-                )
-                constraints = enforce_exact_rotation_weeks_per_resident(
-                    constraint.weeks,
-                    residents_subject_to_req,
-                    rotations_fulfilling_req,
-                    weeks,
-                    scheduled,
-                )
-            elif constraint.type == "min_contiguity_in_period":
-                residents_subject_to_req = residents.filter(
-                    pl.col("year").is_in(constraint.resident_years)
-                )
-                rotations_fulfilling_req = rotations.filter(
-                    pl.col("rotation").is_in(requirement_body.fulfilled_by)
-                )
-                constraints = enforce_minimum_contiguity(
-                    constraint.weeks,
-                    residents_subject_to_req,
-                    rotations_fulfilling_req,
-                    weeks,
-                    scheduled,
-                )
-            elif constraint.type == "max_contiguity_in_period":
-                raise NotImplementedError("Unclear if actually needed")
-            elif constraint.type == "prerequisite":
-                constraints = enforce_prerequisite(
-                    constraint, residents, rotations, weeks, scheduled
-                )
-            else:
-                raise LookupError(
-                    f"{constraint.type=} is not a known requirement constraint type"
-                )
+            match constraint.type:
+                case "min_by_period":
+                    residents_subject_to_req = residents.filter(
+                        pl.col("year").is_in(constraint.resident_years)
+                    )
+                    rotations_fulfilling_req = rotations.filter(
+                        pl.col("rotation").is_in(requirement_body.fulfilled_by)
+                    )
+                    constraints = enforce_minimum_rotation_weeks_per_resident(
+                        constraint.weeks,
+                        residents_subject_to_req,
+                        rotations_fulfilling_req,
+                        weeks,
+                        scheduled,
+                    )
+                case "max_by_period":
+                    residents_subject_to_req = residents.filter(
+                        pl.col("year").is_in(constraint.resident_years)
+                    )
+                    rotations_fulfilling_req = rotations.filter(
+                        pl.col("rotation").is_in(requirement_body.fulfilled_by)
+                    )
+                    constraints = enforce_maximum_rotation_weeks_per_resident(
+                        constraint.weeks,
+                        residents_subject_to_req,
+                        rotations_fulfilling_req,
+                        weeks,
+                        scheduled,
+                    )
+                case "exact_by_period":
+                    residents_subject_to_req = residents.filter(
+                        pl.col("year").is_in(constraint.resident_years)
+                    )
+                    rotations_fulfilling_req = rotations.filter(
+                        pl.col("rotation").is_in(requirement_body.fulfilled_by)
+                    )
+                    constraints = enforce_exact_rotation_weeks_per_resident(
+                        constraint.weeks,
+                        residents_subject_to_req,
+                        rotations_fulfilling_req,
+                        weeks,
+                        scheduled,
+                    )
+                case "min_contiguity_in_period":
+                    residents_subject_to_req = residents.filter(
+                        pl.col("year").is_in(constraint.resident_years)
+                    )
+                    rotations_fulfilling_req = rotations.filter(
+                        pl.col("rotation").is_in(requirement_body.fulfilled_by)
+                    )
+                    constraints = enforce_minimum_contiguity(
+                        constraint.weeks,
+                        residents_subject_to_req,
+                        rotations_fulfilling_req,
+                        weeks,
+                        scheduled,
+                    )
+                case "max_contiguity_in_period":
+                    raise NotImplementedError("Unclear if actually needed")
+                case "prerequisite":
+                    constraints = enforce_prerequisite(
+                        prerequisite_constraint=constraint,
+                        prerequisite_demander=requirement_name,
+                        residents=residents,
+                        rotations=rotations,
+                        weeks=weeks,
+                        scheduled=scheduled,
+                    )
+                case _:
+                    raise LookupError(
+                        f"{constraint.type=} is not a known requirement constraint type"
+                    )
             cumulative_constraints.extend(constraints)
     return cumulative_constraints
 

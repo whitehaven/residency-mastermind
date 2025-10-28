@@ -549,88 +549,88 @@ def verify_enforce_requirement_constraints(
 ) -> bool:
     for requirement_name, requirement_body in requirements.items():
         for constraint in requirement_body.constraints:
-            # TODO convert this dispatcher to a pattern match
-            if constraint.type == "min_by_period":
-                residents_subject_to_req = residents.filter(
-                    pl.col("year").is_in(constraint.resident_years)
-                )
-                rotations_fulfilling_req = rotations.filter(
-                    pl.col("rotation").is_in(requirement_body.fulfilled_by)
-                )
-                assert verify_minimum_week_constraint(
-                    constraint,
-                    residents_subject_to_req,
-                    rotations_fulfilling_req,
-                    weeks,
-                    solved_schedule,
-                ), "verify_minimum_week_requirement == False"
+            match constraint.type:
+                case "min_by_period":
+                    residents_subject_to_req = residents.filter(
+                        pl.col("year").is_in(constraint.resident_years)
+                    )
+                    rotations_fulfilling_req = rotations.filter(
+                        pl.col("rotation").is_in(requirement_body.fulfilled_by)
+                    )
+                    assert verify_minimum_week_constraint(
+                        constraint,
+                        residents_subject_to_req,
+                        rotations_fulfilling_req,
+                        weeks,
+                        solved_schedule,
+                    ), "verify_minimum_week_requirement == False"
 
-            elif constraint.type == "max_by_period":
-                residents_subject_to_req = residents.filter(
-                    pl.col("year").is_in(constraint.resident_years)
-                )
-                rotations_fulfilling_req = rotations.filter(
-                    pl.col("rotation").is_in(requirement_body.fulfilled_by)
-                )
-                assert verify_maximum_week_constraint(
-                    constraint,
-                    residents_subject_to_req,
-                    rotations_fulfilling_req,
-                    weeks,
-                    solved_schedule,
-                ), "verify_maximum_week_requirement == False"
+                case "max_by_period":
+                    residents_subject_to_req = residents.filter(
+                        pl.col("year").is_in(constraint.resident_years)
+                    )
+                    rotations_fulfilling_req = rotations.filter(
+                        pl.col("rotation").is_in(requirement_body.fulfilled_by)
+                    )
+                    assert verify_maximum_week_constraint(
+                        constraint,
+                        residents_subject_to_req,
+                        rotations_fulfilling_req,
+                        weeks,
+                        solved_schedule,
+                    ), "verify_maximum_week_requirement == False"
 
-            elif constraint.type == "exact_by_period":
-                residents_subject_to_req = residents.filter(
-                    pl.col("year").is_in(constraint.resident_years)
-                )
-                rotations_fulfilling_req = rotations.filter(
-                    pl.col("rotation").is_in(requirement_body.fulfilled_by)
-                )
-                assert verify_exact_week_constraint(
-                    constraint,
-                    residents_subject_to_req,
-                    rotations_fulfilling_req,
-                    weeks,
-                    solved_schedule,
-                ), "verify_exact_week_constraint failed"
+                case "exact_by_period":
+                    residents_subject_to_req = residents.filter(
+                        pl.col("year").is_in(constraint.resident_years)
+                    )
+                    rotations_fulfilling_req = rotations.filter(
+                        pl.col("rotation").is_in(requirement_body.fulfilled_by)
+                    )
+                    assert verify_exact_week_constraint(
+                        constraint,
+                        residents_subject_to_req,
+                        rotations_fulfilling_req,
+                        weeks,
+                        solved_schedule,
+                    ), "verify_exact_week_constraint failed"
 
-            elif constraint.type == "min_contiguity_in_period":
-                residents_subject_to_req = residents.filter(
-                    pl.col("year").is_in(constraint.resident_years)
-                )
-                rotations_fulfilling_req = rotations.filter(
-                    pl.col("rotation").is_in(requirement_body.fulfilled_by)
-                )
-                assert verify_minimum_contiguity(
-                    constraint,
-                    residents_subject_to_req,
-                    rotations_fulfilling_req,
-                    weeks,
-                    solved_schedule,
-                ), "verify_minimum_contiguity failed"
+                case "min_contiguity_in_period":
+                    residents_subject_to_req = residents.filter(
+                        pl.col("year").is_in(constraint.resident_years)
+                    )
+                    rotations_fulfilling_req = rotations.filter(
+                        pl.col("rotation").is_in(requirement_body.fulfilled_by)
+                    )
+                    assert verify_minimum_contiguity(
+                        constraint,
+                        residents_subject_to_req,
+                        rotations_fulfilling_req,
+                        weeks,
+                        solved_schedule,
+                    ), "verify_minimum_contiguity failed"
 
-            elif constraint.type == "prerequisite":
-                residents_subject_to_req = residents.filter(
-                    pl.col("year").is_in(constraint.resident_years)
-                )
-                rotations_fulfilling_req = rotations.filter(
-                    pl.col("rotation").is_in(requirement_body.fulfilled_by)
-                )
-                assert verify_prerequisite_met(
-                    constraint,
-                    residents_subject_to_req,
-                    rotations_fulfilling_req,
-                    weeks,
-                    solved_schedule,
-                ), "verify_exact_week_constraint failed"
+                case "prerequisite":
+                    residents_subject_to_req = residents.filter(
+                        pl.col("year").is_in(constraint.resident_years)
+                    )
+                    rotations_fulfilling_req = rotations.filter(
+                        pl.col("rotation").is_in(requirement_body.fulfilled_by)
+                    )
+                    assert verify_prerequisite_met(
+                        constraint,
+                        residents_subject_to_req,
+                        rotations_fulfilling_req,
+                        weeks,
+                        solved_schedule,
+                    ), "verify_exact_week_constraint failed"
 
-            elif constraint.type == "max_contiguity_in_period":
-                raise NotImplementedError("Unclear if actually needed")
-            else:
-                raise LookupError(
-                    f"{constraint.type=} is not a known requirement constraint type"
-                )
+                case "max_contiguity_in_period":
+                    raise NotImplementedError("Unclear if actually needed")
+                case _:
+                    raise LookupError(
+                        f"{constraint.type=} is not a known requirement constraint type"
+                    )
     return True
 
 
