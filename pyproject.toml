@@ -1,19 +1,23 @@
 [project]
 name = "residency-mastermind"
-version = "0.3.0.dev2"
+version = "0.3.0.dev3"
 description = "Constraint satisfaction-based residency scheduling solver with support for complex structures of rotations, requirements, and preferences."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "black>=25.9.0",
-    "cpmpy>=0.9.26",
-    "faker>=37.8.0",
-    "isort>=6.0.1",
+    "cpmpy>=0.9.27",
     "ortools>=9.14.6206",
-    "polars>=1.33.1",
+    "polars>=1.34.0",
     "pyarrow>=21.0.0",
     "pytest>=8.4.2",
     "python-box>=7.3.2",
     "pyyaml>=6.0.3",
     "sqlalchemy>=2.0.43",
+]
+
+[project.optional-dependencies]
+code-editor = [
+    "black>=25.9.0",
+    "faker>=37.11.0",
+    "isort>=6.1.0",
 ]

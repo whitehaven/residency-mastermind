@@ -2,6 +2,7 @@ import warnings
 
 import box
 import polars as pl
+import pytest
 
 from config import config
 from display import convert_melted_to_block_schedule, extract_solved_schedule
@@ -18,6 +19,9 @@ test_rotations_path = config.testing_files.rotations.real_size
 test_weeks_path = config.testing_files.weeks.full_academic_year_2025_2026
 
 
+@pytest.mark.skip(
+    reason="duplicates function of constraint tests at this point, only needed when optimization also implemented"
+)
 def test_solve_schedule():
     residents = pl.read_csv(test_residents_path)
     rotations = pl.read_csv(test_rotations_path)
