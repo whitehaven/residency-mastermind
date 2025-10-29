@@ -15,6 +15,7 @@ from constraints import (
     enforce_rotation_capacity_minimum,
     require_one_rotation_per_resident_per_week,
     enforce_prerequisite,
+    force_literal_value_over_range,
 )
 from data_io import generate_pl_wrapped_boolvar
 from display import extract_solved_schedule

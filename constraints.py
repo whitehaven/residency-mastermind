@@ -439,21 +439,33 @@ def enforce_requirement_constraints(
 
 
 def enforce_prerequisite(
-    prerequisite_constraint: Union[box.Box | dict],
+    prerequisite_constraint: Union[box.Box, dict[str, str]],
     prerequisite_demander: str,
     residents: pl.DataFrame,
     rotations: pl.DataFrame,
     weeks: pl.DataFrame,
     scheduled: pl.DataFrame,
 ) -> list[cp.core.Comparison]:
-    prereq_fulfillers = prerequisite_constraint.get("prerequisite")
-    prereq_weeks_required = prerequisite_constraint.get("weeks")
+
+    prereq_fulfillers = prerequisite_constraint["prerequisite"]
+    prereq_weeks_required = prerequisite_constraint["weeks"]
 
     rotations_fulfilling_prereq = rotations.filter(
         pl.col("rotation").is_in(prereq_fulfillers)
     )
+    if len(rotations_fulfilling_prereq) == 0:
+        raise ValueError(
+            f"no rotations fulfilling prereq {prerequisite_demander}, {prereq_fulfillers=}"
+        )
 
-    skips = 0
+    # (function only called per-requirement but could be made up of different rotations)
+
+    # for each rotation fulfilling this requirement
+    # for each resident
+    # for each week
+    # if true at this position -> sum(weeks before this one ) + logged priors must be >= prereq_weeks_required
+
+    raise NotImplementedError("not finished")
 
     for resident_dict in residents.iter_rows(named=True):
         for week_dict in weeks.iter_rows(named=True):
