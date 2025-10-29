@@ -14,8 +14,8 @@ from constraints import (
     enforce_rotation_capacity_maximum,
     enforce_rotation_capacity_minimum,
     require_one_rotation_per_resident_per_week,
+    enforce_prerequisite,
 )
-from constraints import enforce_prerequisite
 from data_io import generate_pl_wrapped_boolvar
 from display import extract_solved_schedule
 from requirement_builder import (
@@ -502,6 +502,94 @@ def barely_fit_R2s():
     )
     return residents, rotations, weeks, current_requirements, scheduled
 
+
+@pytest.fixture
+def testcase_prerequisites_no_priors() -> (
+    tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame, box.Box, pl.DataFrame]
+):
+    residents = pl.DataFrame(
+        {
+            "full_name": ["First Guy", "Second Guy", "Third Guy", "Fourth Guy"],
+            "year": ["R2", "R2", "R2", "R2"],
+        }
+    )
+    rotations = pl.DataFrame(
+        {
+            "rotation": [
+                "Green HS Senior",
+                "Orange HS Senior",
+                "Elective",
+                "Purple HS Senior",
+            ],
+            "category": [
+                "HS Rounding Senior",
+                "HS Rounding Senior",
+                "Elective",
+                "HS Admitting Senior",
+            ],
+            "required_role": ["Senior", "Senior", "Any", "Senior"],
+            "minimum_residents_assigned": [1, 1, 0, 0],
+            "maximum_residents_assigned": [1, 1, 10, 1],
+            "minimum_contiguous_weeks": [2, 2, None, 2],
+        }
+    )
+    weeks = one_academic_year_weeks.head(n=8)
+
+    builder = RequirementBuilder()
+    (
+        builder.add_requirement(
+            "HS Rounding Senior",
+            fulfilled_by=[
+                "Green HS Senior",
+                "Orange HS Senior",
+            ],
+        )
+        .min_weeks_over_resident_years(4, ["R2"])
+        .min_contiguity_over_resident_years(4, ["R2"])
+        .after_prerequisite(["HS Admitting Senior"], 1, ["R2"])
+    )
+    (
+        builder.add_requirement(
+            name="HS Admitting Senior", fulfilled_by=["Purple HS Senior"]
+        )
+        .min_weeks_over_resident_years(2, ["R2"])
+        .min_contiguity_over_resident_years(2, ["R2"])
+    )
+    (
+        builder.add_requirement(
+            name="Elective", fulfilled_by=["Elective"]
+        ).max_weeks_over_resident_years(12, ["R2"])
+    )
+    current_requirements = builder.accumulate_constraints_by_rule()
+
+    scheduled = generate_pl_wrapped_boolvar(
+        residents,
+        rotations,
+        weeks,
+    )
+    raise NotImplementedError("incomplete")
+    return residents, rotations, weeks, current_requirements, scheduled
+
+
+def test_enforce_prerequisites_with_no_priors(testcase_prerequisites_no_priors):
+
+    residents, rotations, weeks, current_requirements, scheduled = (
+        testcase_prerequisites_no_priors
+    )
+
+    model = cp.Model()
+
+    model += enforce_requirement_constraints(
+        current_requirements, residents, rotations, weeks, scheduled
+    )
+
+    model += require_one_rotation_per_resident_per_week(
+        residents, rotations, weeks, scheduled
+    )
+    model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
+    model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
+
+    raise NotImplementedError("not implemented")
 
 def test_enforce_requirement_constraints_R2s_barely_fit(barely_fit_R2s):
     residents, rotations, weeks, current_requirements, scheduled = barely_fit_R2s
