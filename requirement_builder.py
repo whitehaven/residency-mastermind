@@ -342,8 +342,8 @@ def generate_builder_doable_with_R2s_only_and_prereqs() -> RequirementBuilder:
         builder.add_requirement(
             name="HS Admitting Senior", fulfilled_by=["Purple/Consults"]
         )
-        .min_weeks_over_resident_years(4, ["R2"])
-        .max_weeks_over_resident_years(8, ["R2"])
+        .min_weeks_over_resident_years(5, ["R2"])
+        .max_weeks_over_resident_years(6, ["R2"])
         .min_contiguity_over_resident_years(2, ["R2"])
     )
 
