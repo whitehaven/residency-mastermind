@@ -11,12 +11,14 @@ be reusable.
 
 #### Remaining missing features
 
-- prerequisite constraints
-  - prerequisite logs applied to current
-- block-match constraints (must be all in one block or touching border)
-- optimization for preferences
-- manual forcing of values en bloc
-  - alias for rotation-week limitations (like SOM)
+- [ ] prerequisite constraints
+    - [ ] simple prereqs
+    - [ ] incorporate prior completions
+- [ ] manual forcing of values en bloc
+    - [ ] alias for rotation-week limitations (like SOM)
+- [ ] multi-year operations and constraints
+- [ ] block-match constraints (must be all in one block or touching border)
+- [ ] optimization for preferences
 
 ## Main Problem
 
