@@ -447,7 +447,7 @@ def enforce_prerequisite(
     scheduled: pl.DataFrame,
 ) -> list[cp.core.Comparison]:
 
-    prereq_fulfillers = prerequisite_constraint["prerequisite"]
+    prereq_fulfillers: list[str] = prerequisite_constraint["prerequisite_fulfillers"]
     prereq_weeks_required = prerequisite_constraint["weeks"]
 
     rotations_fulfilling_prereq = rotations.filter(

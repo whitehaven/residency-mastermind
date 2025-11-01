@@ -547,7 +547,11 @@ def testcase_prerequisites_no_priors() -> (
         )
         .min_weeks_over_resident_years(4, ["R2"])
         .min_contiguity_over_resident_years(4, ["R2"])
-        .after_prerequisite(["HS Admitting Senior"], 1, ["R2"])
+        .after_prerequisite(
+            prereq_fulfilling_rotations=["HS Admitting Senior"],
+            weeks_required=1,
+            years=["R2"],
+        )
     )
     (
         builder.add_requirement(

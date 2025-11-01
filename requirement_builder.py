@@ -83,14 +83,14 @@ class RequirementRule:
 
     def after_prerequisite(
         self,
-        prerequisite_rotations: list[str],
+        prereq_fulfilling_rotations: list[str],
         weeks_required: int,
         resident_years: list[str],
     ):
         self._constraints.append(
             {
                 "type": "prerequisite",
-                "prerequisite": prerequisite_rotations,
+                "prerequisite_fulfillers": prereq_fulfilling_rotations,
                 "weeks": weeks_required,
                 "resident_years": resident_years,
             },
