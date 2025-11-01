@@ -451,9 +451,9 @@ def sample_simple_prerequisites_no_priors() -> (
         .min_weeks_over_resident_years(4, ["R2"])
         .min_contiguity_over_resident_years(4, ["R2"])
         .after_prerequisite(
-            prereq_fulfilling_rotations=["HS Admitting Senior"],
-            weeks_required=1,
-            years=["R2"],
+            prereq_fulfilling_rotations=["Purple HS Senior"],
+            weeks_required=1,  # deliberately short so that the four can rotate through Elective to get out of the way
+            resident_years=["R2"],
         )
     )
     (
@@ -475,7 +475,6 @@ def sample_simple_prerequisites_no_priors() -> (
         rotations,
         weeks,
     )
-    raise NotImplementedError("incomplete")
     return residents, rotations, weeks, current_requirements, scheduled
 
 
