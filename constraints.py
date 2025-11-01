@@ -439,7 +439,7 @@ def enforce_requirement_constraints(
 
 
 def enforce_prerequisite(
-    prerequisite_constraint: Union[box.Box, dict[str, str]],
+    prerequisite_constraint: Union[box.Box, dict[str, str | list[str]]],
     prerequisite_demander: str,
     residents: pl.DataFrame,
     rotations: pl.DataFrame,
