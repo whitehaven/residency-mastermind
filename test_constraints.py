@@ -458,7 +458,7 @@ def test_enforce_requirement_constraints_R2_only():
 
 
 @pytest.fixture
-def barely_fit_R2s():
+def sample_barely_fit_R2s_no_prereqs():
     residents = pl.DataFrame(
         {
             "full_name": ["First Guy", "Second Guy", "Third Guy", "Fourth Guy"],
@@ -505,7 +505,7 @@ def barely_fit_R2s():
 
 
 @pytest.fixture
-def testcase_prerequisites_no_priors() -> (
+def sample_simple_prerequisites_no_priors() -> (
     tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame, box.Box, pl.DataFrame]
 ):
     residents = pl.DataFrame(
@@ -576,10 +576,12 @@ def testcase_prerequisites_no_priors() -> (
     return residents, rotations, weeks, current_requirements, scheduled
 
 
-def test_enforce_prerequisites_with_no_priors(testcase_prerequisites_no_priors):
+def test_enforce_prerequisites_with_no_priors(
+    sample_simple_prerequisites_no_priors,
+):
 
     residents, rotations, weeks, current_requirements, scheduled = (
-        testcase_prerequisites_no_priors
+        sample_simple_prerequisites_no_priors
     )
 
     model = cp.Model()
@@ -596,8 +598,13 @@ def test_enforce_prerequisites_with_no_priors(testcase_prerequisites_no_priors):
 
     raise NotImplementedError("not implemented")
 
-def test_enforce_requirement_constraints_R2s_barely_fit(barely_fit_R2s):
-    residents, rotations, weeks, current_requirements, scheduled = barely_fit_R2s
+
+def test_enforce_requirement_constraints_R2s_barely_fit(
+    sample_barely_fit_R2s_no_prereqs,
+):
+    residents, rotations, weeks, current_requirements, scheduled = (
+        sample_barely_fit_R2s_no_prereqs
+    )
 
     model = cp.Model()
 
