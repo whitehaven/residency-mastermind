@@ -418,8 +418,9 @@ def enforce_requirement_constraints(
                     raise NotImplementedError("Unclear if actually needed")
                 case "prerequisite":
                     constraints = enforce_prerequisite(
-                        prerequisite_constraint=constraint,
-                        prerequisite_demander=requirement_name,
+                        prereq_weeks=constraint.weeks,
+                        prereq_demanding_rotations=requirement_body.fulfilled_by,
+                        prereq_fulfilling_rotations=constraint.prerequisite_fulfillers,
                         residents=residents,
                         rotations=rotations,
                         weeks=weeks,
@@ -434,45 +435,42 @@ def enforce_requirement_constraints(
 
 
 def enforce_prerequisite(
-    prerequisite_constraint: Union[box.Box, dict[str, str | list[str]]],
-    prerequisite_demander: str,
+    prereq_demanding_rotations: list[str],
+    prereq_fulfilling_rotations: list[str],
+    prereq_weeks: int,
     residents: pl.DataFrame,
     rotations: pl.DataFrame,
     weeks: pl.DataFrame,
     scheduled: pl.DataFrame,
 ) -> list[cp.core.Comparison]:
 
-    prereq_fulfillers: list[str] = prerequisite_constraint["prerequisite_fulfillers"]
-    prereq_weeks_required = prerequisite_constraint["weeks"]
-
-    rotations_fulfilling_prereq = rotations.filter(
-        pl.col("rotation").is_in(prereq_fulfillers)
-    )
-    if len(rotations_fulfilling_prereq) == 0:
-        raise ValueError(
-            f"no rotations fulfilling prereq {prerequisite_demander}, {prereq_fulfillers=}"
-        )
-
-    # (function only called per-requirement but could be made up of different rotations)
-
-    # for each rotation fulfilling this requirement
-    # for each resident
-    # for each week
-    # if true at this position -> sum(weeks before this one ) + logged priors must be >= prereq_weeks_required
-
-    raise NotImplementedError("not finished")
-
     for resident_dict in residents.iter_rows(named=True):
         for week_dict in weeks.iter_rows(named=True):
-            if week_dict["week"] < prereq_weeks_required:
-                continue
-            subset_scheduled_by(
-                resident_dict[residents_primary_label],
-                rotations.filter(pl.col("rotation").is_in(prereq_fulfillers)),
-                weeks,
-                scheduled,
+            # if true at this position ->
+            # sum(weeks before this one ) + logged priors must be >= prereq_weeks_required ACROSS all fulfillers
+            # TODO change to subset_scheduled
+            prereq_demanders_this_week = scheduled.filter(
+                (pl.col("resident") == resident_dict[residents_primary_label])
+                & (pl.col("week") == week_dict[weeks_primary_label])
+                & (pl.col("rotation").is_in(prereq_demanding_rotations))
             )
 
-    # sum of all fulfillers weeks
+            completed_weeks_this_year = 0
+
+            prior_weeks = weeks.filter(
+                pl.col("monday_date") < week_dict[weeks_primary_label]
+            )
+            if len(prior_weeks) == 0:
+                completed_weeks_this_year = 0
+            else:
+                pass
+                # calc sum this year
+
+            # get from logs to add
+
+            warnings.warn("not doing backlog yet")
+            # cp.any(prereq_demanders_this_week[cpmpy_variable_column]).implies(cp.sum(this year + log))
+
+    raise NotImplementedError("not finished")
 
     raise NotImplementedError("don't think the approach is correct yet")
