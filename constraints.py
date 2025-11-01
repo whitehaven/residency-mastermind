@@ -137,11 +137,6 @@ def prevent_isolated_sequence(
         return ~(left_ok & sequence_true & right_ok)  # type: ignore
 
 
-# TODO replace constraint utility functions
-# def force_value
-# def forbid_ineligible_rotations
-
-
 def require_one_rotation_per_resident_per_week(
     residents: pl.DataFrame,
     rotations: pl.DataFrame,
