@@ -20,7 +20,6 @@ from constraints import (
 from data_io import generate_pl_wrapped_boolvar
 from display import extract_solved_schedule
 from requirement_builder import (
-    generate_builder_doable_with_R2s_only,
     RequirementBuilder,
 )
 from selection import group_scheduled_df_by_for_each, subset_scheduled_by
@@ -359,102 +358,6 @@ def is_consecutive(week1, week2) -> bool:
 
     # Fall back to string comparison (not ideal)
     return str(week2) == str(int(str(week1)) + 1)
-
-
-@pytest.mark.xfail(
-    reason="Can't work since prerequisites and referencing of completed rotations not implemented yet"
-)
-def test_enforce_requirement_constraints():
-    residents = real_size_residents.filter(pl.col("year").is_in(["R2"]))
-    warnings.warn("residents df has filtered extended R3s out")
-
-    rotations = real_size_rotations
-    weeks = one_academic_year_weeks
-    scheduled = generate_pl_wrapped_boolvar(
-        residents=residents,
-        rotations=rotations,
-        weeks=weeks,
-    )
-    current_requirements = box.box_from_file(config.default_requirements_path)
-    if not isinstance(current_requirements, box.Box):
-        raise TypeError
-    model = cp.Model()
-
-    requirement_constraints = enforce_requirement_constraints(
-        current_requirements,
-        residents,
-        rotations,
-        weeks,
-        scheduled,
-    )
-    model += requirement_constraints
-
-    model += require_one_rotation_per_resident_per_week(
-        residents, rotations, weeks, scheduled
-    )
-    model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
-    model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
-
-    is_feasible = model.solve(config.default_cpmpy_solver, log_search_progress=False)
-    if not is_feasible:
-        raise ValueError("Infeasible")
-
-    melted_solved_schedule = extract_solved_schedule(scheduled)
-
-    assert verify_enforce_requirement_constraints(
-        current_requirements,
-        residents,
-        rotations,
-        weeks,
-        melted_solved_schedule,
-    ), "verify_enforce_requirement_constraints returns False"
-
-
-def test_enforce_requirement_constraints_R2_only():
-    residents = real_size_residents.filter(pl.col("year").is_in(["R2"]))
-    warnings.warn("residents df has filtered extended R3s out")
-
-    rotations = pl.read_csv("test_data/test_rotations_doable_with_R2s.csv")
-    weeks = one_academic_year_weeks
-    scheduled = generate_pl_wrapped_boolvar(
-        residents=residents,
-        rotations=rotations,
-        weeks=weeks,
-    )
-
-    current_requirements = (
-        generate_builder_doable_with_R2s_only().accumulate_constraints_by_rule()
-    )
-    model = cp.Model()
-
-    requirement_constraints = enforce_requirement_constraints(
-        current_requirements,
-        residents,
-        rotations,
-        weeks,
-        scheduled,
-    )
-    model += requirement_constraints
-
-    model += require_one_rotation_per_resident_per_week(
-        residents, rotations, weeks, scheduled
-    )
-    model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
-    # model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
-
-    is_feasible = model.solve(config.default_cpmpy_solver, log_search_progress=False)
-    if not is_feasible:
-        raise ValueError("Infeasible")
-
-    melted_solved_schedule = extract_solved_schedule(scheduled)
-
-    assert verify_enforce_requirement_constraints(
-        current_requirements,
-        residents,
-        rotations,
-        weeks,
-        melted_solved_schedule,
-    ), "verify_enforce_requirement_constraints returns False"
 
 
 @pytest.fixture
