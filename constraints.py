@@ -1,5 +1,5 @@
 import warnings
-from typing import Callable, LiteralString, Union
+from typing import Callable, LiteralString
 
 import box
 import cpmpy as cp
@@ -11,6 +11,7 @@ from selection import group_scheduled_df_by_for_each, subset_scheduled_by
 cpmpy_variable_column = config.cpmpy_variable_column
 residents_primary_label = config.residents_primary_label
 rotations_primary_label = config.rotations_primary_label
+weeks_primary_label = config.weeks_primary_label
 
 real_size_residents = pl.read_csv(config.testing_files.residents.real_size_seniors)
 real_size_rotations = pl.read_csv(config.testing_files.rotations.real_size)
@@ -417,6 +418,12 @@ def enforce_requirement_constraints(
                 case "max_contiguity_in_period":
                     raise NotImplementedError("Unclear if actually needed")
                 case "prerequisite":
+                    residents_subject_to_req = residents.filter(
+                        pl.col("year").is_in(constraint.resident_years)
+                    )
+                    rotations_fulfilling_req = rotations.filter(
+                        pl.col("rotation").is_in(requirement_body.fulfilled_by)
+                    )
                     constraints = enforce_prerequisite(
                         prereq_weeks=constraint.weeks,
                         prereq_demanding_rotations=requirement_body.fulfilled_by,
@@ -444,33 +451,53 @@ def enforce_prerequisite(
     scheduled: pl.DataFrame,
 ) -> list[cp.core.Comparison]:
 
+    cumulative_constraints = list()
+    constraint = None
     for resident_dict in residents.iter_rows(named=True):
         for week_dict in weeks.iter_rows(named=True):
-            # if true at this position ->
-            # sum(weeks before this one ) + logged priors must be >= prereq_weeks_required ACROSS all fulfillers
-            # TODO change to subset_scheduled
             prereq_demanders_this_week = scheduled.filter(
                 (pl.col("resident") == resident_dict[residents_primary_label])
                 & (pl.col("week") == week_dict[weeks_primary_label])
                 & (pl.col("rotation").is_in(prereq_demanding_rotations))
             )
 
-            completed_weeks_this_year = 0
-
-            prior_weeks = weeks.filter(
-                pl.col("monday_date") < week_dict[weeks_primary_label]
+            weeks_before_this = scheduled.filter(
+                (pl.col("resident") == resident_dict[residents_primary_label])
+                & (pl.col("week") < week_dict[weeks_primary_label])
+                & (pl.col("rotation").is_in(prereq_fulfilling_rotations))
             )
-            if len(prior_weeks) == 0:
-                completed_weeks_this_year = 0
-            else:
-                pass
-                # calc sum this year
 
-            # get from logs to add
+            completed_weeks_this_year = cp.sum(weeks_before_this[cpmpy_variable_column])
 
-            warnings.warn("not doing backlog yet")
-            # cp.any(prereq_demanders_this_week[cpmpy_variable_column]).implies(cp.sum(this year + log))
+            warnings.warn("not doing backlog yet, 0 inserted here")
+            completed_weeks_prior_years = 0
 
-    raise NotImplementedError("not finished")
+            match completed_weeks_this_year, completed_weeks_prior_years:
+                case 0, 0:
+                    constraint = ~cp.any(
+                        prereq_demanders_this_week[cpmpy_variable_column]
+                    )
+                case completed_weeks_this_year, 0:
+                    constraint = cp.any(
+                        prereq_demanders_this_week[cpmpy_variable_column]
+                    ).implies(completed_weeks_this_year >= prereq_weeks)
+                case 0, completed_weeks_prior_years:
+                    constraint = cp.any(
+                        prereq_demanders_this_week[cpmpy_variable_column]
+                    ).implies(completed_weeks_prior_years >= prereq_weeks)
+                case completed_weeks_this_year, completed_weeks_prior_years:
+                    constraint = cp.any(
+                        prereq_demanders_this_week[cpmpy_variable_column]
+                    ).implies(
+                        cp.sum(completed_weeks_this_year) + completed_weeks_prior_years
+                        >= prereq_weeks
+                    )
+                case _:
+                    raise RuntimeError("unclear how you got here")
+
+            cumulative_constraints.append(constraint)
+
+    return cumulative_constraints
+
 
     raise NotImplementedError("don't think the approach is correct yet")

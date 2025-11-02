@@ -14,8 +14,6 @@ from constraints import (
     enforce_rotation_capacity_maximum,
     enforce_rotation_capacity_minimum,
     require_one_rotation_per_resident_per_week,
-    enforce_prerequisite,
-    force_literal_value_over_range,
 )
 from data_io import generate_pl_wrapped_boolvar
 from display import extract_solved_schedule
@@ -413,8 +411,8 @@ def sample_simple_prerequisites_no_priors() -> (
 ):
     residents = pl.DataFrame(
         {
-            "full_name": ["First Guy", "Second Guy", "Third Guy", "Fourth Guy"],
-            "year": ["R2", "R2", "R2", "R2"],
+            "full_name": ["First Guy", "Second Guy", "Third Guy"],
+            "year": ["R2", "R2", "R2"],
         }
     )
     rotations = pl.DataFrame(
@@ -432,7 +430,7 @@ def sample_simple_prerequisites_no_priors() -> (
                 "HS Admitting Senior",
             ],
             "required_role": ["Senior", "Senior", "Any", "Senior"],
-            "minimum_residents_assigned": [1, 1, 0, 0],
+            "minimum_residents_assigned": [0, 0, 0, 1],
             "maximum_residents_assigned": [1, 1, 10, 1],
             "minimum_contiguous_weeks": [2, 2, None, 2],
         }
@@ -448,11 +446,11 @@ def sample_simple_prerequisites_no_priors() -> (
                 "Orange HS Senior",
             ],
         )
-        .min_weeks_over_resident_years(4, ["R2"])
-        .min_contiguity_over_resident_years(4, ["R2"])
+        .min_weeks_over_resident_years(2, ["R2"])
+        .min_contiguity_over_resident_years(2, ["R2"])
         .after_prerequisite(
             prereq_fulfilling_rotations=["Purple HS Senior"],
-            weeks_required=1,  # deliberately short so that the four can rotate through Elective to get out of the way
+            weeks_required=2,  # deliberately short so that the four can rotate through Elective to get out of the way
             resident_years=["R2"],
         )
     )
@@ -488,9 +486,11 @@ def test_enforce_prerequisites_with_no_priors(
 
     model = cp.Model()
 
-    model += enforce_requirement_constraints(
+    requirement_constraints = enforce_requirement_constraints(
         current_requirements, residents, rotations, weeks, scheduled
     )
+
+    model += requirement_constraints
 
     model += require_one_rotation_per_resident_per_week(
         residents, rotations, weeks, scheduled
@@ -498,7 +498,34 @@ def test_enforce_prerequisites_with_no_priors(
     model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
     model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
 
-    raise NotImplementedError("not implemented")
+    is_feasible = model.solve(config.default_cpmpy_solver, log_search_progress=False)
+    if not is_feasible:
+        from cpmpy.tools import mus
+        import pprint
+
+        print()
+        pprint.pprint(mus(model.constraints))
+        raise ValueError("Infeasible")
+
+    melted_solved_schedule = extract_solved_schedule(scheduled)
+
+    assert verify_enforce_requirement_constraints(
+        current_requirements,
+        residents,
+        rotations,
+        weeks,
+        melted_solved_schedule,
+    ), "verify_enforce_requirement_constraints returns False"
+
+
+def verify_prerequisite_met(
+    constraint: Union[box.Box, dict],
+    residents: pl.DataFrame,
+    rotations: pl.DataFrame,
+    weeks: pl.DataFrame,
+    solved_schedule: pl.DataFrame,
+) -> bool:
+    raise NotImplementedError
 
 
 def test_enforce_requirement_constraints_R2s_barely_fit(
@@ -709,42 +736,3 @@ def verify_exact_week_constraint(
             print(f"{sum(decision_vars)=} != {constraint=} !!!")
             return False
     return True
-
-
-@pytest.mark.xfail(reason="Not implemented yet")
-def test_enforce_prerequisite():
-    test_constraint = {
-        "prerequisite": ["Purple/Consults"],
-        "resident_years": ["R2", "R3"],
-        "type": "prerequisite",
-        "weeks": 4,
-    }
-    test_prerequisite_demander = "HS Rounding Senior"
-
-    residents = real_size_residents
-    rotations = real_size_rotations
-    weeks = one_academic_year_weeks
-    scheduled = generate_pl_wrapped_boolvar(residents, rotations, weeks)
-
-    enforce_prerequisite(
-        test_constraint,
-        test_prerequisite_demander,
-        residents,
-        rotations,
-        weeks,
-        scheduled,
-    )
-
-    assert verify_prerequisite_met(
-        test_constraint, residents, rotations, weeks, scheduled
-    ), "verify_prerequisite_met failed"
-
-
-def verify_prerequisite_met(
-    constraint: Union[box.Box, dict],
-    residents: pl.DataFrame,
-    rotations: pl.DataFrame,
-    weeks: pl.DataFrame,
-    solved_schedule: pl.DataFrame,
-) -> bool:
-    raise NotImplementedError
