@@ -199,6 +199,10 @@ def verify_enforce_rotation_capacity_maximum(rotations, solved_schedule) -> bool
 
 
 def test_enforce_minimum_contiguity() -> None:
+    """
+    Note the source of contiguity is now the requirements pathway (see requirement_builder.py).
+    This remains as a proof on concept on the algorithm but is not going to be used in production.
+    """
     residents = real_size_residents
     residents = residents.filter(pl.col("year").is_in(["R2", "R3"]))
 
