@@ -521,4 +521,13 @@ def enforce_prerequisite(
     return cumulative_constraints
 
 
-    raise NotImplementedError("don't think the approach is correct yet")
+def force_literal_value_over_range(
+    subset_scheduled: pl.DataFrame, literal: bool
+) -> list[cp.core.Comparison]:
+    cumulative_constraints = list()
+
+    for scheduled_row_dict in subset_scheduled.iter_rows(named=True):
+        constraint = scheduled_row_dict[cpmpy_variable_column] == literal
+        cumulative_constraints.append(constraint)
+
+    return cumulative_constraints

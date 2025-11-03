@@ -14,6 +14,7 @@ from constraints import (
     enforce_rotation_capacity_maximum,
     enforce_rotation_capacity_minimum,
     require_one_rotation_per_resident_per_week,
+    force_literal_value_over_range,
 )
 from data_io import generate_pl_wrapped_boolvar
 from display import extract_solved_schedule
@@ -1001,5 +1002,99 @@ def verify_exact_week_constraint(
 
         if sum(decision_vars) != constraint.weeks:
             print(f"{sum(decision_vars)=} != {constraint=} !!!")
+            return False
+    return True
+
+
+@pytest.fixture
+def sample_literal_reqs_matching_barely_fit_R2s_no_prereqs(
+    sample_barely_fit_R2s_no_prereqs,
+):
+    (
+        residents,
+        rotations,
+        weeks,
+        current_requirements,
+        prior_rotations_completed,
+        scheduled,
+    ) = sample_barely_fit_R2s_no_prereqs
+
+    subset_scheduled = subset_scheduled_by(
+        residents=["Fourth Guy"],
+        rotations=["Green HS Senior"],
+        weeks=one_academic_year_weeks.head(n=1),
+        scheduled=scheduled,
+    )
+
+    literal = True
+
+    return subset_scheduled, literal
+
+
+def test_force_literal_value_over_range(
+    sample_barely_fit_R2s_no_prereqs,
+    sample_literal_reqs_matching_barely_fit_R2s_no_prereqs,
+):
+    (
+        residents,
+        rotations,
+        weeks,
+        current_requirements,
+        prior_rotations_completed,
+        scheduled,
+    ) = sample_barely_fit_R2s_no_prereqs
+
+    model = cp.Model()
+
+    requirement_constraints = enforce_requirement_constraints(
+        current_requirements,
+        residents,
+        rotations,
+        weeks,
+        prior_rotations_completed,
+        scheduled,
+    )
+
+    model += requirement_constraints
+
+    model += require_one_rotation_per_resident_per_week(
+        residents, rotations, weeks, scheduled
+    )
+    model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
+    model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
+
+    subset_scheduled, literal = sample_literal_reqs_matching_barely_fit_R2s_no_prereqs
+
+    force_literal_value_over_range(subset_scheduled, literal)
+
+    is_feasible = model.solve(config.default_cpmpy_solver, log_search_progress=False)
+    if not is_feasible:
+        from cpmpy.tools import mus
+        import pprint
+
+        print()
+        pprint.pprint(mus(model.constraints))
+        raise ValueError("Infeasible")
+
+    melted_solved_schedule = extract_solved_schedule(scheduled)
+
+    assert verify_enforce_requirement_constraints(
+        current_requirements,
+        residents,
+        rotations,
+        weeks,
+        prior_rotations_completed,
+        melted_solved_schedule,
+    ), "verify_enforce_requirement_constraints returns False"
+
+    assert verify_literal_value_over_range(subset_scheduled, literal)
+
+
+def verify_literal_value_over_range(
+    subset_scheduled: pl.DataFrame, literal: bool
+) -> bool:
+    for scheduled_row_dict in subset_scheduled.iter_rows(named=True):
+        element_equals_literal = scheduled_row_dict[cpmpy_result_column] == literal
+        if not element_equals_literal:
             return False
     return True
