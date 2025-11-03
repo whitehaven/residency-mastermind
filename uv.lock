@@ -700,7 +700,7 @@ wheels = [
 
 [[package]]
 name = "residency-mastermind"
-version = "0.3.0.dev4"
+version = "0.3.0.dev5"
 source = { virtual = "." }
 
 [package.optional-dependencies]

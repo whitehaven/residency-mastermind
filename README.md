@@ -11,13 +11,14 @@ be reusable.
 
 #### Remaining missing features
 
-- [ ] prerequisite constraints
+- [x] prerequisite constraints
     - [x] simple prereqs
     - [x] incorporate prior completions
     - [x] modify requirements to take prior into account
-    - [ ] make prior case work
+    - [x] make prior case work
 - [ ] manual forcing of values en bloc
-    - [ ] alias for rotation-week limitations (like SOM)
+      - [ ] alias for rotation-week limitations (like SOM)
+- [ ] integrate prereqs into requirements
 - [ ] multi-year operations and constraints
 - [ ] block-match constraints (must be all in one block or touching border)
 - [ ] optimization for preferences
