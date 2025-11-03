@@ -406,12 +406,27 @@ def sample_barely_fit_R2s_no_prereqs():
         rotations,
         weeks,
     )
-    return residents, rotations, weeks, current_requirements, scheduled
+    prior_rotations_completed = pl.DataFrame(
+        {
+            "resident": [],
+            "rotation": [],
+            "completed_weeks": [],
+        }
+    )
+
+    return (
+        residents,
+        rotations,
+        weeks,
+        current_requirements,
+        prior_rotations_completed,
+        scheduled,
+    )
 
 
 @pytest.fixture
 def sample_simple_prerequisites_no_priors() -> (
-    tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame, box.Box, pl.DataFrame]
+    tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame, box.Box, pl.DataFrame, pl.DataFrame]
 ):
     residents = pl.DataFrame(
         {
@@ -477,21 +492,47 @@ def sample_simple_prerequisites_no_priors() -> (
         rotations,
         weeks,
     )
-    return residents, rotations, weeks, current_requirements, scheduled
+
+    prior_rotations_completed = pl.DataFrame(
+        {
+            "resident": [],
+            "rotation": [],
+            "completed_weeks": [],
+        }
+    )
+
+    return (
+        residents,
+        rotations,
+        weeks,
+        current_requirements,
+        prior_rotations_completed,
+        scheduled,
+    )
 
 
 def test_enforce_prerequisites_with_no_priors(
     sample_simple_prerequisites_no_priors,
 ):
 
-    residents, rotations, weeks, current_requirements, scheduled = (
-        sample_simple_prerequisites_no_priors
-    )
+    (
+        residents,
+        rotations,
+        weeks,
+        current_requirements,
+        prior_rotations_completed,
+        scheduled,
+    ) = sample_simple_prerequisites_no_priors
 
     model = cp.Model()
 
     requirement_constraints = enforce_requirement_constraints(
-        current_requirements, residents, rotations, weeks, scheduled
+        current_requirements,
+        residents,
+        rotations,
+        weeks,
+        prior_rotations_completed,
+        scheduled,
     )
 
     model += requirement_constraints
@@ -509,6 +550,219 @@ def test_enforce_prerequisites_with_no_priors(
 
         print()
         pprint.pprint(mus(model.constraints))
+        raise ValueError("Infeasible")
+
+    melted_solved_schedule = extract_solved_schedule(scheduled)
+
+    assert verify_enforce_requirement_constraints(
+        current_requirements,
+        residents,
+        rotations,
+        weeks,
+        prior_rotations_completed,
+        melted_solved_schedule,
+    ), "verify_enforce_requirement_constraints returns False"
+
+
+@pytest.fixture
+def sample_simple_prerequisites_with_priors():
+    residents = pl.DataFrame(
+        {
+            "full_name": [
+                "Already Did Purple Guy",
+                "Never Done Purple Guy",
+                "Other Never Purple Guy",
+            ],
+            "year": ["R2", "R2", "R2"],
+        }
+    )
+    rotations = pl.DataFrame(
+        {
+            "rotation": [
+                "Green HS Senior",
+                # "Orange HS Senior",
+                "Elective",
+                "Purple HS Senior",
+            ],
+            "category": [
+                "HS Rounding Senior",
+                # "HS Rounding Senior",
+                "Elective",
+                "HS Admitting Senior",
+            ],
+            "required_role": [
+                "Senior",
+                # "Senior",
+                "Any",
+                "Senior",
+            ],
+            "minimum_residents_assigned": [
+                1,
+                # 1,
+                0,
+                1,
+            ],
+            "maximum_residents_assigned": [
+                1,
+                # 1,
+                10,
+                1,
+            ],
+            "minimum_contiguous_weeks": [
+                2,
+                # 2,
+                None,
+                2,
+            ],
+        }
+    )
+    weeks = one_academic_year_weeks.head(n=4)
+
+    builder = RequirementBuilder()
+    (
+        builder.add_requirement(
+            "HS Rounding Senior",
+            fulfilled_by=[
+                "Green HS Senior",
+                # "Orange HS Senior",
+            ],
+        ).min_weeks_over_resident_years(1, ["R2"])
+        # .min_contiguity_over_resident_years(2, ["R2"])
+        .after_prerequisite(
+            prereq_fulfilling_rotations=["Purple HS Senior"],
+            weeks_required=2,  # deliberately short so that the four can rotate through Elective to get out of the way
+            resident_years=["R2"],
+        )
+    )
+    (
+        builder.add_requirement(
+            name="HS Admitting Senior", fulfilled_by=["Purple HS Senior"]
+        ).min_weeks_over_resident_years(1, ["R2"])
+        # .min_contiguity_over_resident_years(2, ["R2"])
+    )
+    (
+        builder.add_requirement(
+            name="Elective", fulfilled_by=["Elective"]
+        ).max_weeks_over_resident_years(12, ["R2"])
+    )
+    current_requirements = builder.accumulate_constraints_by_rule()
+
+    scheduled = generate_pl_wrapped_boolvar(
+        residents,
+        rotations,
+        weeks,
+    )
+
+    prior_rotations_completed = pl.DataFrame(
+        {
+            "resident": [
+                "Already Did Purple Guy",
+            ],
+            "rotation": ["Purple HS Senior"],
+            "completed_weeks": [2],
+        }
+    )
+
+    return (
+        residents,
+        rotations,
+        weeks,
+        current_requirements,
+        scheduled,
+        prior_rotations_completed,
+    )
+
+
+def verify_prerequisite_met(
+    prereq_weeks: int,
+    prereq_demanding_rotations: list[str],
+    prereq_fulfilling_rotations: list[str],
+    residents: pl.DataFrame,
+    rotations: pl.DataFrame,
+    weeks: pl.DataFrame,
+    prior_rotations_completed: pl.DataFrame,
+    solved_schedule: pl.DataFrame,
+) -> bool:
+    for resident_dict in residents.iter_rows(named=True):
+        resident_name = resident_dict[config.residents_primary_label]
+        completed_weeks_prior_years: int = (
+            prior_rotations_completed.filter(
+                (pl.col("resident") == resident_name)
+                & (pl.col("rotation").is_in(prereq_fulfilling_rotations))
+            )
+            .select("completed_weeks")
+            .sum()
+            .item()
+        )
+        if completed_weeks_prior_years is None:
+            completed_weeks_prior_years = 0
+
+        is_resident_already_done: bool = completed_weeks_prior_years >= prereq_weeks
+        if is_resident_already_done:
+            continue
+
+        for week_dict in weeks.iter_rows(named=True):
+            this_week = week_dict[config.weeks_primary_label]
+
+            count_prereq_demanders_scheduled_this_week: int = solved_schedule.filter(
+                (pl.col("resident") == resident_name)
+                & (pl.col("week") == this_week)
+                & (pl.col("rotation").is_in(prereq_demanding_rotations))
+            )[config.cpmpy_result_column].sum()
+
+            is_scheduled_this_week = count_prereq_demanders_scheduled_this_week > 0
+            if not is_scheduled_this_week:
+                continue
+
+            scheduled_weeks_prior: int = solved_schedule.filter(
+                (pl.col("resident") == resident_name)
+                & (pl.col("week") < this_week)
+                & (pl.col("rotation").is_in(prereq_fulfilling_rotations))
+            )[config.cpmpy_result_column].sum()
+
+            if completed_weeks_prior_years + scheduled_weeks_prior < prereq_weeks:
+                return False
+    return True
+
+
+def test_simple_prerequisites_with_priors(sample_simple_prerequisites_with_priors):
+    (
+        residents,
+        rotations,
+        weeks,
+        current_requirements,
+        scheduled,
+        prior_rotations_completed,
+    ) = sample_simple_prerequisites_with_priors
+
+    model = cp.Model()
+
+    requirement_constraints = enforce_requirement_constraints(
+        current_requirements,
+        residents,
+        rotations,
+        weeks,
+        prior_rotations_completed,
+        scheduled,
+    )
+
+    model += requirement_constraints
+
+    model += require_one_rotation_per_resident_per_week(
+        residents, rotations, weeks, scheduled
+    )
+    model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
+    model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
+
+    is_feasible = model.solve(config.default_cpmpy_solver, log_search_progress=False)
+    if not is_feasible:
+        from cpmpy.tools import mus
+        import pprint
+
+        print("\n")
+        print(">>> Minimum Unsatisfiable Core (MUS): ")
+        pprint.pprint(mus(model.constraints))
+        print("<<<")
         raise ValueError("Infeasible")
 
     melted_solved_schedule = extract_solved_schedule(scheduled)
@@ -522,27 +776,27 @@ def test_enforce_prerequisites_with_no_priors(
     ), "verify_enforce_requirement_constraints returns False"
 
 
-def verify_prerequisite_met(
-    constraint: Union[box.Box, dict],
-    residents: pl.DataFrame,
-    rotations: pl.DataFrame,
-    weeks: pl.DataFrame,
-    solved_schedule: pl.DataFrame,
-) -> bool:
-    raise NotImplementedError
-
-
 def test_enforce_requirement_constraints_R2s_barely_fit(
     sample_barely_fit_R2s_no_prereqs,
 ):
-    residents, rotations, weeks, current_requirements, scheduled = (
-        sample_barely_fit_R2s_no_prereqs
-    )
+    (
+        residents,
+        rotations,
+        weeks,
+        current_requirements,
+        prior_rotations_completed,
+        scheduled,
+    ) = sample_barely_fit_R2s_no_prereqs
 
     model = cp.Model()
 
     requirement_constraints = enforce_requirement_constraints(
-        current_requirements, residents, rotations, weeks, scheduled
+        current_requirements,
+        residents,
+        rotations,
+        weeks,
+        prior_rotations_completed,
+        scheduled,
     )
 
     model += requirement_constraints
@@ -569,6 +823,7 @@ def test_enforce_requirement_constraints_R2s_barely_fit(
         residents,
         rotations,
         weeks,
+        prior_rotations_completed,
         melted_solved_schedule,
     ), "verify_enforce_requirement_constraints returns False"
 
@@ -578,6 +833,7 @@ def verify_enforce_requirement_constraints(
     residents: pl.DataFrame,
     rotations: pl.DataFrame,
     weeks: pl.DataFrame,
+    prior_rotations_completed: pl.DataFrame,
     solved_schedule: pl.DataFrame,
 ) -> bool:
     for requirement_name, requirement_body in requirements.items():
@@ -644,6 +900,9 @@ def verify_enforce_requirement_constraints(
                     ), "verify_minimum_contiguity failed"
 
                 case "prerequisite":
+                    prereq_demanding_rotations = requirement_body.fulfilled_by
+                    prereq_fulfilling_rotations = constraint.prerequisite_fulfillers
+                    prereq_weeks = constraint.weeks
                     residents_subject_to_req = residents.filter(
                         pl.col("year").is_in(constraint.resident_years)
                     )
@@ -651,10 +910,13 @@ def verify_enforce_requirement_constraints(
                         pl.col("rotation").is_in(requirement_body.fulfilled_by)
                     )
                     assert verify_prerequisite_met(
-                        constraint,
+                        prereq_weeks,
+                        prereq_demanding_rotations,
+                        prereq_fulfilling_rotations,
                         residents_subject_to_req,
                         rotations_fulfilling_req,
                         weeks,
+                        prior_rotations_completed,
                         solved_schedule,
                     ), "verify_exact_week_constraint failed"
 

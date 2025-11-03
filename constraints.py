@@ -347,6 +347,7 @@ def enforce_requirement_constraints(
     residents: pl.DataFrame,
     rotations: pl.DataFrame,
     weeks: pl.DataFrame,
+    prior_rotations_completed: pl.DataFrame,
     scheduled: pl.DataFrame,
 ) -> list[cp.core.Comparison]:
     """
@@ -428,9 +429,10 @@ def enforce_requirement_constraints(
                         prereq_weeks=constraint.weeks,
                         prereq_demanding_rotations=requirement_body.fulfilled_by,
                         prereq_fulfilling_rotations=constraint.prerequisite_fulfillers,
-                        residents=residents,
-                        rotations=rotations,
+                        residents=residents_subject_to_req,
+                        rotations=rotations_fulfilling_req,
                         weeks=weeks,
+                        prior_rotations_completed=prior_rotations_completed,
                         scheduled=scheduled,
                     )
                 case _:
@@ -448,13 +450,31 @@ def enforce_prerequisite(
     residents: pl.DataFrame,
     rotations: pl.DataFrame,
     weeks: pl.DataFrame,
+    prior_rotations_completed: pl.DataFrame,
     scheduled: pl.DataFrame,
 ) -> list[cp.core.Comparison]:
 
     cumulative_constraints = list()
     constraint = None
     for resident_dict in residents.iter_rows(named=True):
+        completed_weeks_prior_years: int = (
+            prior_rotations_completed.filter(
+                (pl.col("resident") == resident_dict[residents_primary_label])
+                & (pl.col("rotation").is_in(prereq_fulfilling_rotations))
+            )
+            .select("completed_weeks")
+            .sum()
+            .item()
+        )
+        if completed_weeks_prior_years is None:
+            completed_weeks_prior_years = 0
+
+        is_resident_already_done: bool = completed_weeks_prior_years >= prereq_weeks
+        if is_resident_already_done:
+            continue
+
         for week_dict in weeks.iter_rows(named=True):
+
             prereq_demanders_this_week = scheduled.filter(
                 (pl.col("resident") == resident_dict[residents_primary_label])
                 & (pl.col("week") == week_dict[weeks_primary_label])
@@ -467,10 +487,9 @@ def enforce_prerequisite(
                 & (pl.col("rotation").is_in(prereq_fulfilling_rotations))
             )
 
-            completed_weeks_this_year = cp.sum(weeks_before_this[cpmpy_variable_column])
-
-            warnings.warn("not doing backlog yet, 0 inserted here")
-            completed_weeks_prior_years = 0
+            completed_weeks_this_year: cp.core.Comparison | int = cp.sum(
+                weeks_before_this[cpmpy_variable_column]
+            )
 
             match completed_weeks_this_year, completed_weeks_prior_years:
                 case 0, 0:
@@ -489,11 +508,13 @@ def enforce_prerequisite(
                     constraint = cp.any(
                         prereq_demanders_this_week[cpmpy_variable_column]
                     ).implies(
-                        cp.sum(completed_weeks_this_year) + completed_weeks_prior_years
+                        completed_weeks_this_year + completed_weeks_prior_years
                         >= prereq_weeks
                     )
                 case _:
-                    raise RuntimeError("unclear how you got here")
+                    raise RuntimeError(
+                        f"{completed_weeks_this_year=}, {completed_weeks_prior_years=} are wrongly constructed"
+                    )
 
             cumulative_constraints.append(constraint)
 
