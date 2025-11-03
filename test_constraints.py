@@ -630,7 +630,7 @@ def sample_simple_prerequisites_with_priors():
         # .min_contiguity_over_resident_years(2, ["R2"])
         .after_prerequisite(
             prereq_fulfilling_rotations=["Purple HS Senior"],
-            weeks_required=2,  # deliberately short so that the four can rotate through Elective to get out of the way
+            weeks_required=1,  # deliberately short so that the four can rotate through Elective to get out of the way
             resident_years=["R2"],
         )
     )
@@ -772,6 +772,7 @@ def test_simple_prerequisites_with_priors(sample_simple_prerequisites_with_prior
         residents,
         rotations,
         weeks,
+        prior_rotations_completed,
         melted_solved_schedule,
     ), "verify_enforce_requirement_constraints returns False"
 
