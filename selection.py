@@ -1,3 +1,5 @@
+import warnings
+
 import polars as pl
 
 from config import config
@@ -81,6 +83,10 @@ def subset_scheduled_by(
         & (pl.col("rotation").is_in(rotation_names))
         & (pl.col("week").is_in(week_dates))
     )
+
+    if len(subset_scheduled) == 0:
+        warnings.warn(f"Note {len(subset_scheduled)=} which may not be the expected outcome.")
+
     return subset_scheduled
 
 
