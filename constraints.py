@@ -529,7 +529,7 @@ def force_literal_value_over_range(
     for scheduled_row_dict in subset_scheduled.iter_rows(named=True):
         constraint = scheduled_row_dict[cpmpy_variable_column] == literal
         # TODO debug only
-        if isinstance(constraint, cp.core.Comparison) or not cp.core.is_boolexpr(constraint):
+        if not (isinstance(constraint, cp.core.Comparison) or cp.core.is_boolexpr(constraint)):
             raise ValueError(
                 f"{constraint=} with {type(constraint)=} but should be cp.core.Expression or cp.core.Comparison")
         cumulative_constraints.append(constraint)

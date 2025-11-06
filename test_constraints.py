@@ -1019,16 +1019,18 @@ def sample_literal_reqs_matching_barely_fit_R2s_no_prereqs(
         scheduled,
     ) = sample_barely_fit_R2s_no_prereqs
 
-    subset_scheduled = subset_scheduled_by(
-        residents=["Fourth Guy"],
-        rotations=["Green HS Senior"],
-        weeks=one_academic_year_weeks.head(n=1),
-        scheduled=scheduled,
+    resident_target = ["Fourth Guy"]
+    rotation_target = ["Green HS Senior"]
+    week_target = weeks.head(1)
+
+    subset_scheduled_for_literal = scheduled.filter(
+        (pl.col("resident").is_in(resident_target)) & (pl.col("rotation").is_in(rotation_target)) & (
+            pl.col("week").is_in(week_target[config.WEEKS_PRIMARY_LABEL]))
     )
 
     literal = True
 
-    return subset_scheduled, literal
+    return subset_scheduled_for_literal, literal
 
 
 def test_force_literal_value_over_range(
@@ -1063,9 +1065,9 @@ def test_force_literal_value_over_range(
     model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
     model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
 
-    subset_scheduled, literal = sample_literal_reqs_matching_barely_fit_R2s_no_prereqs
+    subset_scheduled_for_literal, literal = sample_literal_reqs_matching_barely_fit_R2s_no_prereqs
 
-    force_literal_value_over_range(subset_scheduled, literal)
+    model += force_literal_value_over_range(subset_scheduled_for_literal, literal)
 
     is_feasible = model.solve(config.default_cpmpy_solver, log_search_progress=False)
     if not is_feasible:
@@ -1087,7 +1089,7 @@ def test_force_literal_value_over_range(
         melted_solved_schedule,
     ), "verify_enforce_requirement_constraints returns False"
 
-    assert verify_literal_value_over_range(subset_scheduled, literal)
+    assert verify_literal_value_over_range(melted_solved_schedule, literal)
 
 
 def verify_literal_value_over_range(
