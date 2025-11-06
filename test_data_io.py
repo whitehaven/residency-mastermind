@@ -1,4 +1,5 @@
 import polars as pl
+import pytest
 
 import config
 from data_io import (
@@ -7,6 +8,7 @@ from data_io import (
 )
 
 
+@pytest.mark.skip("project not currently using sqlite, return to this later")
 def test_read_bulk_data_sqlite3():
     test_read_tables = read_bulk_data_sqlite3(config.TESTING_DB_PATH)
     assert isinstance(test_read_tables["residents"], pl.DataFrame)
