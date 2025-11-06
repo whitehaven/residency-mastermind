@@ -1002,7 +1002,7 @@ def verify_exact_week_constraint(
 
 
 @pytest.fixture
-def sample_literal_reqs_matching_barely_fit_R2s_no_prereqs(
+def sample_literal_reqs_matching_barely_fit_R2_no_prereqs_single_element(
     sample_barely_fit_R2s_no_prereqs,
 ):
     (
@@ -1025,13 +1025,12 @@ def sample_literal_reqs_matching_barely_fit_R2s_no_prereqs(
 
     literal = True
 
-
     return subset_scheduled_for_literal, literal
 
 
-def test_force_literal_value_over_range(
+def test_force_literal_value_over_range_single_element(
     sample_barely_fit_R2s_no_prereqs,
-    sample_literal_reqs_matching_barely_fit_R2s_no_prereqs,
+    sample_literal_reqs_matching_barely_fit_R2_no_prereqs_single_element,
 ):
     (
         residents,
@@ -1061,9 +1060,13 @@ def test_force_literal_value_over_range(
     model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
     model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
 
-    subset_scheduled_for_literal, literal = sample_literal_reqs_matching_barely_fit_R2s_no_prereqs
+    scheduled_subset_constrained_to_literal, literal = (
+        sample_literal_reqs_matching_barely_fit_R2_no_prereqs_single_element
+    )
 
-    model += force_literal_value_over_range(subset_scheduled_for_literal, literal)
+    model += force_literal_value_over_range(
+        scheduled_subset_constrained_to_literal, literal
+    )
 
     is_feasible = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
     if not is_feasible:
@@ -1085,13 +1088,24 @@ def test_force_literal_value_over_range(
         melted_solved_schedule,
     ), "verify_enforce_requirement_constraints returns False"
 
-    assert verify_literal_value_over_range(melted_solved_schedule, literal)
+    melted_solved_schedule_targeted_to_literal = melted_solved_schedule.join(
+        scheduled_subset_constrained_to_literal,
+        on=["resident", "rotation", "week"],
+        how="inner",
+    )
+
+    assert verify_literal_value_over_range(
+        melted_solved_schedule_targeted_to_literal, literal
+    )
 
 
 def verify_literal_value_over_range(
-    subset_scheduled: pl.DataFrame, literal: bool
+    solved_schedule_which_should_equal_literal: pl.DataFrame,
+    literal: bool,
 ) -> bool:
-    for scheduled_row_dict in subset_scheduled.iter_rows(named=True):
+    for scheduled_row_dict in solved_schedule_which_should_equal_literal.iter_rows(
+        named=True
+    ):
         element_equals_literal = scheduled_row_dict[config.CPMPY_RESULT_COLUMN] == literal
         if not element_equals_literal:
             return False
