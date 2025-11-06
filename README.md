@@ -17,7 +17,10 @@ be reusable.
     - [x] modify requirements to take prior into account
     - [x] make prior case work
 - [ ] manual forcing of values en bloc
-      - [ ] alias for rotation-week limitations (like SOM)
+  - [x] test: single value
+  - [x] test: blockwise, same resident
+  - [ ] test: multiple various disconnected locations
+  - [ ] alias for rotation-week limitations (like SOM)
 - [ ] integrate prereqs into requirements
 - [ ] multi-year operations and constraints
 - [ ] block-match constraints (must be all in one block or touching border)
