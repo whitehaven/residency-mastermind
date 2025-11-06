@@ -1,13 +1,10 @@
 import polars as pl
 
-from config import config
+import config
 
-test_residents_path = config.testing_files.residents.real_size_seniors
-test_rotations_path = config.testing_files.rotations.real_size
-test_weeks_path = config.testing_files.weeks.full_academic_year_2025_2026
-cpmpy_variable_column = config.cpmpy_variable_column
-cpmpy_result_column = config.cpmpy_result_column
-
+test_residents_path = pl.read_csv(config.TESTING_FILES["residents"]["real_size_seniors"])
+test_rotations_path = pl.read_csv(config.TESTING_FILES["rotations"]["real_size"])
+test_weeks_path = config.TESTING_FILES["weeks"]["full_academic_year_2025_2026"]
 
 def extract_solved_schedule(scheduled: pl.DataFrame) -> pl.DataFrame:
     """
@@ -23,11 +20,11 @@ def extract_solved_schedule(scheduled: pl.DataFrame) -> pl.DataFrame:
 
     solved_values = []
 
-    for decision_variable in scheduled[cpmpy_variable_column]:
+    for decision_variable in scheduled[config.CPMPY_VARIABLE_COLUMN]:
         solved_values.append(decision_variable.value())
 
     scheduled_result = scheduled.with_columns(
-        pl.Series(cpmpy_result_column, solved_values).cast(pl.Boolean)
+        pl.Series(config.CPMPY_RESULT_COLUMN, solved_values).cast(pl.Boolean)
     )
     return scheduled_result.sort("week")
 
@@ -42,8 +39,8 @@ def convert_melted_to_block_schedule(solved_schedule: pl.DataFrame) -> pl.DataFr
     Returns:
         block_schedule: pivoted df
     """
-    renderable_df = solved_schedule.select(pl.all().exclude(cpmpy_variable_column))
-    filtered_long_format = renderable_df.filter(pl.col(cpmpy_result_column))
+    renderable_df = solved_schedule.select(pl.all().exclude(config.CPMPY_VARIABLE_COLUMN))
+    filtered_long_format = renderable_df.filter(pl.col(config.CPMPY_VARIABLE_COLUMN))
     block_schedule = filtered_long_format.pivot(
         "week", index="resident", values="rotation"
     )

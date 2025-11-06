@@ -1,32 +1,25 @@
-import box
-
-config = box.Box(
-    {
-        "allowable_year_options": {"R2", "R3", "R3 Extended"},
-        "cpmpy_variable_column": "is_scheduled_cp_var",
-        "cpmpy_result_column": "is_scheduled_result",
-        "residents_primary_label": "full_name",
-        "rotations_primary_label": "rotation",
-        "weeks_primary_label": "monday_date",
-        "default_cpmpy_solver": "ortools",
-        "default_maximum_contiguity": 4,
-        "default_requirements_path": "requirements.yaml",
-        "testing_db_path": "seniors_only_anonymized_current_reqs.db",
-        "testing_files": {
-            "residents": {
-                "tiny": "test_data/test_residents_tiny.csv",
-                "real_size_seniors": "test_data/test_residents_real_size.csv",
-                "only_R3s": "test_data/test_residents_real_size_R3_only.csv",
-            },
-            "rotations": {
-                "tiny": "test_data/test_rotations_minimal.csv",
-                "real_size": "test_data/test_rotations_real_size.csv",
-            },
-            "weeks": {
-                "tiny": "test_data/test_weeks_tiny_10wk.csv",
-                "full_three_years": "test_data/test_weeks_2024_2027_three_years.csv",
-                "full_academic_year_2025_2026": "test_data/test_weeks_2025_2026.csv",
-            },
-        },
-    }
-)
+ALLOWABLE_YEAR_OPTIONS = {"R2", "R3", "R3 Extended"}
+CPMPY_VARIABLE_COLUMN = "is_scheduled_cp_var"
+CPMPY_RESULT_COLUMN = "is_scheduled_result"
+RESIDENTS_PRIMARY_LABEL = "full_name"
+ROTATIONS_PRIMARY_LABEL = "rotation"
+WEEKS_PRIMARY_LABEL = "monday_date"
+DEFAULT_CPMPY_SOLVER = "ortools"
+DEFAULT_MAXIMUM_CONTIGUITY = 4
+DEFAULT_REQUIREMENTS_PATH = "requirements.yaml"
+TESTING_DB_PATH = "seniors_only_anonymized_current_reqs.db"
+TESTING_FILES = {
+    "residents": {
+        "tiny": "test_data/test_residents_tiny.csv",
+        "real_size_seniors": "test_data/test_residents_real_size.csv",
+        "only_R3s": "test_data/test_residents_real_size_R3_only.csv",
+    },
+    "rotations": {
+        "tiny": "test_data/test_rotations_minimal.csv",
+        "real_size": "test_data/test_rotations_real_size.csv",
+    },
+    "weeks": {
+        "tiny": "test_data/test_weeks_tiny_10wk.csv",
+        "full_three_years": "test_data/test_weeks_2024_2027_three_years.csv",
+        "full_academic_year_2025_2026": "test_data/test_weeks_2025_2026.csv",
+    }, }

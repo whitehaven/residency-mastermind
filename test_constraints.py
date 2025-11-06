@@ -7,7 +7,7 @@ import cpmpy as cp
 import polars as pl
 import pytest
 
-from config import config
+import config
 from constraints import (
     enforce_minimum_contiguity,
     enforce_requirement_constraints,
@@ -23,16 +23,11 @@ from requirement_builder import (
 )
 from selection import group_scheduled_df_by_for_each, subset_scheduled_by
 
-cpmpy_variable_column = config.cpmpy_variable_column
-cpmpy_result_column = config.cpmpy_result_column
-
-real_size_residents = pl.read_csv(config.testing_files.residents.real_size_seniors)
-real_size_rotations = pl.read_csv(config.testing_files.rotations.real_size)
+real_size_residents = pl.read_csv(config.TESTING_FILES["residents"]["real_size_seniors"])
+real_size_rotations = pl.read_csv(config.TESTING_FILES["rotations"]["real_size"])
 one_academic_year_weeks = pl.read_csv(
-    config.testing_files.weeks.full_academic_year_2025_2026, try_parse_dates=True
+    config.TESTING_FILES["weeks"]["full_academic_year_2025_2026"], try_parse_dates=True
 )
-
-default_solver = config.default_cpmpy_solver
 
 
 def test_require_one_rotation_per_resident_per_week() -> None:
@@ -79,10 +74,10 @@ def verify_one_rotation_per_resident_per_week(solved_schedule) -> bool:
     grouped_solved_schedule = group_scheduled_df_by_for_each(
         solved_schedule,
         for_each_individual=["resident", "week"],
-        group_on_column=cpmpy_result_column,
+        group_on_column=config.CPMPY_RESULT_COLUMN,
     )
     for group_dict in grouped_solved_schedule.iter_rows(named=True):
-        decision_vars = group_dict[cpmpy_result_column]
+        decision_vars = group_dict[config.CPMPY_RESULT_COLUMN]
 
         assert sum(decision_vars) == 1, f"sum decision_vars = {decision_vars} != 1"
 
@@ -111,7 +106,7 @@ def test_enforce_rotation_capacity_minimum() -> None:
     )
     model = cp.Model()
     model += test_constraints
-    model.solve(default_solver, log_search_progress=False)
+    model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
 
     solved_schedule = extract_solved_schedule(test_scheduled)
 
@@ -125,10 +120,10 @@ def verify_enforce_rotation_capacity_minimum(rotations, solved_schedule) -> bool
     grouped_solved_schedule = group_scheduled_df_by_for_each(
         solved_schedule,
         for_each_individual=["rotation", "week"],
-        group_on_column=cpmpy_result_column,
+        group_on_column=config.CPMPY_RESULT_COLUMN,
     )
     for group_dict in grouped_solved_schedule.iter_rows(named=True):
-        decision_vars = group_dict[cpmpy_result_column]
+        decision_vars = group_dict[config.CPMPY_RESULT_COLUMN]
         if decision_vars:
             rotation = rotations.filter(pl.col("rotation") == group_dict["rotation"])
             min_residents_this_rotation = rotation.select(
@@ -165,7 +160,7 @@ def test_enforce_rotation_capacity_maximum() -> None:
     )
     model = cp.Model()
     model += test_constraints
-    model.solve(default_solver, log_search_progress=False)
+    model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
 
     solved_schedule = extract_solved_schedule(test_scheduled)
 
@@ -179,10 +174,10 @@ def verify_enforce_rotation_capacity_maximum(rotations, solved_schedule) -> bool
     grouped_solved_schedule = group_scheduled_df_by_for_each(
         solved_schedule,
         for_each_individual=["rotation", "week"],
-        group_on_column=cpmpy_result_column,
+        group_on_column=config.CPMPY_RESULT_COLUMN,
     )
     for group_dict in grouped_solved_schedule.iter_rows(named=True):
-        decision_vars = group_dict[cpmpy_result_column]
+        decision_vars = group_dict[config.CPMPY_RESULT_COLUMN]
         if decision_vars:
             rotation = rotations.filter(pl.col("rotation") == group_dict["rotation"])
             max_residents_this_rotation = rotation.select(
@@ -238,7 +233,7 @@ def test_enforce_minimum_contiguity() -> None:
     model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
     model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
 
-    is_feasible = model.solve(config.default_cpmpy_solver, log_search_progress=False)
+    is_feasible = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
     if not is_feasible:
         raise ValueError("Infeasible")
 
@@ -274,7 +269,7 @@ def verify_minimum_contiguity(
     """
     for rotation_dict in rotations.iter_rows(named=True):
 
-        rotation_name = rotation_dict[config.rotations_primary_label]
+        rotation_name = rotation_dict[config.ROTATIONS_PRIMARY_LABEL]
         if constraint == "use_rotations_data":
             min_contiguity = rotation_dict["minimum_contiguous_weeks"]
         else:
@@ -282,7 +277,7 @@ def verify_minimum_contiguity(
 
         rotation_schedule = solved_schedule.filter(
             (pl.col("rotation") == rotation_name)
-            & (pl.col(cpmpy_result_column) == True)  # noqa: E712
+            & (pl.col(config.CPMPY_RESULT_COLUMN) == True)  # noqa: E712
         )
 
         for resident_dict in residents.iter_rows(named=True):
@@ -544,7 +539,7 @@ def test_enforce_prerequisites_with_no_priors(
     model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
     model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
 
-    is_feasible = model.solve(config.default_cpmpy_solver, log_search_progress=False)
+    is_feasible = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
     if not is_feasible:
         from cpmpy.tools import mus
         import pprint
@@ -685,7 +680,7 @@ def verify_prerequisite_met(
     solved_schedule: pl.DataFrame,
 ) -> bool:
     for resident_dict in residents.iter_rows(named=True):
-        resident_name = resident_dict[config.residents_primary_label]
+        resident_name = resident_dict[config.RESIDENTS_PRIMARY_LABEL]
         completed_weeks_prior_years: int = (
             prior_rotations_completed.filter(
                 (pl.col("resident") == resident_name)
@@ -703,13 +698,13 @@ def verify_prerequisite_met(
             continue
 
         for week_dict in weeks.iter_rows(named=True):
-            this_week = week_dict[config.weeks_primary_label]
+            this_week = week_dict[config.WEEKS_PRIMARY_LABEL]
 
             count_prereq_demanders_scheduled_this_week: int = solved_schedule.filter(
                 (pl.col("resident") == resident_name)
                 & (pl.col("week") == this_week)
                 & (pl.col("rotation").is_in(prereq_demanding_rotations))
-            )[config.cpmpy_result_column].sum()
+            )[config.CPMPY_RESULT_COLUMN].sum()
 
             is_scheduled_this_week = count_prereq_demanders_scheduled_this_week > 0
             if not is_scheduled_this_week:
@@ -719,7 +714,7 @@ def verify_prerequisite_met(
                 (pl.col("resident") == resident_name)
                 & (pl.col("week") < this_week)
                 & (pl.col("rotation").is_in(prereq_fulfilling_rotations))
-            )[config.cpmpy_result_column].sum()
+            )[config.CPMPY_RESULT_COLUMN].sum()
 
             if completed_weeks_prior_years + scheduled_weeks_prior < prereq_weeks:
                 return False
@@ -755,7 +750,7 @@ def test_simple_prerequisites_with_priors(sample_simple_prerequisites_with_prior
     model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
     model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
 
-    is_feasible = model.solve(config.default_cpmpy_solver, log_search_progress=False)
+    is_feasible = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
     if not is_feasible:
         from cpmpy.tools import mus
         import pprint
@@ -809,7 +804,7 @@ def test_enforce_requirement_constraints_R2s_barely_fit(
     model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
     model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
 
-    is_feasible = model.solve(config.default_cpmpy_solver, log_search_progress=False)
+    is_feasible = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
     if not is_feasible:
         from cpmpy.tools import mus
         import pprint
@@ -944,11 +939,11 @@ def verify_minimum_week_constraint(
     grouped_solved_schedule = group_scheduled_df_by_for_each(
         subset_scheduled=relevant_schedule,
         for_each_individual="resident",
-        group_on_column=config.cpmpy_result_column,
+        group_on_column=config.CPMPY_RESULT_COLUMN,
     )
 
     for group_dict in grouped_solved_schedule.iter_rows(named=True):
-        decision_vars = group_dict[cpmpy_result_column]
+        decision_vars = group_dict[config.CPMPY_RESULT_COLUMN]
 
         if sum(decision_vars) < constraint.weeks:
             print(f"{sum(decision_vars)=} < {constraint=} !!!")
@@ -969,11 +964,11 @@ def verify_maximum_week_constraint(
     grouped_solved_schedule = group_scheduled_df_by_for_each(
         subset_scheduled=relevant_schedule,
         for_each_individual="resident",
-        group_on_column=config.cpmpy_result_column,
+        group_on_column=config.CPMPY_RESULT_COLUMN,
     )
 
     for group_dict in grouped_solved_schedule.iter_rows(named=True):
-        decision_vars = group_dict[cpmpy_result_column]
+        decision_vars = group_dict[config.CPMPY_RESULT_COLUMN]
 
         if sum(decision_vars) > constraint.weeks:
             print(f"{sum(decision_vars)=} > {constraint=} !!!")
@@ -994,11 +989,11 @@ def verify_exact_week_constraint(
     grouped_solved_schedule = group_scheduled_df_by_for_each(
         subset_scheduled=relevant_schedule,
         for_each_individual="resident",
-        group_on_column=config.cpmpy_result_column,
+        group_on_column=config.CPMPY_RESULT_COLUMN,
     )
 
     for group_dict in grouped_solved_schedule.iter_rows(named=True):
-        decision_vars = group_dict[cpmpy_result_column]
+        decision_vars = group_dict[config.CPMPY_RESULT_COLUMN]
 
         if sum(decision_vars) != constraint.weeks:
             print(f"{sum(decision_vars)=} != {constraint=} !!!")
@@ -1029,6 +1024,7 @@ def sample_literal_reqs_matching_barely_fit_R2s_no_prereqs(
     )
 
     literal = True
+
 
     return subset_scheduled_for_literal, literal
 
@@ -1069,7 +1065,7 @@ def test_force_literal_value_over_range(
 
     model += force_literal_value_over_range(subset_scheduled_for_literal, literal)
 
-    is_feasible = model.solve(config.default_cpmpy_solver, log_search_progress=False)
+    is_feasible = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
     if not is_feasible:
         from cpmpy.tools import mus
         import pprint
@@ -1096,7 +1092,7 @@ def verify_literal_value_over_range(
     subset_scheduled: pl.DataFrame, literal: bool
 ) -> bool:
     for scheduled_row_dict in subset_scheduled.iter_rows(named=True):
-        element_equals_literal = scheduled_row_dict[cpmpy_result_column] == literal
+        element_equals_literal = scheduled_row_dict[config.CPMPY_RESULT_COLUMN] == literal
         if not element_equals_literal:
             return False
     return True

@@ -5,20 +5,14 @@ import box
 import cpmpy as cp
 import polars as pl
 
-from config import config
+import config
 from selection import group_scheduled_df_by_for_each, subset_scheduled_by
 
-cpmpy_variable_column = config.cpmpy_variable_column
-residents_primary_label = config.residents_primary_label
-rotations_primary_label = config.rotations_primary_label
-weeks_primary_label = config.weeks_primary_label
-
-real_size_residents = pl.read_csv(config.testing_files.residents.real_size_seniors)
-real_size_rotations = pl.read_csv(config.testing_files.rotations.real_size)
+real_size_residents = pl.read_csv(config.TESTING_FILES["residents"]["real_size_seniors"])
+real_size_rotations = pl.read_csv(config.TESTING_FILES["rotations"]["real_size"])
 one_academic_year_weeks = pl.read_csv(
-    config.testing_files.weeks.full_academic_year_2025_2026, try_parse_dates=True
+    config.TESTING_FILES["weeks"]["full_academic_year_2025_2026"], try_parse_dates=True
 )
-
 
 def enforce_minimum_contiguity(
     constraint_weeks: int | LiteralString,
@@ -65,11 +59,11 @@ def enforce_minimum_contiguity(
 
         for resident_dict in residents.iter_rows(named=True):
             is_scheduled_for_res_on_rot = scheduled.filter(
-                (pl.col("resident") == resident_dict[residents_primary_label])
-                & (pl.col("rotation") == rotation_dict[rotations_primary_label])
+                (pl.col("resident") == resident_dict[config.RESIDENTS_PRIMARY_LABEL])
+                & (pl.col("rotation") == rotation_dict[config.ROTATIONS_PRIMARY_LABEL])
             )
 
-            schedule_vars = is_scheduled_for_res_on_rot[cpmpy_variable_column].to_list()
+            schedule_vars = is_scheduled_for_res_on_rot[config.CPMPY_VARIABLE_COLUMN].to_list()
             for forbidden_length in range(1, min_contiguity):
                 for start_idx in range(len(schedule_vars) - forbidden_length + 1):
                     constraint_against_sequence = prevent_isolated_sequence(
@@ -166,7 +160,7 @@ def require_one_rotation_per_resident_per_week(
     grouped = group_scheduled_df_by_for_each(
         subset_scheduled,
         for_each_individual=["resident", "week"],
-        group_on_column=cpmpy_variable_column,
+        group_on_column=config.CPMPY_VARIABLE_COLUMN,
     )
 
     constraints = apply_constraint_to_groups(
@@ -190,7 +184,7 @@ def enforce_minimum_rotation_weeks_per_resident(
     grouped = group_scheduled_df_by_for_each(
         subset_scheduled,
         for_each_individual=["resident"],
-        group_on_column=cpmpy_variable_column,
+        group_on_column=config.CPMPY_VARIABLE_COLUMN,
     )
     constraints = apply_constraint_to_groups(
         grouped, constraint_applicator=lambda group: cp.sum(group) >= minimum_weeks
@@ -212,7 +206,7 @@ def enforce_maximum_rotation_weeks_per_resident(
     grouped = group_scheduled_df_by_for_each(
         subset_scheduled,
         for_each_individual=["resident"],
-        group_on_column=cpmpy_variable_column,
+        group_on_column=config.CPMPY_VARIABLE_COLUMN,
     )
     constraints = apply_constraint_to_groups(
         grouped, constraint_applicator=lambda group: cp.sum(group) <= maximum_weeks
@@ -234,7 +228,7 @@ def enforce_exact_rotation_weeks_per_resident(
     grouped = group_scheduled_df_by_for_each(
         subset_scheduled,
         for_each_individual=["resident"],
-        group_on_column=cpmpy_variable_column,
+        group_on_column=config.CPMPY_VARIABLE_COLUMN,
     )
 
     constraints = apply_constraint_to_groups(
@@ -257,7 +251,7 @@ def apply_constraint_to_groups(
     """
     constraints = list()
     for group in grouped.iter_rows(named=True):
-        decision_vars = group[cpmpy_variable_column]
+        decision_vars = group[config.CPMPY_VARIABLE_COLUMN]
         if decision_vars:
             constraints.append(constraint_applicator(decision_vars))
     return constraints
@@ -285,12 +279,12 @@ def enforce_rotation_capacity_minimum(
     grouped = group_scheduled_df_by_for_each(
         subset_scheduled,
         for_each_individual=["rotation", "week"],
-        group_on_column=cpmpy_variable_column,
+        group_on_column=config.CPMPY_VARIABLE_COLUMN,
     )
 
     constraints = list()
     for group_dict in grouped.iter_rows(named=True):
-        decision_vars = group_dict[cpmpy_variable_column]
+        decision_vars = group_dict[config.CPMPY_VARIABLE_COLUMN]
         if decision_vars:
             rotation = rotations_with_minimum_residents.filter(
                 pl.col("rotation") == group_dict["rotation"]
@@ -325,12 +319,12 @@ def enforce_rotation_capacity_maximum(
     grouped = group_scheduled_df_by_for_each(
         subset_scheduled,
         for_each_individual=["rotation", "week"],
-        group_on_column=cpmpy_variable_column,
+        group_on_column=config.CPMPY_VARIABLE_COLUMN,
     )
 
     constraints = list()
     for group_dict in grouped.iter_rows(named=True):
-        decision_vars = group_dict[cpmpy_variable_column]
+        decision_vars = group_dict[config.CPMPY_VARIABLE_COLUMN]
         if decision_vars:
             rotation = rotations_with_maximum_residents.filter(
                 pl.col("rotation") == group_dict["rotation"]
@@ -459,7 +453,7 @@ def enforce_prerequisite(
     for resident_dict in residents.iter_rows(named=True):
         completed_weeks_prior_years: int = (
             prior_rotations_completed.filter(
-                (pl.col("resident") == resident_dict[residents_primary_label])
+                (pl.col("resident") == resident_dict[config.RESIDENTS_PRIMARY_LABEL])
                 & (pl.col("rotation").is_in(prereq_fulfilling_rotations))
             )
             .select("completed_weeks")
@@ -476,37 +470,37 @@ def enforce_prerequisite(
         for week_dict in weeks.iter_rows(named=True):
 
             prereq_demanders_this_week = scheduled.filter(
-                (pl.col("resident") == resident_dict[residents_primary_label])
-                & (pl.col("week") == week_dict[weeks_primary_label])
+                (pl.col("resident") == resident_dict[config.RESIDENTS_PRIMARY_LABEL])
+                & (pl.col("week") == week_dict[config.WEEKS_PRIMARY_LABEL])
                 & (pl.col("rotation").is_in(prereq_demanding_rotations))
             )
 
             weeks_before_this = scheduled.filter(
-                (pl.col("resident") == resident_dict[residents_primary_label])
-                & (pl.col("week") < week_dict[weeks_primary_label])
+                (pl.col("resident") == resident_dict[config.RESIDENTS_PRIMARY_LABEL])
+                & (pl.col("week") < week_dict[config.WEEKS_PRIMARY_LABEL])
                 & (pl.col("rotation").is_in(prereq_fulfilling_rotations))
             )
 
             completed_weeks_this_year: cp.core.Comparison | int = cp.sum(
-                weeks_before_this[cpmpy_variable_column]
+                weeks_before_this[config.CPMPY_VARIABLE_COLUMN]
             )
 
             match completed_weeks_this_year, completed_weeks_prior_years:
                 case 0, 0:
                     constraint = ~cp.any(
-                        prereq_demanders_this_week[cpmpy_variable_column]
+                        prereq_demanders_this_week[config.CPMPY_VARIABLE_COLUMN]
                     )
                 case completed_weeks_this_year, 0:
                     constraint = cp.any(
-                        prereq_demanders_this_week[cpmpy_variable_column]
+                        prereq_demanders_this_week[config.CPMPY_VARIABLE_COLUMN]
                     ).implies(completed_weeks_this_year >= prereq_weeks)
                 case 0, completed_weeks_prior_years:
                     constraint = cp.any(
-                        prereq_demanders_this_week[cpmpy_variable_column]
+                        prereq_demanders_this_week[config.CPMPY_VARIABLE_COLUMN]
                     ).implies(completed_weeks_prior_years >= prereq_weeks)
                 case completed_weeks_this_year, completed_weeks_prior_years:
                     constraint = cp.any(
-                        prereq_demanders_this_week[cpmpy_variable_column]
+                        prereq_demanders_this_week[config.CPMPY_VARIABLE_COLUMN]
                     ).implies(
                         completed_weeks_this_year + completed_weeks_prior_years
                         >= prereq_weeks
@@ -527,7 +521,7 @@ def force_literal_value_over_range(
     cumulative_constraints = list()
 
     for scheduled_row_dict in subset_scheduled.iter_rows(named=True):
-        constraint = scheduled_row_dict[cpmpy_variable_column] == literal
+        constraint = scheduled_row_dict[config.CPMPY_VARIABLE_COLUMN] == literal
         # TODO debug only
         if not (isinstance(constraint, cp.core.Comparison) or cp.core.is_boolexpr(constraint)):
             raise ValueError(

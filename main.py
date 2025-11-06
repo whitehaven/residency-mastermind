@@ -4,7 +4,7 @@ import box
 import cpmpy as cp
 import polars as pl
 
-from config import config
+import config
 from constraints import (
     enforce_requirement_constraints,
     enforce_rotation_capacity_maximum,
@@ -54,7 +54,7 @@ def solve_schedule(
     # TODO Constraints
     # resident-specific
 
-    current_requirements = box.box_from_file(config.default_requirements_path)
+    current_requirements = box.box_from_file(config.DEFAULT_REQUIREMENTS_PATH)
     if not isinstance(current_requirements, box.Box):
         raise TypeError
 

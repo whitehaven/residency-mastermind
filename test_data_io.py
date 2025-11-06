@@ -1,6 +1,6 @@
 import polars as pl
 
-from config import config
+import config
 from data_io import (
     read_bulk_data_sqlite3,
     generate_pl_wrapped_boolvar,
@@ -8,7 +8,7 @@ from data_io import (
 
 
 def test_read_bulk_data_sqlite3():
-    test_read_tables = read_bulk_data_sqlite3(config.testing_db_path)
+    test_read_tables = read_bulk_data_sqlite3(config.TESTING_DB_PATH)
     assert isinstance(test_read_tables["residents"], pl.DataFrame)
 
     dtype_of_weeks_monday_date = (
@@ -20,9 +20,11 @@ def test_read_bulk_data_sqlite3():
 
 
 def test_generate_pl_wrapped_boolvar():
-    tester_residents = pl.read_csv(config.testing_files.residents.real_size_seniors)
-    tester_rotations = pl.read_csv(config.testing_files.rotations.real_size)
-    tester_weeks = pl.read_csv(config.testing_files.weeks.full_academic_year_2025_2026)
+    tester_residents = pl.read_csv(config.TESTING_FILES["residents"]["real_size_seniors"])
+    tester_rotations = pl.read_csv(config.TESTING_FILES["rotations"]["real_size"])
+    tester_weeks = pl.read_csv(
+        config.TESTING_FILES["weeks"]["full_academic_year_2025_2026"], try_parse_dates=True
+    )
 
     fake_scheduled = generate_pl_wrapped_boolvar(
         tester_residents, tester_rotations, tester_weeks

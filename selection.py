@@ -2,48 +2,44 @@ import warnings
 
 import polars as pl
 
-from config import config
-
-cpmpy_variable_column = config.cpmpy_variable_column
-cpmpy_result_column = config.cpmpy_result_column
-default_solver = config.default_cpmpy_solver
+import config
 
 
 def get_resident_week_vars(
-    scheduled: pl.DataFrame, resident_name: str, week_date
+        scheduled: pl.DataFrame, resident_name: str, week_date
 ) -> list:
     # TODO test if works
     """Get all rotation variables for a specific resident and week."""
     return scheduled.filter(
         (pl.col("resident") == resident_name) & (pl.col("week") == week_date)
-    )[cpmpy_variable_column].to_list()
+    )[config.CPMPY_VARIABLE_COLUMN].to_list()
 
 
 def get_rotation_week_vars(
-    scheduled: pl.DataFrame, rotation_name: str, week_date
+        scheduled: pl.DataFrame, rotation_name: str, week_date
 ) -> list:
     # TODO test if works
     """Get all resident variables for a specific rotation and week."""
     return scheduled.filter(
         (pl.col("rotation") == rotation_name) & (pl.col("week") == week_date)
-    )[cpmpy_variable_column].to_list()
+    )[config.CPMPY_VARIABLE_COLUMN].to_list()
 
 
 def get_resident_rotation_vars(
-    scheduled: pl.DataFrame, resident_name: str, rotation_name: str
+        scheduled: pl.DataFrame, resident_name: str, rotation_name: str
 ) -> list:
     # TODO test if works
     """Get all week variables for a specific resident and rotation."""
     return scheduled.filter(
         (pl.col("resident") == resident_name) & (pl.col("rotation") == rotation_name)
-    )[cpmpy_variable_column].to_list()
+    )[config.CPMPY_VARIABLE_COLUMN].to_list()
 
 
 def subset_scheduled_by(
-    residents: pl.DataFrame | list[str],
-    rotations: pl.DataFrame | list[str],
-    weeks: pl.DataFrame | list[str],
-    scheduled: pl.DataFrame,
+        residents: pl.DataFrame | list[str],
+        rotations: pl.DataFrame | list[str],
+        weeks: pl.DataFrame | list[str],
+        scheduled: pl.DataFrame,
 ) -> pl.DataFrame:
     """
     Subset the scheduled dataframe of cpmpy variables by supplied residents, rotations, and weeks.
@@ -91,9 +87,9 @@ def subset_scheduled_by(
 
 
 def group_scheduled_df_by_for_each(
-    subset_scheduled: pl.DataFrame,
-    for_each_individual: list[str] | str,
-    group_on_column: str,
+        subset_scheduled: pl.DataFrame,
+        for_each_individual: list[str] | str,
+        group_on_column: str,
 ) -> pl.DataFrame:
     """
     Get grouped subframes containing grouped decision variables by those fields which are "for each (individual)" when used for
@@ -116,7 +112,7 @@ def group_scheduled_df_by_for_each(
     constraint application and can then be processed in the next function.
     """
     assert (
-        group_on_column in subset_scheduled.columns
+            group_on_column in subset_scheduled.columns
     ), f"{group_on_column} not in {subset_scheduled.columns}"
     grouped = subset_scheduled.group_by(for_each_individual).agg(
         pl.col(group_on_column)
