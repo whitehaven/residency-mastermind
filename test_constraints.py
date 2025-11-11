@@ -1214,7 +1214,11 @@ def sample_literal_reqs_matching_barely_fit_R2_no_prereqs_weekwise(
     subset_scheduled_for_literal = scheduled.filter(
         (pl.col("resident").is_in(["Fourth Guy"]))
         & (pl.col("rotation").is_in(["Green HS Senior"]))
-        & (pl.col("week").is_in(weeks.row(1)[config.WEEKS_PRIMARY_LABEL].implode()))
+        & (
+            pl.col("week").is_in(
+                weeks.row(1, named=True)[config.WEEKS_PRIMARY_LABEL]
+            )
+        )
     )
 
     literal = False
