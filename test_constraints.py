@@ -259,7 +259,9 @@ def verify_minimum_contiguity(
 
     Args:
         constraint: python-box describing minimum contiguity constraint or "use_rotations_data" which will pull instead from the rotations dataframe. (This is not the intended final function.)
+        residents:
         rotations: DataFrame with rotations that have minimum_contiguous_weeks constraints
+        weeks:
         solved_schedule: Melted schedule DataFrame with columns:
                         ['resident', 'rotation', 'week', 'scheduled'] where
                         'scheduled' is boolean indicating if resident is on rotation that week
@@ -1019,8 +1021,9 @@ def sample_literal_reqs_matching_barely_fit_R2_no_prereqs_single_element(
     week_target = weeks.head(1)
 
     subset_scheduled_for_literal = scheduled.filter(
-        (pl.col("resident").is_in(resident_target)) & (pl.col("rotation").is_in(rotation_target)) & (
-            pl.col("week").is_in(week_target[config.WEEKS_PRIMARY_LABEL]))
+        (pl.col("resident").is_in(resident_target))
+        & (pl.col("rotation").is_in(rotation_target))
+        & (pl.col("week").is_in(week_target[config.WEEKS_PRIMARY_LABEL]))
     )
 
     literal = True
@@ -1103,6 +1106,9 @@ def test_force_literal_value_over_range_single_element(
 def sample_literal_reqs_matching_barely_fit_R2_no_prereqs_block_element(
     sample_barely_fit_R2s_no_prereqs,
 ):
+    """
+    Sample subset of scheduled dataframe which requires "Fourth Guy" never to be on Green over the 8 weeks available.
+    """
     (
         residents,
         rotations,
@@ -1131,6 +1137,9 @@ def test_force_literal_value_over_range_block_element(
     sample_barely_fit_R2s_no_prereqs,
     sample_literal_reqs_matching_barely_fit_R2_no_prereqs_block_element,
 ):
+    """
+    Excludes "Fourth Guy" from Green during all 8 weeks in question.
+    """
     (
         residents,
         rotations,
@@ -1214,21 +1223,23 @@ def sample_literal_reqs_matching_barely_fit_R2_no_prereqs_weekwise(
     subset_scheduled_for_literal = scheduled.filter(
         (pl.col("resident").is_in(["Fourth Guy"]))
         & (pl.col("rotation").is_in(["Green HS Senior"]))
-        & (
-            pl.col("week").is_in(
-                weeks.row(1, named=True)[config.WEEKS_PRIMARY_LABEL]
-            )
-        )
+        & (pl.col("week").is_in(weeks.row(1, named=True)[config.WEEKS_PRIMARY_LABEL]))
     )
 
     literal = False
 
     return subset_scheduled_for_literal, literal
 
+
 def test_force_literal_value_over_range_weekwise(
     sample_barely_fit_R2s_no_prereqs,
     sample_literal_reqs_matching_barely_fit_R2_no_prereqs_weekwise,
 ):
+    """
+    Args:
+        sample_barely_fit_R2s_no_prereqs: fixture with R2s only which barely fit (4 residents having to do 4 weeks of one of two rotations over 8 weeks)
+        sample_literal_reqs_matching_barely_fit_R2_no_prereqs_weekwise: demands that first week has a certain composition
+    """
     (
         residents,
         rotations,
