@@ -40,7 +40,7 @@ def convert_melted_to_block_schedule(solved_schedule: pl.DataFrame) -> pl.DataFr
         block_schedule: pivoted df
     """
     renderable_df = solved_schedule.select(pl.all().exclude(config.CPMPY_VARIABLE_COLUMN))
-    filtered_long_format = renderable_df.filter(pl.col(config.CPMPY_VARIABLE_COLUMN))
+    filtered_long_format = renderable_df.filter(pl.col(config.CPMPY_RESULT_COLUMN))
     block_schedule = filtered_long_format.pivot(
         "week", index="resident", values="rotation"
     )
