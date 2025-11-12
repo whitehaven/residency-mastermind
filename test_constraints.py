@@ -17,7 +17,11 @@ from constraints import (
     force_literal_value_over_range,
 )
 from data_io import generate_pl_wrapped_boolvar
-from display import extract_solved_schedule
+from display import (
+    extract_solved_schedule,
+    convert_melted_to_block_schedule,
+    reconstruct_melted_from_block_schedule,
+)
 from requirement_builder import (
     RequirementBuilder,
 )
@@ -1239,6 +1243,126 @@ def test_force_literal_value_over_range_weekwise(
     Args:
         sample_barely_fit_R2s_no_prereqs: fixture with R2s only which barely fit (4 residents having to do 4 weeks of one of two rotations over 8 weeks)
         sample_literal_reqs_matching_barely_fit_R2_no_prereqs_weekwise: demands that first week has a certain composition
+    """
+    (
+        residents,
+        rotations,
+        weeks,
+        current_requirements,
+        prior_rotations_completed,
+        scheduled,
+    ) = sample_barely_fit_R2s_no_prereqs
+
+    model = cp.Model()
+
+    requirement_constraints = enforce_requirement_constraints(
+        current_requirements,
+        residents,
+        rotations,
+        weeks,
+        prior_rotations_completed,
+        scheduled,
+    )
+
+    model += requirement_constraints
+
+    model += require_one_rotation_per_resident_per_week(
+        residents, rotations, weeks, scheduled
+    )
+    model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
+    model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
+
+    scheduled_subset_constrained_to_literal, literal = (
+        sample_literal_reqs_matching_barely_fit_R2_no_prereqs_weekwise
+    )
+
+    model += force_literal_value_over_range(
+        scheduled_subset_constrained_to_literal, literal
+    )
+
+    is_feasible = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
+    if not is_feasible:
+        from cpmpy.tools import mus
+        import pprint
+
+        print()
+        pprint.pprint(mus(model.constraints))
+        raise ValueError("Infeasible")
+
+    melted_solved_schedule = extract_solved_schedule(scheduled)
+
+    blockmode = convert_melted_to_block_schedule(melted_solved_schedule)
+
+    dump = blockmode.to_init_repr()
+
+    assert verify_enforce_requirement_constraints(
+        current_requirements,
+        residents,
+        rotations,
+        weeks,
+        prior_rotations_completed,
+        melted_solved_schedule,
+    ), "verify_enforce_requirement_constraints returns False"
+
+    melted_solved_schedule_targeted_to_literal = melted_solved_schedule.join(
+        scheduled_subset_constrained_to_literal,
+        on=["resident", "rotation", "week"],
+        how="inner",
+    )
+
+    assert verify_literal_value_over_range(
+        melted_solved_schedule_targeted_to_literal, literal
+    )
+
+
+@pytest.fixture
+def sample_literal_reqs_matching_barely_fit_R2_no_prereqs_lock_past_weeks(
+    sample_barely_fit_R2s_no_prereqs,
+):
+
+    (
+        residents,
+        rotations,
+        weeks,
+        current_requirements,
+        prior_rotations_completed,
+        scheduled,
+    ) = sample_barely_fit_R2s_no_prereqs
+
+    goal_block = pl.DataFrame(
+        [
+            pl.Series(
+                "resident",
+                ["First Guy", "Second Guy", "Third Guy", "Fourth Guy"],
+                dtype=pl.String,
+            ),
+            pl.Series(
+                "2025-06-30",
+                ["Elective", "Elective", "Orange HS Senior", "Green HS Senior"],
+                dtype=pl.String,
+            ),
+            pl.Series(
+                "2025-07-07",
+                ["Elective", "Elective", "Orange HS Senior", "Green HS Senior"],
+                dtype=pl.String,
+            ),
+        ]
+    )
+
+    subset_scheduled_for_literal = reconstruct_melted_from_block_schedule(goal_block)
+
+    literal = True
+
+    return subset_scheduled_for_literal, literal
+
+
+def test_force_literal_value_over_range_lock_past_weeks(
+    sample_barely_fit_R2s_no_prereqs,
+    sample_literal_reqs_matching_barely_fit_R2_no_prereqs_lock_past_weeks,
+):
+    """
+    Args:
+        sample_barely_fit_R2s_no_prereqs: fixture with R2s only which barely fit (4 residents having to do 4 weeks of one of two rotations over 8 weeks)
     """
     (
         residents,

@@ -49,3 +49,20 @@ def convert_melted_to_block_schedule(solved_schedule: pl.DataFrame) -> pl.DataFr
             f"{block_schedule.is_empty()=}, usually occurs because > 1 True rotation slot per resident:week locus"
         )
     return block_schedule
+
+
+def reconstruct_melted_from_block_schedule(
+    block_schedule: pl.DataFrame,
+) -> pl.DataFrame:
+    """
+    Rebuild melted schedule from block. Keep in mind it only returns True loci because False values don't carry through in convert_melted_to_block_schedule
+    Args:
+        block_schedule:
+    Returns:
+        reconstructed_melted_schedule: again, the True-only variable components are all that will reappear.
+    """
+    unpivoted = block_schedule.unpivot(index=config.BLOCK_SCHEDULE_INDEX)
+    unpivoted_with_true_literal = unpivoted.with_columns(
+        pl.lit(value=True).alias(config.CPMPY_RESULT_COLUMN)
+    )
+    return unpivoted_with_true_literal

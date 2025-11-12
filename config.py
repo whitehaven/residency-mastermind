@@ -1,4 +1,5 @@
 ALLOWABLE_YEAR_OPTIONS = {"R2", "R3", "R3 Extended"}
+BLOCK_SCHEDULE_INDEX = "resident"
 CPMPY_VARIABLE_COLUMN = "is_scheduled_cp_var"
 CPMPY_RESULT_COLUMN = "is_scheduled_result"
 RESIDENTS_PRIMARY_LABEL = "full_name"
