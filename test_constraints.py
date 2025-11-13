@@ -1450,3 +1450,10 @@ def verify_literal_value_over_range(
         if not element_equals_literal:
             return False
     return True
+
+@pytest.fixture
+def sample_rarely_available_rotation() -> pl.DataFrame:
+    raise NotImplementedError
+
+def test_rarely_available_rotation():
+    raise NotImplementedError
