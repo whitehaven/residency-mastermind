@@ -1349,7 +1349,13 @@ def sample_literal_reqs_matching_barely_fit_R2_no_prereqs_lock_past_weeks(
         ]
     )
 
-    subset_scheduled_for_literal = reconstruct_melted_from_block_schedule(goal_block)
+    melted = reconstruct_melted_from_block_schedule(goal_block).select(
+        pl.all().exclude(config.CPMPY_RESULT_COLUMN)
+    )
+
+    subset_scheduled_for_literal = scheduled.join(
+        melted, how="inner", on=["resident", "rotation", "week"]
+    )
 
     literal = True
 
@@ -1393,7 +1399,7 @@ def test_force_literal_value_over_range_lock_past_weeks(
     model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
 
     scheduled_subset_constrained_to_literal, literal = (
-        sample_literal_reqs_matching_barely_fit_R2_no_prereqs_weekwise
+        sample_literal_reqs_matching_barely_fit_R2_no_prereqs_lock_past_weeks
     )
 
     model += force_literal_value_over_range(
@@ -1438,7 +1444,9 @@ def verify_literal_value_over_range(
     for scheduled_row_dict in solved_schedule_which_should_equal_literal.iter_rows(
         named=True
     ):
-        element_equals_literal = scheduled_row_dict[config.CPMPY_RESULT_COLUMN] == literal
+        element_equals_literal = (
+            scheduled_row_dict[config.CPMPY_RESULT_COLUMN] == literal
+        )
         if not element_equals_literal:
             return False
     return True
