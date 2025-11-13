@@ -61,8 +61,10 @@ def reconstruct_melted_from_block_schedule(
     Returns:
         reconstructed_melted_schedule: again, the True-only variable components are all that will reappear.
     """
-    unpivoted = block_schedule.unpivot(index=config.BLOCK_SCHEDULE_INDEX)
-    unpivoted_with_true_literal = unpivoted.with_columns(
+    melted = block_schedule.unpivot(index=config.BLOCK_SCHEDULE_INDEX)
+    melted.columns = ["resident", "week", "rotation"]
+    melted_fixed_date_column = melted.with_columns(week=pl.col("week").str.to_date())
+    melted_with_true_literal = melted_fixed_date_column.with_columns(
         pl.lit(value=True).alias(config.CPMPY_RESULT_COLUMN)
     )
-    return unpivoted_with_true_literal
+    return melted_with_true_literal
