@@ -1435,7 +1435,7 @@ def test_force_literal_value_over_range_lock_past_weeks(
     assert verify_literal_value_over_range(
         melted_solved_schedule_targeted_to_literal, literal
     )
-
+    
 
 def verify_literal_value_over_range(
     solved_schedule_which_should_equal_literal: pl.DataFrame,

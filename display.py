@@ -57,9 +57,11 @@ def reconstruct_melted_from_block_schedule(
     """
     Rebuild melted schedule from block. Keep in mind it only returns True loci because False values don't carry through in convert_melted_to_block_schedule
     Args:
-        block_schedule:
+        block_schedule: schedule arranged in block format (resident rows, date columns, intersections with rotation name)
     Returns:
-        reconstructed_melted_schedule: again, the True-only variable components are all that will reappear.
+        reconstructed_melted_schedule: schedule arranged in melted format with rows of resident, week, rotation, and a boolean variable or boolean on each row
+    Caveat:
+     the True-only variable components are all that will reappear. They are returned with (generated) true values to the correct column.
     """
     melted = block_schedule.unpivot(index=config.BLOCK_SCHEDULE_INDEX)
     melted.columns = ["resident", "week", "rotation"]
