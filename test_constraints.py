@@ -27,7 +27,9 @@ from requirement_builder import (
 )
 from selection import group_scheduled_df_by_for_each, subset_scheduled_by
 
-real_size_residents = pl.read_csv(config.TESTING_FILES["residents"]["real_size_seniors"])
+real_size_residents = pl.read_csv(
+    config.TESTING_FILES["residents"]["real_size_seniors"]
+)
 real_size_rotations = pl.read_csv(config.TESTING_FILES["rotations"]["real_size"])
 one_academic_year_weeks = pl.read_csv(
     config.TESTING_FILES["weeks"]["full_academic_year_2025_2026"], try_parse_dates=True
@@ -1435,7 +1437,7 @@ def test_force_literal_value_over_range_lock_past_weeks(
     assert verify_literal_value_over_range(
         melted_solved_schedule_targeted_to_literal, literal
     )
-    
+
 
 def verify_literal_value_over_range(
     solved_schedule_which_should_equal_literal: pl.DataFrame,
@@ -1451,9 +1453,125 @@ def verify_literal_value_over_range(
             return False
     return True
 
-@pytest.fixture
-def sample_rarely_available_rotation() -> pl.DataFrame:
-    raise NotImplementedError
 
-def test_rarely_available_rotation():
+@pytest.fixture
+def sample_rarely_available_rotation(sample_barely_fit_R2s_no_prereqs):
+
+    residents = pl.DataFrame(
+        {
+            "full_name": ["First Guy", "Second Guy", "Third Guy", "Fourth Guy"],
+            "year": ["R2", "R2", "R2", "R2"],
+        }
+    )
+    rotations = pl.DataFrame(
+        {
+            "rotation": ["Green HS Senior", "Elective"],
+            "category": ["HS Rounding Senior", "Elective"],
+            "required_role": ["Senior", "Any"],
+            "minimum_residents_assigned": [1, 0],
+            "maximum_residents_assigned": [1, 10],
+            "minimum_contiguous_weeks": [2, None],
+        }
+    )
+    weeks = one_academic_year_weeks.head(n=9)
+
+    weeks_with_SOM = weeks.tail(2)  # maybe better if randomly distributed
+
+    builder = RequirementBuilder()
+    (
+        builder.add_requirement(
+            "HS Rounding Senior",
+            fulfilled_by=[
+                "Green HS Senior",
+                "Orange HS Senior",
+            ],
+        )
+        .min_weeks_over_resident_years(4, ["R2"])
+        .min_contiguity_over_resident_years(4, ["R2"])
+    )
+    (
+        builder.add_requirement(
+            name="Elective", fulfilled_by=["Elective"]
+        ).max_weeks_over_resident_years(12, ["R2"])
+    )
+
+    (
+        builder.add_requirement(
+            name="SOM", fulfilled_by=["SOM"]
+        ).min_weeks_over_resident_years(1, ["R2"])
+    )
+    current_requirements = builder.accumulate_constraints_by_rule()
+
+    scheduled = generate_pl_wrapped_boolvar(
+        residents,
+        rotations,
+        weeks,
+    )
+    prior_rotations_completed = pl.DataFrame(
+        {
+            "resident": [],
+            "rotation": [],
+            "completed_weeks": [],
+        }
+    )
+    return (
+        residents,
+        rotations,
+        weeks,
+        weeks_with_SOM,
+        current_requirements,
+        scheduled,
+        prior_rotations_completed,
+    )
+
+
+def test_rarely_available_rotation(sample_rarely_available_rotation):
+    (
+        residents,
+        rotations,
+        weeks,
+        weeks_with_SOM,
+        current_requirements,
+        scheduled,
+        prior_rotations_completed,
+    ) = sample_rarely_available_rotation
+
+    model = cp.Model()
+
+    requirement_constraints = enforce_requirement_constraints(
+        current_requirements,
+        residents,
+        rotations,
+        weeks,
+        prior_rotations_completed,
+        scheduled,
+    )
+
+    model += requirement_constraints
+
+    model += require_one_rotation_per_resident_per_week(
+        residents, rotations, weeks, scheduled
+    )
+    model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
+    model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
+
+    is_feasible = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
+    if not is_feasible:
+        from cpmpy.tools import mus
+        import pprint
+
+        print()
+        pprint.pprint(mus(model.constraints))
+        raise ValueError("Infeasible")
+
+    melted_solved_schedule = extract_solved_schedule(scheduled)
+
+    assert verify_enforce_requirement_constraints(
+        current_requirements,
+        residents,
+        rotations,
+        weeks,
+        prior_rotations_completed,
+        melted_solved_schedule,
+    ), "verify_enforce_requirement_constraints returns False"
     raise NotImplementedError
