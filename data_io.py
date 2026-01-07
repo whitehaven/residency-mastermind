@@ -56,16 +56,17 @@ def generate_pl_wrapped_boolvar(
         pl.DataFrame `scheduled`: wrapped around 3D array of residents, rotations, weeks
         for ease of complex indexing by string variables.
     """
-    scheduled_vars = cp.boolvar(
-        shape=(len(residents), len(rotations), len(weeks)), name="is_scheduled"  # type: ignore
-    )
-    
+
     residents_list = residents["full_name"].to_list()
     rotations_list = rotations["rotation"].to_list()
     weeks_list = weeks["monday_date"].to_list()
     combinations = list(itertools.product(residents_list, rotations_list, weeks_list))
 
-      # TODO: generate names array
+    variable_labels = [f"{combo[0]}, {combo[1]}, {combo[2]}" for combo in combinations]
+
+    scheduled_vars: list[str] = cp.boolvar(
+        shape=(len(residents) * len(rotations) * len(weeks)), name=variable_labels  # type: ignore
+    )
 
     scheduled = pl.DataFrame(
         {
