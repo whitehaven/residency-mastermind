@@ -59,11 +59,13 @@ def generate_pl_wrapped_boolvar(
     scheduled_vars = cp.boolvar(
         shape=(len(residents), len(rotations), len(weeks)), name="is_scheduled"  # type: ignore
     )
-
+    
     residents_list = residents["full_name"].to_list()
     rotations_list = rotations["rotation"].to_list()
     weeks_list = weeks["monday_date"].to_list()
     combinations = list(itertools.product(residents_list, rotations_list, weeks_list))
+
+      # TODO: generate names array
 
     scheduled = pl.DataFrame(
         {
