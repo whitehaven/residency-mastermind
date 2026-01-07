@@ -62,7 +62,7 @@ def generate_pl_wrapped_boolvar(
     weeks_list = weeks["monday_date"].to_list()
     combinations = list(itertools.product(residents_list, rotations_list, weeks_list))
 
-    variable_labels = [f"{combo[0]}, {combo[1]}, {combo[2]}" for combo in combinations]
+    variable_labels = [f"boolvar@({combo[0]}, {combo[1]}, {combo[2]})" for combo in combinations]
 
     scheduled_vars: list[str] = cp.boolvar(
         shape=(len(residents) * len(rotations) * len(weeks)), name=variable_labels  # type: ignore
