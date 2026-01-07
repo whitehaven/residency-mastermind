@@ -1575,3 +1575,7 @@ def test_rarely_available_rotation(sample_rarely_available_rotation):
         melted_solved_schedule,
     ), "verify_enforce_requirement_constraints returns False"
     raise NotImplementedError
+
+
+def test_enforce_block_alignment():
+    raise NotImplementedError
