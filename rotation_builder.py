@@ -2,7 +2,6 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Any
 
 import polars as pl
-from icecream import ic
 
 
 @dataclass
@@ -14,10 +13,7 @@ class RotationRule:
         """
         Mark off weeks.
         Args:
-            weeks:
-
-        Returns:
-
+            weeks: unavailable weeks
         """
         self._constraints.append(
             {
@@ -32,10 +28,7 @@ class RotationRule:
         """
         Mark only available weeks. Not for use with unavailable_weeks_this_year()
         Args:
-            weeks:
-
-        Returns:
-
+            weeks: weeks available
         """
         self._constraints.append(
             {
@@ -158,21 +151,3 @@ class RotationBuilder:
         completed_constraints_df = pl.DataFrame(constraints_data)
 
         return completed_constraints_df
-
-
-if __name__ == "__main__":
-    import yaml
-
-    builder = RotationBuilder()
-
-    (builder.add_rotation("Night Float Backup").exactly_n_residents(1, [1, 5]))
-
-    builder.add_rotation("HS Orange Senior").exactly_n_residents(1, period="full")
-    builder.add_rotation("HS Green Senior").exactly_n_residents(1, period="full")
-    builder.add_rotation("SHMC ICU Senior").exactly_n_residents(1, period="full")
-
-    ic(builder.rotations)
-
-    ic(builder.generate_constraints_df())
-
-    print(yaml.dump(builder.rotations))

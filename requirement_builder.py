@@ -365,11 +365,3 @@ def generate_builder_doable_with_R2s_only_and_prereqs() -> RequirementBuilder:
         ).exact_weeks_over_resident_years(4, ["R2"])
     )
     return builder
-
-
-if __name__ == "__main__":
-    from config import config
-
-    current_builder = generate_builder_with_current_requirements()
-    current_builder.write_builder_to_yaml(config.default_requirements_path)
-    print(f"rebuilt requirements at {config.default_requirements_path}")
