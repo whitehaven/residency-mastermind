@@ -26,6 +26,10 @@ be reusable.
 - [ ] block-match constraints (must be all in one block or touching border)
 - [ ] optimization for preferences
 
+#### Other concerns
+
+Starting to run into problems with irregular requirement structures, like super R3s. Perhaps makes sense to do a builder class for residents too.
+
 ## Main Problem
 
 ### Decision Variables
