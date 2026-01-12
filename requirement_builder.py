@@ -179,7 +179,7 @@ class RequirementBuilder:
         )
 
     def write_builder_to_yaml(self, path: str = "requirements.yaml"):
-        builder_box = box.Box(current_builder.accumulate_constraints_by_rule())
+        builder_box = box.Box(self.accumulate_constraints_by_rule())
         builder_box.to_yaml(path)
 
 
