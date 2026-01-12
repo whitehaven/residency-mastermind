@@ -1,5 +1,6 @@
-# exclude scratch directory for notebook investigations
+# exclude scratch files/directory for notebook investigations
 scratch/
+scratch.*
 
 # exclude confidential IMR policies
 IMR_policy/
