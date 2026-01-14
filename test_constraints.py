@@ -1469,17 +1469,17 @@ def sample_rarely_available_rotation(sample_barely_fit_R2s_no_prereqs):
     )
     rotations = pl.DataFrame(
         {
-            "rotation": ["Green HS Senior", "Elective"],
-            "category": ["HS Rounding Senior", "Elective"],
-            "required_role": ["Senior", "Any"],
-            "minimum_residents_assigned": [1, 0],
-            "maximum_residents_assigned": [1, 10],
-            "minimum_contiguous_weeks": [2, None],
+            "rotation": ["Green HS Senior", "Elective","SOM"],
+            "category": ["HS Rounding Senior", "Elective","SOM"],
+            "required_role": ["Senior", "Any","Senior"],
+            "minimum_residents_assigned": [1, 0,0],
+            "maximum_residents_assigned": [1, 10,10],
+            "minimum_contiguous_weeks": [2, None,2],
         }
     )
     weeks = one_academic_year_weeks.head(n=9)
 
-    weeks_with_SOM = weeks.tail(2)  # maybe better if randomly distributed
+    weeks_with_SOM = weeks.tail(2) #needs 2 spans  # maybe better if randomly distributed
 
     builder = RequirementBuilder()
     (
