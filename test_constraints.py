@@ -22,9 +22,7 @@ from display import (
     convert_melted_to_block_schedule,
     reconstruct_melted_from_block_schedule,
 )
-from requirement_builder import (
-    RequirementBuilder,
-)
+from requirement_builder import RequirementBuilder
 from selection import group_scheduled_df_by_for_each, subset_scheduled_by
 
 real_size_residents = pl.read_csv(
