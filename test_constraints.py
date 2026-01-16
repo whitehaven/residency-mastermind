@@ -1464,7 +1464,7 @@ def verify_literal_value_over_range(
 
 
 @pytest.fixture
-def sample_rarely_available_rotation(sample_barely_fit_R2s_no_prereqs):
+def sample_rarely_available_rotation():
 
     residents = pl.DataFrame(
         {
@@ -1474,17 +1474,23 @@ def sample_rarely_available_rotation(sample_barely_fit_R2s_no_prereqs):
     )
     rotations = pl.DataFrame(
         {
-            "rotation": ["Green HS Senior", "Elective","SOM"],
-            "category": ["HS Rounding Senior", "Elective","SOM"],
-            "required_role": ["Senior", "Any","Senior"],
-            "minimum_residents_assigned": [1, 0,0],
-            "maximum_residents_assigned": [1, 10,10],
-            "minimum_contiguous_weeks": [2, None,2],
+            "rotation": ["Green HS Senior", "Elective", "SOM"],
+            "category": ["HS Rounding Senior", "Elective", "SOM"],
+            "required_role": ["Senior", "Any", "Senior"],
+            "minimum_residents_assigned": [1, 0, 0],
+            "maximum_residents_assigned": [1, 10, 10],
+            "minimum_contiguous_weeks": [2, None, 2],
         }
     )
-    weeks = one_academic_year_weeks.head(n=9)
+    weeks = one_academic_year_weeks.head(n=16)
 
-    weeks_with_SOM = weeks.tail(2) #needs 2 spans  # maybe better if randomly distributed
+    SOM_indices = [1, 7]
+
+    weeks_with_SOM = (
+        weeks.with_row_index("index")
+        .filter(pl.col("index").is_in(SOM_indices))
+        .drop("index")
+    )
 
     builder = RequirementBuilder()
     (
@@ -1492,7 +1498,6 @@ def sample_rarely_available_rotation(sample_barely_fit_R2s_no_prereqs):
             "HS Rounding Senior",
             fulfilled_by=[
                 "Green HS Senior",
-                "Orange HS Senior",
             ],
         )
         .min_weeks_over_resident_years(4, ["R2"])
@@ -1503,7 +1508,6 @@ def sample_rarely_available_rotation(sample_barely_fit_R2s_no_prereqs):
             name="Elective", fulfilled_by=["Elective"]
         ).max_weeks_over_resident_years(12, ["R2"])
     )
-
     (
         builder.add_requirement(
             name="SOM", fulfilled_by=["SOM"]
@@ -1516,6 +1520,7 @@ def sample_rarely_available_rotation(sample_barely_fit_R2s_no_prereqs):
         rotations,
         weeks,
     )
+
     prior_rotations_completed = pl.DataFrame(
         {
             "resident": [],
@@ -1523,6 +1528,7 @@ def sample_rarely_available_rotation(sample_barely_fit_R2s_no_prereqs):
             "completed_weeks": [],
         }
     )
+
     return (
         residents,
         rotations,
