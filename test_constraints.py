@@ -35,10 +35,15 @@ one_academic_year_weeks = pl.read_csv(
     config.TESTING_FILES["weeks"]["full_academic_year_2025_2026"], try_parse_dates=True
 )
 
-def dump_resulting_block(melted_solved_schedule:pl.DataFrame,csv_filepath="block.csv")-> None:
+
+def dump_resulting_block(
+    melted_solved_schedule: pl.DataFrame, csv_filepath="block.csv"
+) -> None:
     from display import convert_melted_to_block_schedule
+
     block_schedule = convert_melted_to_block_schedule(melted_solved_schedule)
     block_schedule.write_csv(csv_filepath)
+
 
 def test_require_one_rotation_per_resident_per_week() -> None:
 
