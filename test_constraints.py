@@ -37,7 +37,7 @@ one_academic_year_weeks = pl.read_csv(
 
 
 def dump_resulting_block(
-    melted_solved_schedule: pl.DataFrame, csv_filepath="block.csv"
+    melted_solved_schedule: pl.DataFrame, csv_filepath="scratch_output.csv"
 ) -> None:
     from display import convert_melted_to_block_schedule
 
