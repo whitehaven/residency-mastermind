@@ -1570,6 +1570,22 @@ def test_rarely_available_rotation(sample_rarely_available_rotation):
     model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
     model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
 
+    limited_week_rotation_names = ["SOM"]
+    limited_week_rotations = rotations.filter(
+        pl.col("rotation").is_in(limited_week_rotation_names)
+    )
+
+    excluded_weeks = weeks.join(weeks_with_SOM, on=weeks.columns, how="anti")
+
+    scheduled_subset_subject_to_week_exclusion = subset_scheduled_by(
+        residents, limited_week_rotations, excluded_weeks, scheduled
+    )
+    literal = False
+
+    model += force_literal_value_over_range(
+        scheduled_subset_subject_to_week_exclusion, literal
+    )
+
     is_feasible = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
     if not is_feasible:
         from cpmpy.tools import mus
@@ -1589,7 +1605,14 @@ def test_rarely_available_rotation(sample_rarely_available_rotation):
         prior_rotations_completed,
         melted_solved_schedule,
     ), "verify_enforce_requirement_constraints returns False"
-    raise NotImplementedError
+
+    melted_solved_schedule_for_weeks = extract_solved_schedule(
+        scheduled_subset_subject_to_week_exclusion
+    )
+
+    assert verify_literal_value_over_range(
+        melted_solved_schedule_for_weeks, literal=False
+    )
 
 
 def test_enforce_block_alignment():
