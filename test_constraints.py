@@ -1509,9 +1509,9 @@ def sample_rarely_available_rotation():
         ).max_weeks_over_resident_years(12, ["R2"])
     )
     (
-        builder.add_requirement(
-            name="SOM", fulfilled_by=["SOM"]
-        ).min_weeks_over_resident_years(1, ["R2"])
+        builder.add_requirement(name="SOM", fulfilled_by=["SOM"])
+        .min_weeks_over_resident_years(1, ["R2"])
+        .max_weeks_over_resident_years(1, ["R2"])
     )
     current_requirements = builder.accumulate_constraints_by_rule()
 
