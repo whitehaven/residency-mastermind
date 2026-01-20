@@ -4,6 +4,9 @@ version = "0.5.1.dev1"
 description = "Constraint satisfaction-based residency scheduling solver with support for complex structures of rotations, requirements, and preferences."
 readme = "README.md"
 requires-python = ">=3.13"
+dependencies = [
+    "fastexcel>=0.18.0",
+]
 
 [dependency-groups]
 core = [

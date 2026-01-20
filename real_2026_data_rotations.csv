@@ -1,0 +1,11 @@
+﻿rotation,category,minimum_residents_assigned,maximum_residents_assigned
+Green HS Senior,HS Rounding Senior,1,1
+Orange HS Senior,HS Rounding Senior,1,1
+Purple/Consults,HS Admitting Senior,1,2
+SHMC ICU Senior,ICU Senior,1,1
+SHMC Night Senior,Night Senior,1,1
+STHC Senior,Primary Care Senior,1,1
+Vacation,Vacation,0,15
+Systems of Medicine,Systems of Medicine,0,7
+IP Cardiology Senior,IP Cardiology Senior,0,1
+Elective,Elective,0,30
