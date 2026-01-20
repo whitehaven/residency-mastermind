@@ -1,3 +1,4 @@
+import pprint
 import warnings
 from datetime import timedelta
 from typing import Union
@@ -6,6 +7,7 @@ import box
 import cpmpy as cp
 import polars as pl
 import pytest
+from cpmpy.tools import mus
 
 import config
 from constraints import (
@@ -13,13 +15,13 @@ from constraints import (
     enforce_requirement_constraints,
     enforce_rotation_capacity_maximum,
     enforce_rotation_capacity_minimum,
-    require_one_rotation_per_resident_per_week,
     force_literal_value_over_range,
+    require_one_rotation_per_resident_per_week,
 )
 from data_io import generate_pl_wrapped_boolvar
 from display import (
-    extract_solved_schedule,
     convert_melted_to_block_schedule,
+    extract_solved_schedule,
     reconstruct_melted_from_block_schedule,
 )
 from requirement_builder import RequirementBuilder
@@ -32,6 +34,14 @@ real_size_rotations = pl.read_csv(config.TESTING_FILES["rotations"]["real_size"]
 one_academic_year_weeks = pl.read_csv(
     config.TESTING_FILES["weeks"]["full_academic_year_2025_2026"], try_parse_dates=True
 )
+
+
+def get_MUS(model: cp.Model) -> str:
+    return (
+        ">>> Minimum Unsatisfiable Core (MUS):\n"
+        + pprint.pformat(mus(model.constraints))
+        + "\n<<<"
+    )
 
 
 def test_require_one_rotation_per_resident_per_week() -> None:
@@ -547,11 +557,8 @@ def test_enforce_prerequisites_with_no_priors(
 
     is_feasible = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
     if not is_feasible:
-        from cpmpy.tools import mus
-        import pprint
-
-        print()
-        pprint.pprint(mus(model.constraints))
+        result = get_MUS(model)
+        print(result)
         raise ValueError("Infeasible")
 
     melted_solved_schedule = extract_solved_schedule(scheduled)
@@ -758,13 +765,8 @@ def test_simple_prerequisites_with_priors(sample_simple_prerequisites_with_prior
 
     is_feasible = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
     if not is_feasible:
-        from cpmpy.tools import mus
-        import pprint
-
-        print("\n")
-        print(">>> Minimum Unsatisfiable Core (MUS): ")
-        pprint.pprint(mus(model.constraints))
-        print("<<<")
+        min_unsat_result = get_MUS(model)
+        print(min_unsat_result)
         raise ValueError("Infeasible")
 
     melted_solved_schedule = extract_solved_schedule(scheduled)
