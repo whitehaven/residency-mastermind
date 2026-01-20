@@ -1,21 +1,22 @@
 import cpmpy as cp
 import polars as pl
 import pytest
+import box
 
 import config
 from constraints import (
     enforce_requirement_constraints,
     enforce_rotation_capacity_maximum,
     enforce_rotation_capacity_minimum,
-    force_literal_value_over_range,
     require_one_rotation_per_resident_per_week,
-    subset_scheduled_by,
 )
-from display import extract_solved_schedule
 from data_io import generate_pl_wrapped_boolvar
-from test_constraints import verify_enforce_requirement_constraints
+from display import (
+    extract_solved_schedule,
+    dump_resulting_block,
+)
 from requirement_builder import RequirementBuilder
-from io import StringIO
+from test_constraints import verify_enforce_requirement_constraints
 
 
 @pytest.fixture
@@ -25,48 +26,17 @@ def real_2026_data():
     weeks = pl.read_csv("real_2026_data_weeks.csv", try_parse_dates=True)
     rotations = pl.read_csv("real_2026_data_rotations.csv")
 
-    builder = RequirementBuilder()
-    (
-        builder.add_requirement(
-            "HS Rounding Senior",
-            fulfilled_by=["Green HS Senior", "Orange HS Senior"],
-        )
-        .min_weeks_over_resident_years(4, ["R2"])
-        .min_contiguity_over_resident_years(4, ["R2"])
-        .min_weeks_over_resident_years(8, ["R3"])
-        .min_contiguity_over_resident_years(4, ["R3"])
-        .after_prerequisite(
-            prereq_fulfilling_rotations=["HS Admitting Senior"],
-            weeks_required=4,
-            resident_years=["R2"],
-        )
-    )
-    (
-        builder.add_requirement(
-            name="HS Admitting Senior", fulfilled_by=["Purple/Consults"]
-        )
-        .min_weeks_over_resident_years(5, ["R2"])
-        .min_contiguity_over_resident_years(2, ["R2"])
-    )
+    R2_standard_reqs = generate_R2_standard_reqs()
+    R2_primary_care_track_reqs = generate_R2_primary_care_track_reqs()
+    R3_standard_reqs = generate_R3_standard_reqs()
+    R3_primary_care_tract_reqs = generate_R3_primary_care_tract_reqs()
 
-    (
-        builder.add_requirement(
-            name="Elective", fulfilled_by=["Elective"]
-        ).max_weeks_over_resident_years(40, ["R2", "R3"])
+    current_requirements = (
+        R2_standard_reqs,
+        R2_primary_care_track_reqs,
+        R3_standard_reqs,
+        R3_primary_care_tract_reqs,
     )
-    (
-        builder.add_requirement(
-            name="Systems of Medicine", fulfilled_by=["Systems of Medicine"]
-        )
-        .exact_weeks_over_resident_years(2, ["R2"])
-        .min_contiguity_over_resident_years(2, ["R2"])
-    )
-    (
-        builder.add_requirement(
-            name="Vacation", fulfilled_by=["Vacation"]
-        ).exact_weeks_over_resident_years(4, ["R2", "R3"])
-    )
-    current_requirements = builder.accumulate_constraints_by_rule()
 
     scheduled = generate_pl_wrapped_boolvar(
         residents,
@@ -90,6 +60,63 @@ def real_2026_data():
         scheduled,
         prior_rotations_completed,
     )
+
+
+def generate_R2_standard_reqs() -> box.Box:
+    builder_r2 = RequirementBuilder()
+    (
+        builder_r2.add_requirement(
+            "HS Rounding Senior",
+            fulfilled_by=["Green HS Senior", "Orange HS Senior"],
+        )
+        .min_weeks_over_resident_years(4, ["R2"])
+        .min_contiguity_over_resident_years(4, ["R2"])
+        .after_prerequisite(
+            prereq_fulfilling_rotations=["HS Admitting Senior"],
+            weeks_required=4,
+            resident_years=["R2"],
+        )
+    )
+    (
+        builder_r2.add_requirement(
+            name="HS Admitting Senior", fulfilled_by=["Purple HS Senior"]
+        )
+        .min_weeks_over_resident_years(5, ["R2"])
+        .max_weeks_over_resident_years(6, ["R2"])
+        .min_contiguity_over_resident_years(2, ["R2"])
+    )
+
+    (
+        builder_r2.add_requirement(
+            name="Elective", fulfilled_by=["Elective"]
+        ).max_weeks_over_resident_years(40, ["R2"])
+    )
+    (
+        builder_r2.add_requirement(
+            name="Systems of Medicine", fulfilled_by=["Systems of Medicine"]
+        )
+        .exact_weeks_over_resident_years(2, ["R2"])
+        .min_contiguity_over_resident_years(2, ["R2"])
+    )
+    (
+        builder_r2.add_requirement(
+            name="Vacation", fulfilled_by=["Vacation"]
+        ).exact_weeks_over_resident_years(4, ["R2"])
+    )
+    current_requirements = builder_r2.accumulate_constraints_by_rule()
+    return current_requirements
+
+
+def generate_R2_primary_care_track_reqs() -> box.Box:
+    pass
+
+
+def generate_R3_standard_reqs() -> box.Box:
+    pass
+
+
+def generate_R3_primary_care_tract_reqs() -> box.Box:
+    pass
 
 
 def test_2026_real_data_run(real_2026_data):
@@ -157,6 +184,8 @@ def test_2026_real_data_run(real_2026_data):
         prior_rotations_completed,
         melted_solved_schedule,
     ), "verify_enforce_requirement_constraints returns False"
+
+    dump_resulting_block(melted_solved_schedule)
 
 
 # # TODO:  make sure to force literals
