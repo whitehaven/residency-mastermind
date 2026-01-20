@@ -70,3 +70,12 @@ def reconstruct_melted_from_block_schedule(
         pl.lit(value=True).alias(config.CPMPY_RESULT_COLUMN)
     )
     return melted_with_true_literal
+
+
+def dump_resulting_block(
+    melted_solved_schedule: pl.DataFrame, csv_filepath="scratch_output.csv"
+) -> None:
+    from display import convert_melted_to_block_schedule
+
+    block_schedule = convert_melted_to_block_schedule(melted_solved_schedule)
+    block_schedule.write_csv(csv_filepath)

@@ -34,15 +34,6 @@ one_academic_year_weeks = pl.read_csv(
 )
 
 
-def dump_resulting_block(
-    melted_solved_schedule: pl.DataFrame, csv_filepath="scratch_output.csv"
-) -> None:
-    from display import convert_melted_to_block_schedule
-
-    block_schedule = convert_melted_to_block_schedule(melted_solved_schedule)
-    block_schedule.write_csv(csv_filepath)
-
-
 def test_require_one_rotation_per_resident_per_week() -> None:
 
     rotations = real_size_rotations
