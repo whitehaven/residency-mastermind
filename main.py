@@ -13,7 +13,10 @@ from constraints import (
 )
 from data_io import generate_pl_wrapped_boolvar, read_bulk_data_sqlite3
 from display import convert_melted_to_block_schedule, extract_solved_schedule
-
+from optimization import (
+    calculate_total_preference_satisfaction,
+    create_preference_objective,
+)
 
 def main(args_from_commandline=None) -> pl.DataFrame:
     if args_from_commandline is None:
@@ -31,18 +34,43 @@ def main(args_from_commandline=None) -> pl.DataFrame:
         pl.col("starting_academic_year") == current_academic_starting_year  # type: ignore
     )
 
-    solved_schedule = solve_schedule(residents, rotations, weeks_this_acad_year)
+    # Load preferences if provided
+    preferences = None
+    if args.preferences:
+        preferences = pl.read_csv(args.preferences)
+        # Ensure week column is properly formatted
+        if "week" in preferences.columns and preferences["week"].dtype == pl.Utf8:
+            preferences = preferences.with_columns(pl.col("week").str.to_datetime())
+
+    solved_schedule = solve_schedule(
+        residents,
+        rotations,
+        weeks_this_acad_year,
+        preferences=preferences,
+        optimize=args.optimize,
+    )
 
     return solved_schedule
 
 
 def solve_schedule(
-    residents: pl.DataFrame, rotations: pl.DataFrame, weeks: pl.DataFrame
+    residents: pl.DataFrame,
+    rotations: pl.DataFrame,
+    weeks: pl.DataFrame,
+    preferences: pl.DataFrame | None = None,
+    optimize: bool = False,
 ) -> pl.DataFrame:
     """
     Solve schedule as represented by residents, rotations, and weeks.
 
     This should handle all filtering before dispatching for efficiency.
+
+    Args:
+        residents: DataFrame of residents
+        rotations: DataFrame of rotations
+        weeks: DataFrame of weeks
+        preferences: Optional DataFrame with preference scores
+        optimize: Whether to optimize for preferences or just find feasible solution
 
     Returns:
         scheduled: pl.DataFrame containing the cartesian product of residents, rotations, and weeks along with cpmpy variables and their results
@@ -58,8 +86,18 @@ def solve_schedule(
     if not isinstance(current_requirements, box.Box):
         raise TypeError
 
+    # Create empty prior rotations for now
+    prior_rotations_completed = pl.DataFrame(
+        {"resident": [], "rotation": [], "completed_weeks": []}
+    )
+
     model += enforce_requirement_constraints(
-        current_requirements, residents, rotations, weeks, scheduled
+        current_requirements,
+        residents,
+        rotations,
+        weeks,
+        prior_rotations_completed,
+        scheduled,
     )
 
     model += require_one_rotation_per_resident_per_week(
@@ -83,14 +121,27 @@ def solve_schedule(
 
     # TODO enforce block transitions
 
-    # TODO Optimization
-    # maximize rotation preferences + vacation preferences (? + completion of 2nd year rotations if possible)
-    # Solve model
-    is_feasible = model.solve("ortools", log_search_progress=True)
-    if not is_feasible:
-        raise ValueError("Infeasible")
+    # Optimization
+    if optimize and preferences is not None:
+        objective = create_preference_objective(scheduled, preferences)
+        model.maximize(objective)
 
-    solved_schedule = extract_solved_schedule(scheduled)
+        is_optimal = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=True)
+        if not is_optimal:
+            raise ValueError("No optimal solution found")
+
+        solved_schedule = extract_solved_schedule(scheduled)
+        total_satisfaction = calculate_total_preference_satisfaction(
+            solved_schedule, preferences
+        )
+        print(f"Total preference satisfaction: {total_satisfaction}")
+    else:
+        # Solve model (feasibility only)
+        is_feasible = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=True)
+        if not is_feasible:
+            raise ValueError("Infeasible")
+
+        solved_schedule = extract_solved_schedule(scheduled)
 
     return solved_schedule
 
@@ -113,6 +164,20 @@ if __name__ == "__main__":
         "--block-output",
         type=str,
         help="output block schedule",
+        required=False,
+    )
+    parser.add_argument(
+        "-o",
+        "--optimize",
+        action="store_true",
+        help="optimize for preference satisfaction instead of just feasibility",
+        required=False,
+    )
+    parser.add_argument(
+        "-p",
+        "--preferences",
+        type=str,
+        help="CSV file with resident preferences (resident, rotation, week, preference)",
         required=False,
     )
     args = parser.parse_args()
