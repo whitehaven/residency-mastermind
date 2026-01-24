@@ -66,6 +66,8 @@ def test_require_one_rotation_per_resident_per_week() -> None:
     model += test_constraints
     is_feasible = model.solve("ortools", log_search_progress=False)
     if not is_feasible:
+        min_unsat_result = get_MUS(model)
+        print(min_unsat_result)
         raise ValueError("Infeasible")
 
     solved_schedule = extract_solved_schedule(test_scheduled)
@@ -249,6 +251,8 @@ def test_enforce_minimum_contiguity() -> None:
 
     is_feasible = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
     if not is_feasible:
+        min_unsat_result = get_MUS(model)
+        print(min_unsat_result)
         raise ValueError("Infeasible")
 
     melted_solved_schedule = extract_solved_schedule(scheduled)
@@ -768,7 +772,6 @@ def test_simple_prerequisites_with_priors(sample_simple_prerequisites_with_prior
         min_unsat_result = get_MUS(model)
         print(min_unsat_result)
         raise ValueError("Infeasible")
-
     melted_solved_schedule = extract_solved_schedule(scheduled)
 
     assert verify_enforce_requirement_constraints(
@@ -814,11 +817,8 @@ def test_enforce_requirement_constraints_R2s_barely_fit(
 
     is_feasible = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
     if not is_feasible:
-        from cpmpy.tools import mus
-        import pprint
-
-        print()
-        pprint.pprint(mus(model.constraints))
+        min_unsat_result = get_MUS(model)
+        print(min_unsat_result)
         raise ValueError("Infeasible")
 
     melted_solved_schedule = extract_solved_schedule(scheduled)
@@ -1079,11 +1079,8 @@ def test_force_literal_value_over_range_single_element(
 
     is_feasible = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
     if not is_feasible:
-        from cpmpy.tools import mus
-        import pprint
-
-        print()
-        pprint.pprint(mus(model.constraints))
+        min_unsat_result = get_MUS(model)
+        print(min_unsat_result)
         raise ValueError("Infeasible")
 
     melted_solved_schedule = extract_solved_schedule(scheduled)
@@ -1184,11 +1181,8 @@ def test_force_literal_value_over_range_block_element(
 
     is_feasible = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
     if not is_feasible:
-        from cpmpy.tools import mus
-        import pprint
-
-        print()
-        pprint.pprint(mus(model.constraints))
+        min_unsat_result = get_MUS(model)
+        print(min_unsat_result)
         raise ValueError("Infeasible")
 
     melted_solved_schedule = extract_solved_schedule(scheduled)
@@ -1284,11 +1278,8 @@ def test_force_literal_value_over_range_weekwise(
 
     is_feasible = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
     if not is_feasible:
-        from cpmpy.tools import mus
-        import pprint
-
-        print()
-        pprint.pprint(mus(model.constraints))
+        min_unsat_result = get_MUS(model)
+        print(min_unsat_result)
         raise ValueError("Infeasible")
 
     melted_solved_schedule = extract_solved_schedule(scheduled)
@@ -1410,11 +1401,8 @@ def test_force_literal_value_over_range_lock_past_weeks(
 
     is_feasible = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
     if not is_feasible:
-        from cpmpy.tools import mus
-        import pprint
-
-        print()
-        pprint.pprint(mus(model.constraints))
+        min_unsat_result = get_MUS(model)
+        print(min_unsat_result)
         raise ValueError("Infeasible")
 
     melted_solved_schedule = extract_solved_schedule(scheduled)
@@ -1579,11 +1567,8 @@ def test_rarely_available_rotation(sample_rarely_available_rotation):
 
     is_feasible = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
     if not is_feasible:
-        from cpmpy.tools import mus
-        import pprint
-
-        print()
-        pprint.pprint(mus(model.constraints))
+        min_unsat_result = get_MUS(model)
+        print(min_unsat_result)
         raise ValueError("Infeasible")
 
     melted_solved_schedule = extract_solved_schedule(scheduled)
