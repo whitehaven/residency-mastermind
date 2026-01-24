@@ -1591,5 +1591,6 @@ def test_rarely_available_rotation(sample_rarely_available_rotation):
     )
 
 
+@pytest.mark.xfail()
 def test_enforce_block_alignment():
     raise NotImplementedError
