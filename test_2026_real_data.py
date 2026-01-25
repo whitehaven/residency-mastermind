@@ -149,7 +149,95 @@ def generate_R2_standard_reqs() -> box.Box:
 
 
 def generate_R2_primary_care_track_reqs() -> box.Box:
-    pass
+    builder = RequirementBuilder()
+    (
+        builder.add_requirement(
+            "HS Rounding Senior",
+            fulfilled_by=["Green HS Senior", "Orange HS Senior"],
+        )
+        .min_weeks_over_resident_years(4, ["R2"])
+        .min_contiguity_over_resident_years(2, ["R2"])
+        .after_prerequisite(
+            prereq_fulfilling_rotations=["HS Admitting Senior"],
+            weeks_required=2,
+            resident_years=["R2"],
+        )
+    )
+    (
+        builder.add_requirement(
+            name="HS Admitting Senior", fulfilled_by=["Purple HS Senior"]
+        )
+        .min_weeks_over_resident_years(5, ["R2"])
+        .max_weeks_over_resident_years(6, ["R2"])
+        .min_contiguity_over_resident_years(2, ["R2"])
+    )
+    (
+        builder.add_requirement(name="Night Senior", fulfilled_by=["Night Senior"])
+        .min_weeks_over_resident_years(4, ["R2"])
+        .min_contiguity_over_resident_years(4, ["R2"])
+    )
+
+    (
+        builder.add_requirement(name="ICU Senior", fulfilled_by=["SHMC ICU Senior"])
+        .min_weeks_over_resident_years(4, ["R2"])
+        .min_contiguity_over_resident_years(4, ["R2"])
+    )
+
+    (
+        builder.add_requirement(
+            name="Consults", fulfilled_by=["Consults"]
+        ).min_weeks_over_resident_years(4, ["R2"])
+    )
+    (
+        builder.add_requirement(name="STHC Senior", fulfilled_by=["STHC Senior"])
+        .min_weeks_over_resident_years(4, ["R2"])
+        .min_contiguity_over_resident_years(4, ["R2"])
+    )
+    (
+        builder.add_requirement(name="OP Cardiology", fulfilled_by=["OP Cardiology"])
+        .min_weeks_over_resident_years(4, ["R2"])
+        .min_contiguity_over_resident_years(2, ["R2"])
+    )
+    (
+        builder.add_requirement(
+            name="Dermatology", fulfilled_by=["Dermatology"]
+        ).min_weeks_over_resident_years(2, ["R2"])
+    )
+    (
+        builder.add_requirement(name="Geriatrics", fulfilled_by=["Geriatrics"])
+        .min_weeks_over_resident_years(2, ["R2"])
+        .min_contiguity_over_resident_years(2, ["R2"])
+    )
+    (
+        builder.add_requirement(name="Psych Consult", fulfilled_by=["Psych Consult"])
+        .min_weeks_over_resident_years(2, ["R2"])
+        .min_contiguity_over_resident_years(2, ["R2"])
+    )
+    (
+        builder.add_requirement(
+            name="Systems of Medicine", fulfilled_by=["Systems of Medicine"]
+        )
+        .exact_weeks_over_resident_years(2, ["R2"])
+        .min_contiguity_over_resident_years(2, ["R2"])
+    )
+    (
+        builder.add_requirement(
+            name="Elective", fulfilled_by=["Elective"]
+        ).max_weeks_over_resident_years(20, ["R2"])
+    )
+    (
+        builder.add_requirement(
+            name="Vacation", fulfilled_by=["Vacation"]
+        ).exact_weeks_over_resident_years(4, ["R2"])
+    )
+    (
+        builder.add_requirement(name="GIM", fulfilled_by=["GIM"])
+        .min_weeks_over_resident_years(4, ["R2"])
+        .min_contiguity_over_resident_years(2, ["R2"])
+    )
+
+    current_requirements = builder.accumulate_constraints_by_rule()
+    return current_requirements
 
 
 def generate_R3_standard_reqs() -> box.Box:
