@@ -63,9 +63,9 @@ def real_2026_data():
 
 
 def generate_R2_standard_reqs() -> box.Box:
-    builder_r2 = RequirementBuilder()
+    builder = RequirementBuilder()
     (
-        builder_r2.add_requirement(
+        builder.add_requirement(
             "HS Rounding Senior",
             fulfilled_by=["Green HS Senior", "Orange HS Senior"],
         )
@@ -78,7 +78,7 @@ def generate_R2_standard_reqs() -> box.Box:
         )
     )
     (
-        builder_r2.add_requirement(
+        builder.add_requirement(
             name="HS Admitting Senior", fulfilled_by=["Purple HS Senior"]
         )
         .min_weeks_over_resident_years(5, ["R2"])
@@ -87,23 +87,23 @@ def generate_R2_standard_reqs() -> box.Box:
     )
 
     (
-        builder_r2.add_requirement(
+        builder.add_requirement(
             name="Elective", fulfilled_by=["Elective"]
         ).max_weeks_over_resident_years(40, ["R2"])
     )
     (
-        builder_r2.add_requirement(
+        builder.add_requirement(
             name="Systems of Medicine", fulfilled_by=["Systems of Medicine"]
         )
         .exact_weeks_over_resident_years(2, ["R2"])
         .min_contiguity_over_resident_years(2, ["R2"])
     )
     (
-        builder_r2.add_requirement(
+        builder.add_requirement(
             name="Vacation", fulfilled_by=["Vacation"]
         ).exact_weeks_over_resident_years(4, ["R2"])
     )
-    current_requirements = builder_r2.accumulate_constraints_by_rule()
+    current_requirements = builder.accumulate_constraints_by_rule()
     return current_requirements
 
 
