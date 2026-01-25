@@ -4,13 +4,17 @@ Orange HS Senior,HS Rounding Senior,1,1
 Purple HS Senior,HS Admitting Senior,1,1
 Consults,Consults,0,2
 SHMC ICU Senior,ICU Senior,1,1
+SHMC CICU,ICU Senior,0,1
 Night Senior,Night Senior,1,1
 STHC Senior,STHC Senior,1,10
 Vacation,Vacation,0,30
 Systems of Medicine,Systems of Medicine,0,7
 IP Cardiology Senior,IP Cardiology Senior,0,1
-Geriatrics,Geriatrics,0,1
+Geriatrics,Geriatrics,0,2
 OP Cardiology,OP Cardiology,0,2
 Psych Consult,Psych Consult,0,1
 Dermatology,Dermatology,0,2
-Blank,Blank,0,30
+Elective,Elective,0,30
+GIM,GIM,0,4
+Hospitalist,Hospitalist,0,3
+OP Pulmonology,OP Pulmonology,0,2
