@@ -96,34 +96,6 @@ def create_preference_objective(
     return cp.sum(objective_terms)
 
 
-def solve_with_optimization(
-    model: cp.Model,
-    objective: cp.core.Expression,
-    solver: str = config.DEFAULT_CPMPY_SOLVER,
-    maximize: bool = True,
-    log_search_progress: bool = True,
-) -> bool:
-    """
-    Solve the model with optimization objective.
-
-    Args:
-        model: cpmpy model with constraints
-        objective: objective expression to optimize
-        solver: solver name to use
-        maximize: if True, maximize objective; if False, minimize
-        log_search_progress: whether to log solver progress
-
-    Returns:
-        True if optimal solution found, False otherwise
-    """
-    if maximize:
-        model.maximize(objective)
-    else:
-        model.minimize(objective)
-
-    return model.solve(solver, log_search_progress=log_search_progress)
-
-
 def calculate_total_preference_satisfaction(
     solved_schedule: pl.DataFrame, preferences: pl.DataFrame
 ) -> int:

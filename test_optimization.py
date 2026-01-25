@@ -1,5 +1,6 @@
-import cpmpy as cp
 import itertools
+
+import cpmpy as cp
 import polars as pl
 import pytest
 
@@ -17,7 +18,6 @@ from optimization import (
     create_preference_objective,
     generate_blank_preferences_df,
     join_preferences_with_scheduled,
-    solve_with_optimization,
 )
 from requirement_builder import RequirementBuilder
 
@@ -70,15 +70,15 @@ def test_join_preferences_with_scheduled():
 
     joined = join_preferences_with_scheduled(scheduled, preferences)
 
-    assert len(joined) == len(scheduled), (
-        "Joined should have same number of rows as scheduled"
-    )
-    assert "preference" in joined.columns, (
-        "Preference column should be in joined DataFrame"
-    )
-    assert config.CPMPY_VARIABLE_COLUMN in joined.columns, (
-        "Boolean variable column should be preserved"
-    )
+    assert len(joined) == len(
+        scheduled
+    ), "Joined should have same number of rows as scheduled"
+    assert (
+        "preference" in joined.columns
+    ), "Preference column should be in joined DataFrame"
+    assert (
+        config.CPMPY_VARIABLE_COLUMN in joined.columns
+    ), "Boolean variable column should be preserved"
 
 
 @pytest.fixture
@@ -246,9 +246,9 @@ def test_vacation_optimization(vacation_request_setup):
         & (pl.col(config.CPMPY_RESULT_COLUMN) == True)
     )
 
-    assert len(vacation_assignments) > 0, (
-        "Vacation resident should be assigned to vacation"
-    )
+    assert (
+        len(vacation_assignments) > 0
+    ), "Vacation resident should be assigned to vacation"
 
 
 @pytest.fixture
