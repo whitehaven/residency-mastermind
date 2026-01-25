@@ -241,7 +241,70 @@ def generate_R2_primary_care_track_reqs() -> box.Box:
 
 
 def generate_R3_standard_reqs() -> box.Box:
-    pass
+    builder = RequirementBuilder()
+    # 8wk HS rounding
+    (
+        builder.add_requirement(
+            "HS Rounding Senior",
+            fulfilled_by=["Green HS Senior", "Orange HS Senior"],
+        )
+        .min_weeks_over_resident_years(8, ["R3"])
+        .min_contiguity_over_resident_years(2, ["R3"])
+    )
+    # 1-2 NF
+    (
+        builder.add_requirement(name="Night Senior", fulfilled_by=["Night Senior"])
+        .min_weeks_over_resident_years(1, ["R3"])
+        .max_weeks_over_resident_years(2, ["R3"])
+    )
+    # 4 hosp
+    (
+        builder.add_requirement(
+            name="Hospitalist", fulfilled_by=["Hospitalist"]
+        ).min_weeks_over_resident_years(4, ["R3"])
+    )
+    # 4 amb
+    (
+        builder.add_requirement(name="STHC Senior", fulfilled_by=["STHC Senior"])
+        .min_weeks_over_resident_years(4, ["R3"])
+        .min_contiguity_over_resident_years(4, ["R3"])
+    )
+    # 4 ICU or CICU
+    (
+        builder.add_requirement(
+            name="ICU Senior", fulfilled_by=["SHMC ICU Senior", "SHMC CICU"]
+        )
+        .min_weeks_over_resident_years(4, ["R3"])
+        .min_contiguity_over_resident_years(4, ["R3"])
+    )
+    # 4 IP cards
+    (
+        builder.add_requirement(
+            name="IP Cardiology Senior", fulfilled_by=["IP Cardiology Senior"]
+        )
+        .min_weeks_over_resident_years(4, ["R3"])
+        .min_contiguity_over_resident_years(2, ["R3"])
+    )
+    # 4 OP pulm
+    (
+        builder.add_requirement(name="OP Pulmonology", fulfilled_by=["OP Pulmonology"])
+        .min_weeks_over_resident_years(4, ["R3"])
+        .min_contiguity_over_resident_years(2, ["R3"])
+    )
+    # electives
+    (
+        builder.add_requirement(
+            name="Elective", fulfilled_by=["Elective"]
+        ).max_weeks_over_resident_years(20, ["R2"])
+    )
+    (
+        builder.add_requirement(
+            name="Vacation", fulfilled_by=["Vacation"]
+        ).exact_weeks_over_resident_years(4, ["R2"])
+    )
+
+    current_requirements = builder.accumulate_constraints_by_rule()
+    return current_requirements
 
 
 def generate_R3_primary_care_tract_reqs() -> box.Box:
