@@ -70,10 +70,10 @@ def generate_R2_standard_reqs() -> box.Box:
             fulfilled_by=["Green HS Senior", "Orange HS Senior"],
         )
         .min_weeks_over_resident_years(4, ["R2"])
-        .min_contiguity_over_resident_years(4, ["R2"])
+        .min_contiguity_over_resident_years(2, ["R2"])
         .after_prerequisite(
             prereq_fulfilling_rotations=["HS Admitting Senior"],
-            weeks_required=4,
+            weeks_required=2,
             resident_years=["R2"],
         )
     )
@@ -85,11 +85,47 @@ def generate_R2_standard_reqs() -> box.Box:
         .max_weeks_over_resident_years(6, ["R2"])
         .min_contiguity_over_resident_years(2, ["R2"])
     )
+    (
+        builder.add_requirement(name="Night Senior", fulfilled_by=["Night Senior"])
+        .min_weeks_over_resident_years(4, ["R2"])
+        .min_contiguity_over_resident_years(4, ["R2"])
+    )
+
+    (
+        builder.add_requirement(name="ICU Senior", fulfilled_by=["SHMC ICU Senior"])
+        .min_weeks_over_resident_years(4, ["R2"])
+        .min_contiguity_over_resident_years(4, ["R2"])
+    )
 
     (
         builder.add_requirement(
-            name="Elective", fulfilled_by=["Elective"]
-        ).max_weeks_over_resident_years(40, ["R2"])
+            name="Consults", fulfilled_by=["Consults"]
+        ).min_weeks_over_resident_years(4, ["R2"])
+    )
+    (
+        builder.add_requirement(name="STHC Senior", fulfilled_by=["STHC Senior"])
+        .min_weeks_over_resident_years(4, ["R2"])
+        .min_contiguity_over_resident_years(4, ["R2"])
+    )
+    (
+        builder.add_requirement(name="OP Cardiology", fulfilled_by=["OP Cardiology"])
+        .min_weeks_over_resident_years(4, ["R2"])
+        .min_contiguity_over_resident_years(2, ["R2"])
+    )
+    (
+        builder.add_requirement(
+            name="Dermatology", fulfilled_by=["Dermatology"]
+        ).min_weeks_over_resident_years(2, ["R2"])
+    )
+    (
+        builder.add_requirement(name="Geriatrics", fulfilled_by=["Geriatrics"])
+        .min_weeks_over_resident_years(2, ["R2"])
+        .min_contiguity_over_resident_years(2, ["R2"])
+    )
+    (
+        builder.add_requirement(name="Psych Consult", fulfilled_by=["Psych Consult"])
+        .min_weeks_over_resident_years(2, ["R2"])
+        .min_contiguity_over_resident_years(2, ["R2"])
     )
     (
         builder.add_requirement(
@@ -97,6 +133,11 @@ def generate_R2_standard_reqs() -> box.Box:
         )
         .exact_weeks_over_resident_years(2, ["R2"])
         .min_contiguity_over_resident_years(2, ["R2"])
+    )
+    (
+        builder.add_requirement(
+            name="Elective", fulfilled_by=["Elective"]
+        ).max_weeks_over_resident_years(20, ["R2"])
     )
     (
         builder.add_requirement(
