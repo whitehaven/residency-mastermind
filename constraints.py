@@ -1,18 +1,23 @@
+import pprint
 import warnings
 from typing import Callable, LiteralString
 
 import box
 import cpmpy as cp
 import polars as pl
+from cpmpy.tools import mus
 
 import config
 from selection import group_scheduled_df_by_for_each, subset_scheduled_by
 
-real_size_residents = pl.read_csv(config.TESTING_FILES["residents"]["real_size_seniors"])
+real_size_residents = pl.read_csv(
+    config.TESTING_FILES["residents"]["real_size_seniors"]
+)
 real_size_rotations = pl.read_csv(config.TESTING_FILES["rotations"]["real_size"])
 one_academic_year_weeks = pl.read_csv(
     config.TESTING_FILES["weeks"]["full_academic_year_2025_2026"], try_parse_dates=True
 )
+
 
 def enforce_minimum_contiguity(
     constraint_weeks: int | LiteralString,
@@ -63,7 +68,9 @@ def enforce_minimum_contiguity(
                 & (pl.col("rotation") == rotation_dict[config.ROTATIONS_PRIMARY_LABEL])
             )
 
-            schedule_vars = is_scheduled_for_res_on_rot[config.CPMPY_VARIABLE_COLUMN].to_list()
+            schedule_vars = is_scheduled_for_res_on_rot[
+                config.CPMPY_VARIABLE_COLUMN
+            ].to_list()
             for forbidden_length in range(1, min_contiguity):
                 for start_idx in range(len(schedule_vars) - forbidden_length + 1):
                     constraint_against_sequence = prevent_isolated_sequence(
@@ -523,8 +530,20 @@ def force_literal_value_over_range(
     for scheduled_row_dict in subset_scheduled.iter_rows(named=True):
         constraint = scheduled_row_dict[config.CPMPY_VARIABLE_COLUMN] == literal
         # TODO debug only
-        if not (isinstance(constraint, cp.core.Comparison) or cp.core.is_boolexpr(constraint)):
+        if not (
+            isinstance(constraint, cp.core.Comparison)
+            or cp.core.is_boolexpr(constraint)
+        ):
             raise ValueError(
-                f"{constraint=} with {type(constraint)=} but should be cp.core.Expression or cp.core.Comparison")
+                f"{constraint=} with {type(constraint)=} but should be cp.core.Expression or cp.core.Comparison"
+            )
         cumulative_constraints.append(constraint)
     return cumulative_constraints
+
+
+def get_MUS(model: cp.Model) -> str:
+    return (
+        ">>> Minimum Unsatisfiable Core (MUS):\n"
+        + pprint.pformat(mus(model.constraints))
+        + "\n<<<"
+    )
