@@ -41,7 +41,9 @@ def test_generate_blank_preferences_df():
         4,
     ), "generated df is wrong dimension"
     assert preferences.columns == ["resident", "rotation", "week", "preference"]
-    assert (preferences["preference"] == 0).all(), "All preferences should be 0"
+    assert (
+        preferences["preference"] == 0
+    ).all(), "All preferences should be 0 in blank df"
 
 
 def test_join_preferences_with_scheduled():
