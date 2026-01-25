@@ -1,4 +1,3 @@
-import pprint
 import warnings
 from datetime import timedelta
 from typing import Union
@@ -7,7 +6,6 @@ import box
 import cpmpy as cp
 import polars as pl
 import pytest
-from cpmpy.tools import mus
 
 import config
 from constraints import (
@@ -17,6 +15,7 @@ from constraints import (
     enforce_rotation_capacity_minimum,
     force_literal_value_over_range,
     require_one_rotation_per_resident_per_week,
+    get_MUS,
 )
 from data_io import generate_pl_wrapped_boolvar
 from display import (

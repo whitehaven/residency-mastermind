@@ -18,6 +18,7 @@ from optimization import (
     create_preference_objective,
 )
 
+
 def main(args_from_commandline=None) -> pl.DataFrame:
     if args_from_commandline is None:
         raise ValueError("No db specified")

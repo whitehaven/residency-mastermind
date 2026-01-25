@@ -1,7 +1,9 @@
+import warnings
+
+import box
 import cpmpy as cp
 import polars as pl
 import pytest
-import box
 
 import config
 from constraints import (
@@ -9,6 +11,7 @@ from constraints import (
     enforce_rotation_capacity_maximum,
     enforce_rotation_capacity_minimum,
     require_one_rotation_per_resident_per_week,
+    get_MUS,
 )
 from data_io import generate_pl_wrapped_boolvar
 from display import (
@@ -31,12 +34,12 @@ def real_2026_data():
     R3_standard_reqs = generate_R3_standard_reqs()
     R3_primary_care_tract_reqs = generate_R3_primary_care_track_reqs()
 
-    current_requirements = (
-        R2_standard_reqs,
-        R2_primary_care_track_reqs,
-        R3_standard_reqs,
-        R3_primary_care_tract_reqs,
-    )
+    current_requirements = {
+        "R2_standard": R2_standard_reqs,
+        "R2_PCT": R2_primary_care_track_reqs,
+        "R3_standard": R3_standard_reqs,
+        "R3_PCT": R3_primary_care_tract_reqs,
+    }
 
     scheduled = generate_pl_wrapped_boolvar(
         residents,
@@ -379,16 +382,33 @@ def test_2026_real_data_run(real_2026_data):
 
     model = cp.Model()
 
-    requirement_constraints = enforce_requirement_constraints(
-        current_requirements,
-        residents,
-        rotations,
-        weeks,
-        prior_rotations_completed,
-        scheduled,
-    )
+    residents = residents.filter(pl.col("year") != "super_R3")
+    warnings.warn("filtering out super_R3s")
 
-    model += requirement_constraints
+    for label, filtered_resident_group in residents.group_by(pl.col("year", "track")):
+        relevant_requirements = None
+        match label:
+            case ("R2", "PCT"):
+                relevant_requirements = current_requirements["R2_PCT"]
+            case ("R3", "PCT"):
+                relevant_requirements = current_requirements["R3_PCT"]
+            case ("R2", "fellowship") | ("R2", "standard"):
+                relevant_requirements = current_requirements["R2_standard"]
+            case ("R3", "fellowship") | ("R3", "standard"):
+                relevant_requirements = current_requirements["R3_standard"]
+            case _:
+                raise ValueError("Label not accounted for")
+
+        requirement_constraints = enforce_requirement_constraints(
+            relevant_requirements,
+            filtered_resident_group,
+            rotations,
+            weeks,
+            prior_rotations_completed,
+            scheduled,
+        )
+
+        model += requirement_constraints
 
     model += require_one_rotation_per_resident_per_week(
         residents, rotations, weeks, scheduled
@@ -414,14 +434,9 @@ def test_2026_real_data_run(real_2026_data):
 
     is_feasible = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
     if not is_feasible:
-        import pprint
-
-        from cpmpy.tools import mus
-
-        print()
-        pprint.pprint(mus(model.constraints))
+        min_unsat_result = get_MUS(model)
+        print(min_unsat_result)
         raise ValueError("Infeasible")
-
     melted_solved_schedule = extract_solved_schedule(scheduled)
 
     assert verify_enforce_requirement_constraints(
