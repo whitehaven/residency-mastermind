@@ -65,9 +65,9 @@ def test_join_preferences_with_scheduled():
 
     scheduled = generate_pl_wrapped_boolvar(residents, rotations, weeks)
     preferences = generate_blank_preferences_df(
-        residents["full_name"].to_list(),
-        rotations["rotation"].to_list(),
-        weeks["monday_date"].to_list(),
+        residents[config.RESIDENTS_PRIMARY_LABEL].to_list(),
+        rotations[config.ROTATIONS_PRIMARY_LABEL].to_list(),
+        weeks[config.WEEKS_PRIMARY_LABEL].to_list(),
     )
 
     joined = join_preferences_with_scheduled(scheduled, preferences)
@@ -111,9 +111,9 @@ def simple_optimization_setup_with_preferences(simple_optimization_setup):
 
     scheduled = generate_pl_wrapped_boolvar(residents, rotations, weeks)
     preferences = generate_blank_preferences_df(
-        residents["full_name"].to_list(),
-        rotations["rotation"].to_list(),
-        weeks["monday_date"].to_list(),
+        residents[config.RESIDENTS_PRIMARY_LABEL].to_list(),
+        rotations[config.ROTATIONS_PRIMARY_LABEL].to_list(),
+        weeks[config.WEEKS_PRIMARY_LABEL].to_list(),
     )
 
     # Add some preferences
