@@ -388,7 +388,6 @@ def test_2026_real_data_run(real_2026_data):
     requirement_constraints = list()
 
     for label, filtered_resident_group in residents.group_by(pl.col("year", "track")):
-        relevant_requirements = None
         match label:
             case ("R2", "PCT"):
                 relevant_requirements = current_requirements["R2_PCT"]
@@ -401,7 +400,7 @@ def test_2026_real_data_run(real_2026_data):
             case _:
                 raise ValueError("Label not accounted for")
 
-        requirement_constraints = enforce_requirement_constraints(
+        this_group_requirement_constraints = enforce_requirement_constraints(
             relevant_requirements,
             filtered_resident_group,
             rotations,
@@ -410,7 +409,9 @@ def test_2026_real_data_run(real_2026_data):
             scheduled,
         )
 
-        model += requirement_constraints
+        requirement_constraints.extend(this_group_requirement_constraints)
+
+    model += requirement_constraints
 
     model += require_one_rotation_per_resident_per_week(
         residents, rotations, weeks, scheduled
