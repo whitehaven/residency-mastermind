@@ -385,6 +385,8 @@ def test_2026_real_data_run(real_2026_data):
     residents = residents.filter(pl.col("year") != "super_R3")
     warnings.warn("filtering out super_R3s")
 
+    requirement_constraints = list()
+
     for label, filtered_resident_group in residents.group_by(pl.col("year", "track")):
         relevant_requirements = None
         match label:
