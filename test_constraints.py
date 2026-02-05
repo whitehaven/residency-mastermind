@@ -922,8 +922,8 @@ def verify_enforce_requirement_constraints(
                         weeks,
                         prior_rotations_completed,
                         solved_schedule,
-                    ), "verify_exact_week_constraint failed"
-
+                    ), "verify_prerequisite_met failed"
+                    pass
                 case "max_contiguity_in_period":
                     raise NotImplementedError("Unclear if actually needed")
                 case _:
