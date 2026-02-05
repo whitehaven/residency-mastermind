@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "fastexcel>=0.18.0",
+    "xlsxwriter>=3.2.9",
 ]
 
 [dependency-groups]
