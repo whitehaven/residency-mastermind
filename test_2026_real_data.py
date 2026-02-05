@@ -174,8 +174,9 @@ def generate_R3_base_reqs_builder() -> RequirementBuilder:
         builder.add_requirement(
             "HS Rounding Senior",
             fulfilled_by=["Green HS Senior", "Orange HS Senior"],
-        ).min_weeks_over_resident_years(8, ["R3"])
-        # .min_contiguity_over_resident_years(2, ["R3"])
+        )
+        .min_weeks_over_resident_years(8, ["R3"])
+        .min_contiguity_over_resident_years(4, ["R3"])
     )
     # 1-2 NF
     (
@@ -207,12 +208,17 @@ def generate_R3_base_reqs_builder() -> RequirementBuilder:
     (
         builder.add_requirement(
             name="Elective", fulfilled_by=["Elective"]
-        ).max_weeks_over_resident_years(20, ["R2"])
+        ).max_weeks_over_resident_years(20, ["R3"])
     )
     (
         builder.add_requirement(
             name="Vacation", fulfilled_by=["Vacation"]
-        ).exact_weeks_over_resident_years(4, ["R2"])
+        ).exact_weeks_over_resident_years(4, ["R3"])
+    )
+    (
+        builder.add_requirement(
+            name="OP Cardiology", fulfilled_by=["OP Cardiology"]
+        ).exact_weeks_over_resident_years(0, ["R3"])
     )
 
     return builder
