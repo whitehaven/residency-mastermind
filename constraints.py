@@ -426,10 +426,15 @@ def enforce_requirement_constraints(
                     rotations_fulfilling_req = rotations.filter(
                         pl.col("rotation").is_in(requirement_body.fulfilled_by)
                     )
+
+                    prereq_fulfilling_rotations = rotations.filter(
+                        pl.col("category").is_in(constraint.prerequisite_fulfillers)
+                    )["rotation"].to_list()
+
                     constraints = enforce_prerequisite(
                         prereq_weeks=constraint.weeks,
                         prereq_demanding_rotations=requirement_body.fulfilled_by,
-                        prereq_fulfilling_rotations=constraint.prerequisite_fulfillers,
+                        prereq_fulfilling_rotations=prereq_fulfilling_rotations,
                         residents=residents_subject_to_req,
                         rotations=rotations_fulfilling_req,
                         weeks=weeks,
