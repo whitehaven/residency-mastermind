@@ -1,3 +1,4 @@
+import pprint
 import warnings
 from datetime import timedelta
 from typing import Union
@@ -6,6 +7,7 @@ import box
 import cpmpy as cp
 import polars as pl
 import pytest
+from cpmpy.tools import mus
 
 import config
 from constraints import (
