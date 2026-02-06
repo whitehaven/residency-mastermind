@@ -73,7 +73,7 @@ def generate_R2_base_reqs_builder() -> RequirementBuilder:
             "HS Rounding Senior",
             fulfilled_by=["Green HS Senior", "Orange HS Senior"],
         )
-        .min_weeks_over_resident_years(4, ["R2"])
+        .min_weeks_over_resident_years(2, ["R2"])
         .min_contiguity_over_resident_years(2, ["R2"])
         .after_prerequisite(
             prereq_fulfilling_rotations=["HS Admitting Senior"],

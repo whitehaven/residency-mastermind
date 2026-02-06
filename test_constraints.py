@@ -907,7 +907,6 @@ def verify_enforce_requirement_constraints(
 
                 case "prerequisite":
                     prereq_demanding_rotations = requirement_body.fulfilled_by
-                    prereq_fulfilling_rotations = constraint.prerequisite_fulfillers
                     prereq_weeks = constraint.weeks
                     residents_subject_to_req = residents.filter(
                         pl.col("year").is_in(constraint.resident_years)
@@ -915,6 +914,10 @@ def verify_enforce_requirement_constraints(
                     rotations_fulfilling_req = rotations.filter(
                         pl.col("rotation").is_in(requirement_body.fulfilled_by)
                     )
+                    prereq_fulfilling_rotations = rotations.filter(
+                        pl.col("category").is_in(constraint.prerequisite_fulfillers)
+                    )["rotation"].to_list()
+
                     assert verify_prerequisite_met(
                         prereq_weeks,
                         prereq_demanding_rotations,
