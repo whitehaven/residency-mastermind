@@ -12,6 +12,7 @@ from cpmpy.tools import mus
 import config
 from constraints import (
     enforce_minimum_contiguity,
+    enforce_maximum_contiguity,
     enforce_requirement_constraints,
     enforce_rotation_capacity_maximum,
     enforce_rotation_capacity_minimum,
@@ -46,7 +47,6 @@ def get_MUS(model: cp.Model) -> str:
 
 
 def test_require_one_rotation_per_resident_per_week() -> None:
-
     rotations = real_size_rotations
     weeks = one_academic_year_weeks
 
@@ -266,6 +266,76 @@ def test_enforce_minimum_contiguity() -> None:
     )
 
 
+#
+#
+# def test_enforce_maximum_contiguity() -> None:
+#     """
+#     Test maximum contiguity constraints with a simple dataset.
+#     """
+#     residents = pl.DataFrame(
+#         {
+#             "full_name": ["Test Resident 1", "Test Resident 2"],
+#             "year": ["R2", "R2"],
+#         }
+#     )
+#
+#     rotations = pl.DataFrame(
+#         {
+#             "rotation": ["Test Rotation A", "Test Rotation B"],
+#             "category": ["Test Category A", "Test Category B"],
+#             "required_role": ["Senior", "Senior"],
+#             "minimum_residents_assigned": [0, 0],
+#             "maximum_residents_assigned": [2, 2],
+#         }
+#     )
+#
+#     weeks = one_academic_year_weeks.head(n=6)
+#
+#     scheduled = generate_pl_wrapped_boolvar(
+#         residents=residents,
+#         rotations=rotations,
+#         weeks=weeks,
+#     )
+#
+#     model = cp.Model()
+#
+#     # Test with maximum contiguity of 2 weeks
+#     max_contiguity = 2
+#     contiguity_constraints = enforce_maximum_contiguity(
+#         max_contiguity,
+#         residents,
+#         rotations,
+#         weeks,
+#         scheduled,
+#     )
+#
+#     model += contiguity_constraints
+#
+#     model += require_one_rotation_per_resident_per_week(
+#         residents, rotations, weeks, scheduled=scheduled
+#     )
+#     model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
+#     model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
+#
+#     is_feasible = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
+#     if not is_feasible:
+#         min_unsat_result = get_MUS(model)
+#         print(min_unsat_result)
+#         raise ValueError("Infeasible")
+#
+#     melted_solved_schedule = extract_solved_schedule(scheduled)
+#
+#     assert verify_maximum_contiguity(
+#         max_contiguity,
+#         residents,
+#         rotations,
+#         weeks,
+#         melted_solved_schedule,
+#     ), (
+#         "verify_maximum_contiguity returned False - maximum contiguity constraint violated"
+#     )
+
+
 def verify_minimum_contiguity(
     constraint: Union[box.Box, str],
     residents: pl.DataFrame,
@@ -289,7 +359,6 @@ def verify_minimum_contiguity(
         bool: True if all contiguity constraints are satisfied, False otherwise
     """
     for rotation_dict in rotations.iter_rows(named=True):
-
         rotation_name = rotation_dict[config.ROTATIONS_PRIMARY_LABEL]
         if constraint == "use_rotations_data":
             min_contiguity = rotation_dict["minimum_contiguous_weeks"]
@@ -316,6 +385,58 @@ def verify_minimum_contiguity(
                     )
                     print(f"  Has block of length {len(block)}: {block}")
                     print(f"  But minimum contiguity is {min_contiguity}")
+                    return False
+
+    return True
+
+
+def verify_maximum_contiguity(
+    constraint: int,
+    residents: pl.DataFrame,
+    rotations: pl.DataFrame,
+    weeks: pl.DataFrame,
+    solved_schedule: pl.DataFrame,
+) -> bool:
+    """
+    Verify that the solved schedule respects maximum contiguity constraints.
+
+    Args:
+        constraint: integer describing maximum contiguity allowable
+        residents: DataFrame of residents
+        rotations: DataFrame of rotations subject to the constraints
+        weeks: DataFrame of weeks
+        solved_schedule: Melted schedule DataFrame with columns:
+                        ['resident', 'rotation', 'week', 'scheduled'] where
+                        'scheduled' is boolean indicating if resident is on rotation that week
+
+    Returns:
+        bool: True if all maximum contiguity constraints are satisfied, False otherwise
+    """
+    max_contiguity = constraint
+
+    for rotation_dict in rotations.iter_rows(named=True):
+        rotation_name = rotation_dict[config.ROTATIONS_PRIMARY_LABEL]
+
+        rotation_schedule = solved_schedule.filter(
+            (pl.col("rotation") == rotation_name)
+            & (pl.col(config.CPMPY_RESULT_COLUMN) == True)  # noqa: E712
+        )
+
+        for resident_dict in residents.iter_rows(named=True):
+            resident_rotation_schedule = rotation_schedule.filter(
+                pl.col("resident") == resident_dict
+            ).sort("week")
+
+            scheduled_weeks = resident_rotation_schedule["week"].to_list()
+            contiguous_blocks = find_contiguous_blocks(scheduled_weeks)
+
+            for block in contiguous_blocks:
+                if len(block) > max_contiguity:
+                    print(
+                        f"MAXIMUM CONTIGUITY VIOLATION: Resident {resident_dict} on rotation {rotation_name}"
+                    )
+                    print(f"  Has block of length {len(block)}: {block}")
+                    print(f"  But maximum contiguity is {max_contiguity}")
                     return False
 
     return True
@@ -531,7 +652,6 @@ def sample_simple_prerequisites_no_priors() -> (
 def test_enforce_prerequisites_with_no_priors(
     sample_simple_prerequisites_no_priors,
 ):
-
     (
         residents,
         rotations,
@@ -1316,7 +1436,6 @@ def test_force_literal_value_over_range_weekwise(
 def sample_literal_reqs_matching_barely_fit_R2_no_prereqs_lock_past_weeks(
     sample_barely_fit_R2s_no_prereqs,
 ):
-
     (
         residents,
         rotations,
@@ -1448,7 +1567,6 @@ def verify_literal_value_over_range(
 
 @pytest.fixture
 def sample_rarely_available_rotation():
-
     residents = pl.DataFrame(
         {
             "full_name": ["First Guy", "Second Guy", "Third Guy", "Fourth Guy"],

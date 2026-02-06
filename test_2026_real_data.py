@@ -75,6 +75,7 @@ def generate_R2_base_reqs_builder() -> RequirementBuilder:
         )
         .min_weeks_over_resident_years(2, ["R2"])
         .min_contiguity_over_resident_years(2, ["R2"])
+        .max_contiguity_over_resident_years(4, ["R2"])
         .after_prerequisite(
             prereq_fulfilling_rotations=["HS Admitting Senior"],
             weeks_required=2,
@@ -336,7 +337,7 @@ def test_2026_real_data_run(real_2026_data):
     #     scheduled_subset_subject_to_week_exclusion, literal
     # )
 
-    is_feasible = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
+    is_feasible = model.solve()
     if not is_feasible:
         min_unsat_result = get_MUS(model)
         print(min_unsat_result)

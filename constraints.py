@@ -139,6 +139,79 @@ def prevent_isolated_sequence(
         return ~(left_ok & sequence_true & right_ok)  # type: ignore
 
 
+def prevent_long_sequence(
+    variables: list[cp.core.BoolVal], start_idx: int, length: int
+) -> cp.core.Comparison:
+    """
+    Create a constraint that prevents a sequence of `length` of all True values at start_idx.
+
+    This prevents sequences that are too long by ensuring that not all variables
+    in the specified range are True simultaneously.
+
+    Args:
+        variables: List of boolean variables
+        start_idx: Starting index of the sequence to prevent
+        length: Length of the sequence to prevent
+
+    Returns:
+        A constraint that evaluates to True when this pattern is NOT present
+    """
+    sequence_vars = variables[start_idx : start_idx + length]
+    return ~cp.all(sequence_vars)  # type: ignore
+
+
+def enforce_maximum_contiguity(
+    constraint_weeks: int | LiteralString,
+    residents: pl.DataFrame,
+    rotations: pl.DataFrame,
+    weeks: pl.DataFrame,
+    scheduled: pl.DataFrame,
+) -> list[cp.core.Comparison]:
+    """
+    Generate constraints that require that at least minimum_contiguity be respected.
+
+    Prevents sequences of size higher than maximum contiguity. Any lower contiguity is then allowed.
+
+    Args:
+        constraint_weeks: integer describing maximum contiguity allowable
+        residents: Polars DataFrame of residents who are subject to constraints
+        rotations: Polars DataFrame of rotations subject to the constraints
+        weeks: Polars DataFrame of weeks subject to the constraints
+        scheduled: Polars DataFrame with cpmpy boolean variables with schema [ resident, rotation, week, cpmpy.Boolvar]
+
+    Returns:
+        cumulative_constraints: list of cp.core.Comparison constraints
+    """
+    cumulative_constraints = list()
+    for rotation_dict in rotations.iter_rows(named=True):
+        if isinstance(constraint_weeks, int):
+            max_contiguity = constraint_weeks
+        else:
+            raise ValueError(
+                f"max_contiguity is {type(constraint_weeks)} which is not int"
+            )
+
+        for resident_dict in residents.iter_rows(named=True):
+            is_scheduled_for_res_on_rot = scheduled.filter(
+                (pl.col("resident") == resident_dict[config.RESIDENTS_PRIMARY_LABEL])
+                & (pl.col("rotation") == rotation_dict[config.ROTATIONS_PRIMARY_LABEL])
+            )
+
+            schedule_vars = is_scheduled_for_res_on_rot[
+                config.CPMPY_VARIABLE_COLUMN
+            ].to_list()
+
+            # Prevent sequences longer than max_contiguity
+            for forbidden_length in range(max_contiguity + 1, len(schedule_vars) + 1):
+                for start_idx in range(len(schedule_vars) - forbidden_length + 1):
+                    constraint_against_sequence = prevent_long_sequence(
+                        schedule_vars, start_idx, forbidden_length
+                    )
+                    cumulative_constraints.append(constraint_against_sequence)
+
+    return cumulative_constraints
+
+
 def require_one_rotation_per_resident_per_week(
     residents: pl.DataFrame,
     rotations: pl.DataFrame,
@@ -184,7 +257,6 @@ def enforce_minimum_rotation_weeks_per_resident(
     weeks: pl.DataFrame,
     scheduled: pl.DataFrame,
 ) -> list[cp.core.Comparison]:
-
     subset_scheduled = subset_scheduled_by(
         residents_subject_to_req, rotations_fulfilling_req, weeks, scheduled
     )
@@ -206,7 +278,6 @@ def enforce_maximum_rotation_weeks_per_resident(
     weeks: pl.DataFrame,
     scheduled: pl.DataFrame,
 ) -> list[cp.core.Comparison]:
-
     subset_scheduled = subset_scheduled_by(
         residents_subject_to_req, rotations_fulfilling_req, weeks, scheduled
     )
@@ -228,7 +299,6 @@ def enforce_exact_rotation_weeks_per_resident(
     weeks: pl.DataFrame,
     scheduled: pl.DataFrame,
 ) -> list[cp.core.Comparison]:
-
     subset_scheduled = subset_scheduled_by(
         residents_subject_to_req, rotations_fulfilling_req, weeks, scheduled
     )
@@ -362,7 +432,7 @@ def enforce_requirement_constraints(
         for constraint in requirement_body.constraints:
             match constraint.type:
                 case "min_by_period":
-                    residents_subject_to_req = residents.filter(
+                    residents_subject_to_req = residents.filter(  # TODO not sure if need this line at all in any of these
                         pl.col("year").is_in(constraint.resident_years)
                     )
                     rotations_fulfilling_req = rotations.filter(
@@ -418,7 +488,19 @@ def enforce_requirement_constraints(
                         scheduled,
                     )
                 case "max_contiguity_in_period":
-                    raise NotImplementedError("Unclear if actually needed")
+                    residents_subject_to_req = residents.filter(
+                        pl.col("year").is_in(constraint.resident_years)
+                    )
+                    rotations_fulfilling_req = rotations.filter(
+                        pl.col("rotation").is_in(requirement_body.fulfilled_by)
+                    )
+                    enforce_maximum_contiguity(
+                        constraint.weeks,
+                        residents_subject_to_req,
+                        rotations_fulfilling_req,
+                        weeks,
+                        scheduled,
+                    )
                 case "prerequisite":
                     residents_subject_to_req = residents.filter(
                         pl.col("year").is_in(constraint.resident_years)
@@ -459,7 +541,6 @@ def enforce_prerequisite(
     prior_rotations_completed: pl.DataFrame,
     scheduled: pl.DataFrame,
 ) -> list[cp.core.Comparison]:
-
     cumulative_constraints = list()
     constraint = None
     for resident_dict in residents.iter_rows(named=True):
@@ -480,7 +561,6 @@ def enforce_prerequisite(
             continue
 
         for week_dict in weeks.iter_rows(named=True):
-
             prereq_demanders_this_week = scheduled.filter(
                 (pl.col("resident") == resident_dict[config.RESIDENTS_PRIMARY_LABEL])
                 & (pl.col("week") == week_dict[config.WEEKS_PRIMARY_LABEL])
