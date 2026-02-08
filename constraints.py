@@ -607,6 +607,77 @@ def enforce_prerequisite(
     return cumulative_constraints
 
 
+def enforce_block_alignment(
+    rotations: pl.DataFrame,
+    residents: pl.DataFrame,
+    weeks: pl.DataFrame,
+    scheduled: pl.DataFrame,
+) -> list[cp.core.Comparison]:
+    """
+    Generate constraints that prevent consecutive scheduled weeks for the same rotation/resident
+    from crossing block boundaries.
+
+    Allows a rotation to be scheduled multiple times in different blocks, as long as no
+    consecutive sequence of scheduled weeks spans across block boundaries.
+
+    Args:
+        rotations: DataFrame of rotations
+        residents: DataFrame of residents
+        weeks: DataFrame of weeks with a "block" column, ordered by week
+        scheduled: DataFrame with boolean variables for scheduling
+
+    Returns:
+        List of constraints preventing consecutive weeks from crossing block boundaries
+    """
+    cumulative_constraints = []
+
+    for rotation_dict in rotations.iter_rows(named=True):
+        for resident_dict in residents.iter_rows(named=True):
+            # Get all scheduling variables for this resident and rotation, sorted by week
+            is_scheduled_for_res_on_rot = scheduled.filter(
+                (pl.col("resident") == resident_dict[config.RESIDENTS_PRIMARY_LABEL])
+                & (pl.col("rotation") == rotation_dict[config.ROTATIONS_PRIMARY_LABEL])
+            ).sort("week")
+
+            schedule_data = is_scheduled_for_res_on_rot.select(
+                "week", config.CPMPY_VARIABLE_COLUMN
+            )
+
+
+            is_only_1_long = schedule_data.height < 2
+            if is_only_1_long:
+                continue
+
+            # For each consecutive pair of weeks, prevent crossing block boundaries
+            for i in range(schedule_data.height - 1):
+                week_i = schedule_data.row(i, named=True)["week"]
+                week_j = schedule_data.row(i + 1, named=True)["week"]
+                var_i = schedule_data.row(i, named=True)[config.CPMPY_VARIABLE_COLUMN]
+                var_j = schedule_data.row(i + 1, named=True)[
+                    config.CPMPY_VARIABLE_COLUMN
+                ]
+
+                # Get blocks for consecutive weeks
+                block_i = (
+                    weeks.filter(pl.col(config.WEEKS_PRIMARY_LABEL) == week_i)
+                    .select("block")
+                    .item()
+                )
+
+                block_j = (
+                    weeks.filter(pl.col(config.WEEKS_PRIMARY_LABEL) == week_j)
+                    .select("block")
+                    .item()
+                )
+
+                # If consecutive weeks are in different blocks, prevent them from both being scheduled
+                if block_i != block_j:
+                    constraint = ~(var_i & var_j)
+                    cumulative_constraints.append(constraint)
+
+    return cumulative_constraints
+
+
 def force_literal_value_over_range(
     subset_scheduled: pl.DataFrame, literal: bool
 ) -> list[cp.core.Comparison]:

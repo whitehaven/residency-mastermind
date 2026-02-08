@@ -12,10 +12,10 @@ from cpmpy.tools import mus
 import config
 from constraints import (
     enforce_minimum_contiguity,
-    enforce_maximum_contiguity,
     enforce_requirement_constraints,
     enforce_rotation_capacity_maximum,
     enforce_rotation_capacity_minimum,
+    enforce_block_alignment,
     force_literal_value_over_range,
     require_one_rotation_per_resident_per_week,
     get_MUS,
@@ -1726,6 +1726,123 @@ def test_rarely_available_rotation(sample_rarely_available_rotation):
     )
 
 
-@pytest.mark.xfail()
 def test_enforce_block_alignment():
-    raise NotImplementedError
+    """Test that block alignment constraints prevent rotations from spanning multiple blocks."""
+    residents = pl.DataFrame(
+        {
+            "full_name": ["Test Resident A"],
+            "year": ["R2"],
+        }
+    )
+
+    rotations = pl.DataFrame(
+        {
+            "rotation": ["Test Rotation A", "Test Rotation B"],
+            "category": ["Test Category A", "Test Category B"],
+            "required_role": ["Senior", "Senior"],
+            "minimum_residents_assigned": [0, 0],
+            "maximum_residents_assigned": [1, 1],
+        }
+    )
+
+    weeks = pl.DataFrame(
+        {
+            "monday_date": [
+                "2026-06-22",
+                "2026-06-29",
+                "2026-07-06",
+                "2026-07-13",
+                "2026-07-20",
+                "2026-07-27",
+                "2026-08-03",
+                "2026-08-10",
+            ],
+            "week": [1, 2, 3, 4, 5, 6, 7, 8],
+            "block": [1, 1, 2, 2, 3, 3, 4, 4],
+        }
+    ).with_columns(pl.col("monday_date").str.to_date())
+
+    scheduled = generate_pl_wrapped_boolvar(residents, rotations, weeks)
+
+    model = cp.Model()
+
+    block_constraints = enforce_block_alignment(rotations, residents, weeks, scheduled)
+    model += block_constraints
+
+    model += require_one_rotation_per_resident_per_week(
+        residents, rotations, weeks, scheduled
+    )
+
+    is_feasible = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
+    if not is_feasible:
+        min_unsat_result = get_MUS(model)
+        print(min_unsat_result)
+        raise ValueError("Infeasible")
+    assert is_feasible, "Model should be feasible with block alignment constraints"
+
+    melted_solved_schedule = extract_solved_schedule(scheduled)
+
+    assert verify_block_alignment(
+        residents, rotations, weeks, melted_solved_schedule
+    ), "Block alignment should be satisfied"
+
+
+def verify_block_alignment(residents, rotations, weeks, solved_schedule) -> bool:
+    """Verify that no consecutive scheduled weeks cross block boundaries."""
+    for resident_dict in residents.iter_rows(named=True):
+        for rotation_dict in rotations.iter_rows(named=True):
+            resident_rotation_schedule = solved_schedule.filter(
+                (pl.col("resident") == resident_dict[config.RESIDENTS_PRIMARY_LABEL])
+                & (pl.col("rotation") == rotation_dict[config.ROTATIONS_PRIMARY_LABEL])
+                & (pl.col(config.CPMPY_RESULT_COLUMN) == True)
+            ).sort("week")
+
+            is_schedule_one_or_less = resident_rotation_schedule.height < 2
+            if is_schedule_one_or_less:
+                continue
+
+            # Get all weeks in order with their block info
+            scheduled_weeks = resident_rotation_schedule["week"].to_list()
+
+            # For each scheduled week, check if the next calendar week is also scheduled
+            # and if so, verify they're in the same block
+            for i, week in enumerate(scheduled_weeks):
+                # Find the position of this week in the weeks dataframe
+                week_row_idx = (
+                    weeks.filter(pl.col(config.WEEKS_PRIMARY_LABEL) == week)
+                    .select(pl.col("week"))
+                    .row(0)[0]
+                    - 1
+                )  # Convert to 0-based index
+
+                # Check if there's a next week in the calendar
+                if week_row_idx < weeks.height - 1:
+                    next_week = weeks.row(week_row_idx + 1, named=True)[
+                        config.WEEKS_PRIMARY_LABEL
+                    ]
+
+                    # Check if next week is also scheduled for this resident/rotation
+                    is_next_week_scheduled = next_week in scheduled_weeks
+
+                    if is_next_week_scheduled:
+                        # Get blocks for consecutive weeks
+                        block_i = (
+                            weeks.filter(pl.col(config.WEEKS_PRIMARY_LABEL) == week)
+                            .select("block")
+                            .item()
+                        )
+                        block_j = (
+                            weeks.filter(
+                                pl.col(config.WEEKS_PRIMARY_LABEL) == next_week
+                            )
+                            .select("block")
+                            .item()
+                        )
+
+                        # Verify they're in the same block
+                        assert block_i == block_j, (
+                            f"Consecutive scheduled weeks {week} (block {block_i}) and "
+                            f"{next_week} (block {block_j}) cross block boundary"
+                        )
+
+    return True
