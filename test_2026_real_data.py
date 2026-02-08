@@ -22,7 +22,7 @@ from requirement_builder import RequirementBuilder
 from test_constraints import verify_enforce_requirement_constraints
 
 WRITE_2026_XLSX_OUTPUT = True
-WRITE_2026_CSV_OUTPUT = True
+WRITE_2026_CSV_OUTPUT = False
 
 @pytest.fixture
 def real_2026_data():
