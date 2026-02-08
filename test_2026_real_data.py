@@ -463,6 +463,16 @@ def test_2026_real_data_constraint_only(real_2026_data):
 
     if WRITE_2026_XLSX_OUTPUT:
         block = convert_melted_to_block_schedule(melted_solved_schedule)
+        block = block.join(
+            residents, left_on="resident", right_on=config.RESIDENTS_PRIMARY_LABEL
+        ).select(
+            [
+                "resident",
+                "year",
+                "track",
+                cs.all().exclude(["resident", "year", "track"]),
+            ]
+        )
         block.write_excel(
             "test_2026_output.xlsx",
             conditional_formats={
@@ -523,22 +533,4 @@ def test_2026_real_data_constraint_only(real_2026_data):
         block = convert_melted_to_block_schedule(melted_solved_schedule)
         block.write_csv("test_2026_data.csv")
         logger.success("wrote csv to test_2026_data.csv")
-
-# # TODO:  make sure to force literals
-
-#     melted_solved_schedule_for_weeks = extract_solved_schedule(
-#         scheduled_subset_subject_to_week_exclusion
-#     )
-
-#     assert verify_literal_value_over_range(
-#         melted_solved_schedule_for_weeks, literal=False
-#     )
-#     melted_solved_schedule_for_weeks = extract_solved_schedule(
-#         scheduled_subset_subject_to_week_exclusion
-#     )
-
-#     assert verify_literal_value_over_range(
-#         melted_solved_schedule_for_weeks, literal=False
-#     )
-#     )
-#     )
+    logger.success(">> End of Program <<")
