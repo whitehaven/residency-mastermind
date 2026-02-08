@@ -75,6 +75,7 @@ def generate_R2_base_reqs_builder() -> RequirementBuilder:
             fulfilled_by=["Green HS Senior", "Orange HS Senior"],
         )
         .min_weeks_over_resident_years(2, ["R2"])
+        .max_weeks_over_resident_years(4, ["R2"])
         .min_contiguity_over_resident_years(2, ["R2"])
         .max_contiguity_over_resident_years(4, ["R2"])
         .after_prerequisite(
