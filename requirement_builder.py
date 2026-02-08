@@ -115,6 +115,14 @@ class RequirementRule:
         )
         return self
 
+    def must_respect_block_alignment(self, resident_years: list[str]):
+        self._constraints.append(
+            {
+                "type": "respect_block_alignment",
+                "resident_years": resident_years,
+            }
+        )
+
     def get_constraints(self) -> list[dict[str, Any]]:
         """Get all constraints for this requirement"""
         return self._constraints

@@ -83,6 +83,7 @@ def generate_R2_base_reqs_builder() -> RequirementBuilder:
             weeks_required=2,
             resident_years=["R2"],
         )
+        .must_respect_block_alignment(["R2"])
     )
     (
         builder.add_requirement(
@@ -183,6 +184,7 @@ def generate_R3_base_reqs_builder() -> RequirementBuilder:
         .min_weeks_over_resident_years(8, ["R3"])
         .min_contiguity_over_resident_years(4, ["R3"])
         .max_contiguity_over_resident_years(4, ["R3"])
+        .must_respect_block_alignment(["R3"])
     )
     # 1-2 NF
     (

@@ -523,6 +523,19 @@ def enforce_requirement_constraints(
                         prior_rotations_completed=prior_rotations_completed,
                         scheduled=scheduled,
                     )
+                case "respect_block_alignment":
+                    residents_subject_to_req = residents.filter(
+                        pl.col("year").is_in(constraint.resident_years)
+                    )
+                    rotations_fulfilling_req = rotations.filter(
+                        pl.col("rotation").is_in(requirement_body.fulfilled_by)
+                    )
+                    constraints = enforce_block_alignment(
+                        rotations_fulfilling_req,
+                        residents_subject_to_req,
+                        weeks,
+                        scheduled,
+                    )
                 case _:
                     raise LookupError(
                         f"{constraint.type=} is not a known requirement constraint type"
