@@ -6,7 +6,6 @@ import polars as pl
 import polars.selectors as cs
 import pytest
 
-import config
 from constraints import (
     enforce_requirement_constraints,
     enforce_rotation_capacity_maximum,
@@ -22,6 +21,7 @@ from display import (
 from requirement_builder import RequirementBuilder
 from test_constraints import verify_enforce_requirement_constraints
 
+WRITE_2026_XLSX_OUTPUT = True
 
 @pytest.fixture
 def real_2026_data():
@@ -344,57 +344,57 @@ def test_2026_real_data_run(real_2026_data):
         raise ValueError("Infeasible")
     melted_solved_schedule = extract_solved_schedule(scheduled)
 
-    block = convert_melted_to_block_schedule(melted_solved_schedule)
-
-    block.write_excel(
-        "test_2026_output.xlsx",
-        conditional_formats={
-            cs.all(): [
-                {
-                    "type": "text",
-                    "criteria": "containing",
-                    "value": "Green",
-                    "format": {"bg_color": "#88E788"},
-                },
-                {
-                    "type": "text",
-                    "criteria": "containing",
-                    "value": "Orange",
-                    "format": {"bg_color": "#FFA500"},
-                },
-                {
-                    "type": "text",
-                    "criteria": "containing",
-                    "value": "Purple",
-                    "format": {"bg_color": "#b758e0"},
-                },
-                {
-                    "type": "text",
-                    "criteria": "containing",
-                    "value": "Night",
-                    "format": {"bg_color": "#898bfa"},
-                },
-                {
-                    "type": "text",
-                    "criteria": "containing",
-                    "value": "STHC",
-                    "format": {"bg_color": "#f57171"},
-                },
-                {
-                    "type": "text",
-                    "criteria": "containing",
-                    "value": "SHMC ICU Senior",
-                    "format": {"bg_color": "#77edd3"},
-                },
-                {
-                    "type": "text",
-                    "criteria": "containing",
-                    "value": "Systems of Medicine",
-                    "format": {"bg_color": "#ede977"},
-                },
-            ]
-        },
-    )
+    if WRITE_2026_XLSX_OUTPUT:
+        block = convert_melted_to_block_schedule(melted_solved_schedule)
+        block.write_excel(
+            "test_2026_output.xlsx",
+            conditional_formats={
+                cs.all(): [
+                    {
+                        "type": "text",
+                        "criteria": "containing",
+                        "value": "Green",
+                        "format": {"bg_color": "#88E788"},
+                    },
+                    {
+                        "type": "text",
+                        "criteria": "containing",
+                        "value": "Orange",
+                        "format": {"bg_color": "#FFA500"},
+                    },
+                    {
+                        "type": "text",
+                        "criteria": "containing",
+                        "value": "Purple",
+                        "format": {"bg_color": "#b758e0"},
+                    },
+                    {
+                        "type": "text",
+                        "criteria": "containing",
+                        "value": "Night",
+                        "format": {"bg_color": "#898bfa"},
+                    },
+                    {
+                        "type": "text",
+                        "criteria": "containing",
+                        "value": "STHC",
+                        "format": {"bg_color": "#f57171"},
+                    },
+                    {
+                        "type": "text",
+                        "criteria": "containing",
+                        "value": "SHMC ICU Senior",
+                        "format": {"bg_color": "#77edd3"},
+                    },
+                    {
+                        "type": "text",
+                        "criteria": "containing",
+                        "value": "Systems of Medicine",
+                        "format": {"bg_color": "#ede977"},
+                    },
+                ]
+            },
+        )
 
     for label, filtered_resident_group in residents.group_by(pl.col("year", "track")):
         match label:
