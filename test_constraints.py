@@ -1024,7 +1024,20 @@ def verify_enforce_requirement_constraints(
                         weeks,
                         solved_schedule,
                     ), "verify_minimum_contiguity failed"
-
+                case "max_contiguity_in_period":
+                    residents_subject_to_req = residents.filter(
+                        pl.col("year").is_in(constraint.resident_years)
+                    )
+                    rotations_fulfilling_req = rotations.filter(
+                        pl.col("rotation").is_in(requirement_body.fulfilled_by)
+                    )
+                    assert verify_maximum_contiguity(
+                        constraint,
+                        residents_subject_to_req,
+                        rotations_fulfilling_req,
+                        weeks,
+                        solved_schedule,
+                    ), "verify_maximum_contiguity failed"
                 case "prerequisite":
                     prereq_demanding_rotations = requirement_body.fulfilled_by
                     prereq_weeks = constraint.weeks
@@ -1048,9 +1061,6 @@ def verify_enforce_requirement_constraints(
                         prior_rotations_completed,
                         solved_schedule,
                     ), "verify_prerequisite_met failed"
-                    pass
-                case "max_contiguity_in_period":
-                    raise NotImplementedError("Unclear if actually needed")
                 case _:
                     raise LookupError(
                         f"{constraint.type=} is not a known requirement constraint type"
