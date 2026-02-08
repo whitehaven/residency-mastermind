@@ -1,3 +1,4 @@
+import sys
 import warnings
 
 import box
@@ -5,7 +6,9 @@ import cpmpy as cp
 import polars as pl
 import polars.selectors as cs
 import pytest
+from loguru import logger
 
+import config
 from constraints import (
     enforce_requirement_constraints,
     enforce_rotation_capacity_maximum,
@@ -20,6 +23,10 @@ from display import (
 )
 from requirement_builder import RequirementBuilder
 from test_constraints import verify_enforce_requirement_constraints
+
+logger.add(
+    sys.stderr, format="{time} {level} {message}", filter="my_module", level="INFO"
+)
 
 WRITE_2026_XLSX_OUTPUT = True
 WRITE_2026_CSV_OUTPUT = False
@@ -300,6 +307,7 @@ def test_2026_real_data_constraint_only(real_2026_data):
 
     residents = residents.filter(pl.col("year") != "super_R3")
     warnings.warn("filtering out super_R3s")
+    logger.warning("super_R3 filtered out")
 
     requirement_constraints = list()
 
@@ -326,6 +334,9 @@ def test_2026_real_data_constraint_only(real_2026_data):
         )
 
         requirement_constraints.extend(this_group_requirement_constraints)
+        logger.success(
+            f"created and logged requirements {len(this_group_requirement_constraints)} constraints for {label}, total {len(requirement_constraints)}"
+        )
 
     model += requirement_constraints
 
@@ -334,6 +345,10 @@ def test_2026_real_data_constraint_only(real_2026_data):
     )
     model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
     model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
+
+    logger.info(
+        f"Added basic constraints to model. Total {len(model.constraints)} constraints added."
+    )
 
     # # TODO:  make sure to force literals
     # limited_week_rotation_names = ["SOM"]
@@ -350,13 +365,45 @@ def test_2026_real_data_constraint_only(real_2026_data):
     # model += force_literal_value_over_range(
     #     scheduled_subset_subject_to_week_exclusion, literal
     # )
+    logger.info(f">> Starting solve...")
+    is_feasible = model.solve(
+        solver=config.DEFAULT_CPMPY_SOLVER, log_search_progress=True
+    )
 
-    is_feasible = model.solve()
     if not is_feasible:
         min_unsat_result = get_MUS(model)
         print(min_unsat_result)
         raise ValueError("Infeasible")
+
+    logger.success(f"solver completed; is_feasible = {is_feasible}")
+
     melted_solved_schedule = extract_solved_schedule(scheduled)
+
+    logger.debug(f"Starting constraint verification...")
+
+    for label, filtered_resident_group in residents.group_by(pl.col("year", "track")):
+        match label:
+            case ("R2", "PCT"):
+                relevant_requirements = current_requirements["R2_PCT"]
+            case ("R3", "PCT"):
+                relevant_requirements = current_requirements["R3_PCT"]
+            case ("R2", "fellowship") | ("R2", "standard"):
+                relevant_requirements = current_requirements["R2_standard"]
+            case ("R3", "fellowship") | ("R3", "standard"):
+                relevant_requirements = current_requirements["R3_standard"]
+            case _:
+                raise ValueError("Label not accounted for")
+        logger.info(f"Starting verification for class {label}")
+        assert verify_enforce_requirement_constraints(
+            relevant_requirements,
+            filtered_resident_group,
+            rotations,
+            weeks,
+            prior_rotations_completed,
+            melted_solved_schedule,
+        ), "verify_enforce_requirement_constraints returns False"
+        logger.success(f"Constraints verified for class {label}")
+    logger.success(f"All constraints verified successfully.")
 
     if WRITE_2026_XLSX_OUTPUT:
         block = convert_melted_to_block_schedule(melted_solved_schedule)
@@ -409,32 +456,11 @@ def test_2026_real_data_constraint_only(real_2026_data):
                 ]
             },
         )
+        logger.success("wrote xlsx to test_2026_output.xlsx")
     if WRITE_2026_CSV_OUTPUT:
         block = convert_melted_to_block_schedule(melted_solved_schedule)
         block.write_csv("test_2026_data.csv")
-
-    for label, filtered_resident_group in residents.group_by(pl.col("year", "track")):
-        match label:
-            case ("R2", "PCT"):
-                relevant_requirements = current_requirements["R2_PCT"]
-            case ("R3", "PCT"):
-                relevant_requirements = current_requirements["R3_PCT"]
-            case ("R2", "fellowship") | ("R2", "standard"):
-                relevant_requirements = current_requirements["R2_standard"]
-            case ("R3", "fellowship") | ("R3", "standard"):
-                relevant_requirements = current_requirements["R3_standard"]
-            case _:
-                raise ValueError("Label not accounted for")
-
-        assert verify_enforce_requirement_constraints(
-            relevant_requirements,
-            filtered_resident_group,
-            rotations,
-            weeks,
-            prior_rotations_completed,
-            melted_solved_schedule,
-        ), "verify_enforce_requirement_constraints returns False"
-
+        logger.success("wrote csv to test_2026_data.csv")
 
 # # TODO:  make sure to force literals
 

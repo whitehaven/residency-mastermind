@@ -1,5 +1,21 @@
 # To Do List
 
+## Critical before meeting 2/9
+
+- [x] add block alignment
+  - [ ] incorporate block alignment where needed to main data
+- [ ] manually fixate vacations decided already
+- [ ] get optimization working
+- [ ] incorporate super R3s
+
+## Someday
+
+- [x] add logging
+- [ ] see if can remove year specification in enforce_requirements - currently we pre-filter residents long before
+- [ ] convert to requirement sets applied to lists of residents
+
+## Old for reference:
+
 - [ ] **Import prior completion data**
     - [ ] try digital method from schedules
 

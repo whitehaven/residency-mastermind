@@ -35,6 +35,7 @@ code-editor = [
     "isort>=7.0.0",
 ]
 hand-profiling = [
+    "loguru>=0.7.3",
     "marimo>=0.17.6",
 ]
 
