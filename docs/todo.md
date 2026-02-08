@@ -13,6 +13,7 @@
 - [x] add logging
 - [ ] see if can remove year specification in enforce_requirements - currently we pre-filter residents long before
 - [ ] convert to requirement sets applied to lists of residents
+- [ ] exterminate "use_rotations_data" test bodge
 
 ## Old for reference:
 
