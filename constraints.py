@@ -422,7 +422,7 @@ def enforce_requirement_constraints(
     scheduled: pl.DataFrame,
 ) -> list[cp.core.Comparison]:
     """
-    Enforce requirements fulfilled by rotations for all included residents over period of weeks, operating on dataframe containing cpmpy
+    Enforce requirements fulfilled by rotations for all included residents over period of weeks, operating on dataframe containing cpmpy constraints as a list of dicts.
 
     Notes:
         # MAYBE could benefit from combining all min/max/exact into one central function
