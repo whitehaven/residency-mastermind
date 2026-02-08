@@ -1,3 +1,4 @@
+import datetime
 import warnings
 
 import polars as pl
@@ -36,10 +37,10 @@ def get_resident_rotation_vars(
 
 
 def subset_scheduled_by(
-        residents: pl.DataFrame | list[str],
-        rotations: pl.DataFrame | list[str],
-        weeks: pl.DataFrame | list[str],
-        scheduled: pl.DataFrame,
+    residents: pl.DataFrame | list[str],
+    rotations: pl.DataFrame | list[str],
+    weeks: pl.DataFrame | list[datetime.date],
+    scheduled: pl.DataFrame,
 ) -> pl.DataFrame:
     """
     Subset the scheduled dataframe of cpmpy variables by supplied residents, rotations, and weeks.
