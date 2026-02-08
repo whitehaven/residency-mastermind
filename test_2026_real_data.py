@@ -103,11 +103,13 @@ def generate_R2_base_reqs_builder() -> RequirementBuilder:
     (
         builder.add_requirement(name="Night Senior", fulfilled_by=["Night Senior"])
         .min_weeks_over_resident_years(4, ["R2"])
+        .max_weeks_over_resident_years(4, ["R2"])
         .min_contiguity_over_resident_years(4, ["R2"])
     )
     (
         builder.add_requirement(name="ICU Senior", fulfilled_by=["SHMC ICU Senior"])
         .min_weeks_over_resident_years(4, ["R2"])
+        .max_weeks_over_resident_years(4, ["R2"])
         .min_contiguity_over_resident_years(4, ["R2"])
     )
     (
@@ -116,10 +118,16 @@ def generate_R2_base_reqs_builder() -> RequirementBuilder:
         ).min_weeks_over_resident_years(4, ["R2"])
     )
     (
+        builder.add_requirement(
+            name="Hospitalist", fulfilled_by=["Hospitalist"]
+        ).exact_weeks_over_resident_years(0, ["R2"])
+    )
+    (
         builder.add_requirement(name="STHC Senior", fulfilled_by=["STHC Senior"])
-        .min_weeks_over_resident_years(4, ["R2"])
+        .exact_weeks_over_resident_years(4, ["R2"])
         .min_contiguity_over_resident_years(4, ["R2"])
         .max_contiguity_over_resident_years(4, ["R2"])
+        .must_respect_block_alignment(["R2"])
     )
     (
         builder.add_requirement(name="OP Cardiology", fulfilled_by=["OP Cardiology"])
@@ -127,18 +135,18 @@ def generate_R2_base_reqs_builder() -> RequirementBuilder:
         .min_contiguity_over_resident_years(2, ["R2"])
     )
     (
-        builder.add_requirement(
-            name="Dermatology", fulfilled_by=["Dermatology"]
-        ).min_weeks_over_resident_years(2, ["R2"])
+        builder.add_requirement(name="Dermatology", fulfilled_by=["Dermatology"])
+        .exact_weeks_over_resident_years(2, ["R2"])
+        .min_contiguity_over_resident_years(2, ["R2"])
     )
     (
         builder.add_requirement(name="Geriatrics", fulfilled_by=["Geriatrics"])
-        .min_weeks_over_resident_years(2, ["R2"])
+        .exact_weeks_over_resident_years(2, ["R2"])
         .min_contiguity_over_resident_years(2, ["R2"])
     )
     (
         builder.add_requirement(name="Psych Consult", fulfilled_by=["Psych Consult"])
-        .min_weeks_over_resident_years(2, ["R2"])
+        .exact_weeks_over_resident_years(2, ["R2"])
         .min_contiguity_over_resident_years(2, ["R2"])
     )
     (
@@ -154,15 +162,26 @@ def generate_R2_base_reqs_builder() -> RequirementBuilder:
         ).max_weeks_over_resident_years(20, ["R2"])
     )
     (
+        builder.add_requirement(name="Vacation", fulfilled_by=["Vacation"])
+        .exact_weeks_over_resident_years(4, ["R2"])
+        .max_contiguity_over_resident_years(1, ["R2"])
+    )
+    (
         builder.add_requirement(
-            name="Vacation", fulfilled_by=["Vacation"]
-        ).exact_weeks_over_resident_years(4, ["R2"])
+            name="OP Pulmonology", fulfilled_by=["OP Pulmonology"]
+        ).exact_weeks_over_resident_years(0, ["R2"])
     )
     return builder
 
 
 def generate_R2_standard_reqs() -> box.Box:
     builder = generate_R2_base_reqs_builder()
+
+    # 0 GIM for standard R2
+    builder.add_requirement(
+        name="GIM", fulfilled_by=["GIM"]
+    ).max_weeks_over_resident_years(0, ["R2"])
+
     current_requirements = builder.accumulate_constraints_by_rule()
     return current_requirements
 
@@ -171,7 +190,7 @@ def generate_R2_primary_care_track_reqs() -> box.Box:
     builder = generate_R2_base_reqs_builder()
     (
         builder.add_requirement(name="GIM", fulfilled_by=["GIM"])
-        .min_weeks_over_resident_years(4, ["R2"])
+        .exact_weeks_over_resident_years(4, ["R2"])
         .min_contiguity_over_resident_years(2, ["R2"])
         .max_contiguity_over_resident_years(2, ["R2"])
     )
@@ -216,7 +235,7 @@ def generate_R3_base_reqs_builder() -> RequirementBuilder:
     # 4 OP pulm
     (
         builder.add_requirement(name="OP Pulmonology", fulfilled_by=["OP Pulmonology"])
-        .min_weeks_over_resident_years(4, ["R3"])
+        .exact_weeks_over_resident_years(4, ["R3"])
         .min_contiguity_over_resident_years(2, ["R3"])
     )
     # electives
@@ -226,9 +245,9 @@ def generate_R3_base_reqs_builder() -> RequirementBuilder:
         ).max_weeks_over_resident_years(20, ["R3"])
     )
     (
-        builder.add_requirement(
-            name="Vacation", fulfilled_by=["Vacation"]
-        ).exact_weeks_over_resident_years(4, ["R3"])
+        builder.add_requirement(name="Vacation", fulfilled_by=["Vacation"])
+        .exact_weeks_over_resident_years(4, ["R3"])
+        .max_contiguity_over_resident_years(1, ["R3"])
     )
     (
         builder.add_requirement(
@@ -249,17 +268,19 @@ def generate_R3_standard_reqs() -> box.Box:
     # 4 amb
     (
         builder.add_requirement(name="STHC Senior", fulfilled_by=["STHC Senior"])
-        .min_weeks_over_resident_years(4, ["R3"])
+        .exact_weeks_over_resident_years(4, ["R3"])
         .min_contiguity_over_resident_years(4, ["R3"])
         .max_contiguity_over_resident_years(4, ["R3"])
+        .must_respect_block_alignment(["R3"])
     )
     # 4 ICU or CICU
     (
         builder.add_requirement(
             name="ICU Senior", fulfilled_by=["SHMC ICU Senior", "SHMC CICU"]
         )
-        .min_weeks_over_resident_years(4, ["R3"])
+        .exact_weeks_over_resident_years(4, ["R3"])
         .min_contiguity_over_resident_years(4, ["R3"])
+        .must_respect_block_alignment(["R3"])
     )
     current_requirements = builder.accumulate_constraints_by_rule()
     return current_requirements
@@ -278,7 +299,13 @@ def generate_R3_primary_care_track_reqs() -> box.Box:
     (
         builder.add_requirement(name="GIM", fulfilled_by=["GIM"])
         .min_weeks_over_resident_years(4, ["R3"])
+        .max_weeks_over_resident_years(4, ["R3"])
         .min_contiguity_over_resident_years(2, ["R3"])
+    )
+    (
+        builder.add_requirement(
+            name="ICU Senior", fulfilled_by=["SHMC ICU Senior", "SHMC CICU"]
+        ).exact_weeks_over_resident_years(0, ["R3"])
     )
     current_requirements = builder.accumulate_constraints_by_rule()
     return current_requirements
@@ -346,9 +373,7 @@ def test_2026_real_data_constraint_only(real_2026_data):
     model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
     model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
 
-    logger.info(
-        f"Added basic constraints to model. Total {len(model.constraints)} constraints added."
-    )
+    logger.success(f"Added basic constraints to model")
 
     # # TODO:  make sure to force literals
     # limited_week_rotation_names = ["SOM"]
@@ -393,7 +418,7 @@ def test_2026_real_data_constraint_only(real_2026_data):
                 relevant_requirements = current_requirements["R3_standard"]
             case _:
                 raise ValueError("Label not accounted for")
-        logger.info(f"Starting verification for class {label}")
+        logger.debug(f"Starting verification for class {label}")
         assert verify_enforce_requirement_constraints(
             relevant_requirements,
             filtered_resident_group,
@@ -402,7 +427,7 @@ def test_2026_real_data_constraint_only(real_2026_data):
             prior_rotations_completed,
             melted_solved_schedule,
         ), "verify_enforce_requirement_constraints returns False"
-        logger.success(f"Constraints verified for class {label}")
+        logger.success(f"Constraints verified as met for class {label}")
     logger.success(f"All constraints verified successfully.")
 
     if WRITE_2026_XLSX_OUTPUT:
@@ -452,6 +477,12 @@ def test_2026_real_data_constraint_only(real_2026_data):
                         "criteria": "containing",
                         "value": "Systems of Medicine",
                         "format": {"bg_color": "#ede977"},
+                    },
+                    {
+                        "type": "text",
+                        "criteria": "containing",
+                        "value": "Vacation",
+                        "format": {"bg_color": "#f593d1"},
                     },
                 ]
             },
