@@ -284,7 +284,7 @@ def test_2026_req_generation():
     assert True
 
 
-def test_2026_real_data_run(real_2026_data):
+def test_2026_real_data_constraint_only(real_2026_data):
     (
         residents,
         rotations,
