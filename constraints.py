@@ -494,7 +494,7 @@ def enforce_requirement_constraints(
                     rotations_fulfilling_req = rotations.filter(
                         pl.col("rotation").is_in(requirement_body.fulfilled_by)
                     )
-                    enforce_maximum_contiguity(
+                    constraints = enforce_maximum_contiguity(
                         constraint.weeks,
                         residents_subject_to_req,
                         rotations_fulfilling_req,

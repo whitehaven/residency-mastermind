@@ -372,7 +372,7 @@ def verify_minimum_contiguity(
 
         for resident_dict in residents.iter_rows(named=True):
             resident_rotation_schedule = rotation_schedule.filter(
-                pl.col("resident") == resident_dict
+                pl.col("resident") == resident_dict[config.RESIDENTS_PRIMARY_LABEL]
             ).sort("week")
 
             scheduled_weeks = resident_rotation_schedule["week"].to_list()
@@ -412,9 +412,12 @@ def verify_maximum_contiguity(
     Returns:
         bool: True if all maximum contiguity constraints are satisfied, False otherwise
     """
-    max_contiguity = constraint
-
     for rotation_dict in rotations.iter_rows(named=True):
+        if constraint == "use_rotations_data":
+            max_contiguity = rotation_dict["maximum_contiguous_weeks"]
+        else:
+            max_contiguity = constraint.weeks  # type: ignore
+
         rotation_name = rotation_dict[config.ROTATIONS_PRIMARY_LABEL]
 
         rotation_schedule = solved_schedule.filter(
@@ -424,7 +427,7 @@ def verify_maximum_contiguity(
 
         for resident_dict in residents.iter_rows(named=True):
             resident_rotation_schedule = rotation_schedule.filter(
-                pl.col("resident") == resident_dict
+                pl.col("resident") == resident_dict[config.RESIDENTS_PRIMARY_LABEL]
             ).sort("week")
 
             scheduled_weeks = resident_rotation_schedule["week"].to_list()
