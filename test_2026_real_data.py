@@ -1,3 +1,4 @@
+import datetime
 import sys
 import warnings
 
@@ -15,6 +16,7 @@ from constraints import (
     enforce_rotation_capacity_minimum,
     require_one_rotation_per_resident_per_week,
     get_MUS,
+    force_literal_value_over_range,
 )
 from data_io import generate_pl_wrapped_boolvar
 from display import (
@@ -376,21 +378,43 @@ def test_2026_real_data_constraint_only(real_2026_data):
 
     logger.success(f"Added basic constraints to model")
 
-    # # TODO:  make sure to force literals
-    # limited_week_rotation_names = ["SOM"]
-    # limited_week_rotations = rotations.filter(
-    #     pl.col("rotation").is_in(limited_week_rotation_names)
-    # )
-    # excluded_weeks = weeks.join(weeks_with_SOM, on=weeks.columns, how="anti")
-    #
-    # scheduled_subset_subject_to_week_exclusion = subset_scheduled_by(
-    #     residents, limited_week_rotations, excluded_weeks, scheduled
-    # )
-    # literal = False
-    #
-    # model += force_literal_value_over_range(
-    #     scheduled_subset_subject_to_week_exclusion, literal
-    # )
+    logger.debug(f"Generating manual specification constraints...")
+
+    # restrict SOM
+    SOM_openings = [
+        datetime.date(2026, 10, 12),
+        datetime.date(2026, 10, 19),
+        datetime.date(2027, 3, 1),
+        datetime.date(2027, 3, 8),
+    ]
+
+    SOM_unavail = scheduled.filter(
+        (~pl.col("week").is_in(SOM_openings))
+        & (pl.col("rotation").eq("Systems of Medicine"))
+    )
+
+    SOM_constraints = force_literal_value_over_range(SOM_unavail, False)
+    model += SOM_constraints
+    logger.debug(f"Added {len(SOM_constraints)=}")
+
+    manual_true_targets = pl.read_csv(
+        "real_2026_manual_true_constraints.csv", try_parse_dates=True
+    )
+
+    manual_true_targets_with_boolvars = scheduled.join(
+        manual_true_targets, on=["resident", "rotation", "week"], how="right"
+    )
+
+    vacation_constraints = force_literal_value_over_range(
+        manual_true_targets_with_boolvars, True
+    )
+    model += vacation_constraints
+    logger.debug(f"Added {len(vacation_constraints)=}")
+
+    total_manual_constraints = len(SOM_constraints) + len(vacation_constraints)
+
+    logger.success(f"Generated {total_manual_constraints=}")
+
     logger.info(f">> Starting solve...")
     is_feasible = model.solve(
         solver=config.DEFAULT_CPMPY_SOLVER, log_search_progress=True
