@@ -22,6 +22,7 @@ from requirement_builder import RequirementBuilder
 from test_constraints import verify_enforce_requirement_constraints
 
 WRITE_2026_XLSX_OUTPUT = True
+WRITE_2026_CSV_OUTPUT = True
 
 @pytest.fixture
 def real_2026_data():
@@ -405,6 +406,9 @@ def test_2026_real_data_run(real_2026_data):
                 ]
             },
         )
+    if WRITE_2026_CSV_OUTPUT:
+        block = convert_melted_to_block_schedule(melted_solved_schedule)
+        block.write_csv("test_2026_data.csv")
 
     for label, filtered_resident_group in residents.group_by(pl.col("year", "track")):
         match label:
