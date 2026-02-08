@@ -109,6 +109,7 @@ def generate_R2_base_reqs_builder() -> RequirementBuilder:
         builder.add_requirement(name="STHC Senior", fulfilled_by=["STHC Senior"])
         .min_weeks_over_resident_years(4, ["R2"])
         .min_contiguity_over_resident_years(4, ["R2"])
+        .max_contiguity_over_resident_years(4, ["R2"])
     )
     (
         builder.add_requirement(name="OP Cardiology", fulfilled_by=["OP Cardiology"])
@@ -162,6 +163,7 @@ def generate_R2_primary_care_track_reqs() -> box.Box:
         builder.add_requirement(name="GIM", fulfilled_by=["GIM"])
         .min_weeks_over_resident_years(4, ["R2"])
         .min_contiguity_over_resident_years(2, ["R2"])
+        .max_contiguity_over_resident_years(2, ["R2"])
     )
 
     current_requirements = builder.accumulate_constraints_by_rule()
@@ -178,6 +180,7 @@ def generate_R3_base_reqs_builder() -> RequirementBuilder:
         )
         .min_weeks_over_resident_years(8, ["R3"])
         .min_contiguity_over_resident_years(4, ["R3"])
+        .max_contiguity_over_resident_years(4, ["R3"])
     )
     # 1-2 NF
     (
@@ -221,6 +224,11 @@ def generate_R3_base_reqs_builder() -> RequirementBuilder:
             name="OP Cardiology", fulfilled_by=["OP Cardiology"]
         ).exact_weeks_over_resident_years(0, ["R3"])
     )
+    (
+        builder.add_requirement(
+            name="Systems of Medicine", fulfilled_by=["Systems of Medicine"]
+        ).max_weeks_over_resident_years(0, ["R3"])
+    )
 
     return builder
 
@@ -232,6 +240,7 @@ def generate_R3_standard_reqs() -> box.Box:
         builder.add_requirement(name="STHC Senior", fulfilled_by=["STHC Senior"])
         .min_weeks_over_resident_years(4, ["R3"])
         .min_contiguity_over_resident_years(4, ["R3"])
+        .max_contiguity_over_resident_years(4, ["R3"])
     )
     # 4 ICU or CICU
     (
@@ -251,7 +260,8 @@ def generate_R3_primary_care_track_reqs() -> box.Box:
     (
         builder.add_requirement(name="STHC Senior", fulfilled_by=["STHC Senior"])
         .min_weeks_over_resident_years(8, ["R3"])
-        .min_contiguity_over_resident_years(4, ["R3"])
+        .min_contiguity_over_resident_years(2, ["R3"])
+        .max_contiguity_over_resident_years(4, ["R3"])
     )
     # GIM 4 / 2*2wk
     (
