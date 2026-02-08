@@ -8,7 +8,7 @@ test_weeks_path = config.TESTING_FILES["weeks"]["full_academic_year_2025_2026"]
 
 def extract_solved_schedule(scheduled: pl.DataFrame) -> pl.DataFrame:
     """
-    Process decision variable through the attached solver and returns the
+    Process decision variable through the attached solver and returns a polars DataFrame similar to scheduled with new column 'is_scheduled_result".
 
     Args:
         scheduled: pl.DataFrame with decision variables
