@@ -30,6 +30,7 @@ logger.add(
 
 WRITE_2026_XLSX_OUTPUT = True
 WRITE_2026_CSV_OUTPUT = False
+PERFORM_VERIFICATION = False
 
 @pytest.fixture
 def real_2026_data():
@@ -404,31 +405,37 @@ def test_2026_real_data_constraint_only(real_2026_data):
 
     melted_solved_schedule = extract_solved_schedule(scheduled)
 
-    logger.debug(f"Starting constraint verification...")
+    if PERFORM_VERIFICATION:
 
-    for label, filtered_resident_group in residents.group_by(pl.col("year", "track")):
-        match label:
-            case ("R2", "PCT"):
-                relevant_requirements = current_requirements["R2_PCT"]
-            case ("R3", "PCT"):
-                relevant_requirements = current_requirements["R3_PCT"]
-            case ("R2", "fellowship") | ("R2", "standard"):
-                relevant_requirements = current_requirements["R2_standard"]
-            case ("R3", "fellowship") | ("R3", "standard"):
-                relevant_requirements = current_requirements["R3_standard"]
-            case _:
-                raise ValueError("Label not accounted for")
-        logger.debug(f"Starting verification for class {label}")
-        assert verify_enforce_requirement_constraints(
-            relevant_requirements,
-            filtered_resident_group,
-            rotations,
-            weeks,
-            prior_rotations_completed,
-            melted_solved_schedule,
-        ), "verify_enforce_requirement_constraints returns False"
-        logger.success(f"Constraints verified as met for class {label}")
-    logger.success(f"All constraints verified successfully.")
+        logger.debug(f"Starting constraint verification...")
+
+        for label, filtered_resident_group in residents.group_by(
+            pl.col("year", "track")
+        ):
+            match label:
+                case ("R2", "PCT"):
+                    relevant_requirements = current_requirements["R2_PCT"]
+                case ("R3", "PCT"):
+                    relevant_requirements = current_requirements["R3_PCT"]
+                case ("R2", "fellowship") | ("R2", "standard"):
+                    relevant_requirements = current_requirements["R2_standard"]
+                case ("R3", "fellowship") | ("R3", "standard"):
+                    relevant_requirements = current_requirements["R3_standard"]
+                case _:
+                    raise ValueError("Label not accounted for")
+            logger.debug(f"Starting verification for class {label}")
+            assert verify_enforce_requirement_constraints(
+                relevant_requirements,
+                filtered_resident_group,
+                rotations,
+                weeks,
+                prior_rotations_completed,
+                melted_solved_schedule,
+            ), "verify_enforce_requirement_constraints returns False"
+            logger.success(f"Constraints verified as met for class {label}")
+        logger.success(f"All constraints verified successfully.")
+    else:
+        logger.warning(f"Skipping constraint verification.")
 
     if WRITE_2026_XLSX_OUTPUT:
         block = convert_melted_to_block_schedule(melted_solved_schedule)

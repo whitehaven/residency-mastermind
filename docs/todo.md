@@ -3,10 +3,11 @@
 ## Critical before meeting 2/9
 
 - [x] add block alignment
-  - [ ] incorporate block alignment where needed to main data
-- [ ] manually fixate vacations decided already
+  - [x] incorporate block alignment where needed to main data
+- [x] manually fixate vacations decided already
 - [ ] get optimization working
 - [ ] incorporate super R3s
+- [ ] create paternity leave rotation
 
 ## Someday
 
