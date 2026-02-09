@@ -59,7 +59,7 @@ def join_preferences_with_scheduled(
     return scheduled.join(preferences, on=["resident", "rotation", "week"], how="inner")
 
 
-def create_preference_objective(
+def create_preferences_objective(
     scheduled: pl.DataFrame, preferences: pl.DataFrame
 ) -> int | cp.core.Operator:
     """

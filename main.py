@@ -15,7 +15,7 @@ from data_io import generate_pl_wrapped_boolvar, read_bulk_data_sqlite3
 from display import convert_melted_to_block_schedule, extract_solved_schedule
 from optimization import (
     calculate_total_preference_satisfaction,
-    create_preference_objective,
+    create_preferences_objective,
 )
 
 
@@ -124,7 +124,7 @@ def solve_schedule(
 
     # Optimization
     if optimize and preferences is not None:
-        objective = create_preference_objective(scheduled, preferences)
+        objective = create_preferences_objective(scheduled, preferences)
         model.maximize(objective)
 
         is_optimal = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=True)

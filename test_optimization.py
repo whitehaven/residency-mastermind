@@ -15,7 +15,7 @@ from data_io import generate_pl_wrapped_boolvar
 from display import extract_solved_schedule
 from optimization import (
     calculate_total_preference_satisfaction,
-    create_preference_objective,
+    create_preferences_objective,
     generate_blank_preferences_df,
     join_preferences_with_scheduled,
 )
@@ -134,7 +134,7 @@ def test_create_preference_objective(simple_optimization_setup_with_preferences)
         simple_optimization_setup_with_preferences
     )
 
-    objective = create_preference_objective(scheduled, preferences)
+    objective = create_preferences_objective(scheduled, preferences)
 
     assert objective is not None, "Objective should be created"
     # Test that objective has expected structure (should be a sum expression)
@@ -156,7 +156,7 @@ def test_solve_with_optimization(simple_optimization_setup_with_preferences):
     model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
 
     # Create and add objective
-    objective = create_preference_objective(scheduled, preferences)
+    objective = create_preferences_objective(scheduled, preferences)
     model.maximize(objective)
 
     # Solve
@@ -227,7 +227,7 @@ def test_vacation_optimization(vacation_request_setup):
     model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
     model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
 
-    objective = create_preference_objective(scheduled, preferences)
+    objective = create_preferences_objective(scheduled, preferences)
     model.maximize(objective)
 
     is_optimal = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
@@ -343,7 +343,7 @@ def test_complex_optimization_with_requirements(complex_optimization_setup):
     model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
 
     # Add objective
-    objective = create_preference_objective(scheduled, preferences)
+    objective = create_preferences_objective(scheduled, preferences)
     model.maximize(objective)
 
     is_optimal = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
@@ -398,7 +398,7 @@ def test_optimization_improves_over_feasibility():
         preference=pl.when(pl.col("rotation") == "Preferred").then(10).otherwise(-10)
     )
 
-    objective = create_preference_objective(scheduled, preferences)
+    objective = create_preferences_objective(scheduled, preferences)
 
     optimization_model = cp.Model()
     optimization_model += require_one_rotation_per_resident_per_week(
@@ -469,5 +469,5 @@ def test_minimal_preference_validity():
     )
 
     # Should work with zero preferences
-    objective = create_preference_objective(scheduled, preferences)
+    objective = create_preferences_objective(scheduled, preferences)
     assert objective is not None, "Should create objective even with zero preferences"
