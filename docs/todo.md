@@ -1,13 +1,14 @@
 # To Do List
 
-## Critical before meeting 2/9
+## Critical
 
 - [x] add block alignment
   - [x] incorporate block alignment where needed to main data
 - [x] manually fixate vacations decided already
-- [ ] get optimization working
+- [x] get optimization working
 - [ ] incorporate super R3s
 - [ ] create paternity leave rotation
+- [ ] HS HS X X HS HS X X where X = E | V
 
 ## Someday
 

@@ -1049,7 +1049,7 @@ wheels = [
 
 [[package]]
 name = "residency-mastermind"
-version = "0.7.0a1"
+version = "0.7.1b1"
 source = { virtual = "." }
 
 [package.optional-dependencies]
