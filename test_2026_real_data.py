@@ -803,10 +803,12 @@ def generate_2026_preferences_dataframe(real_2026_data) -> pl.DataFrame:
     )
 
     # specifics
-    specific_preferences = pl.read_csv("real_2026_vacations.csv", try_parse_dates=True)
+    vacation_preferences = pl.read_csv("real_2026_vacations.csv", try_parse_dates=True)
 
     # Add vacation preferences
-    for vacation_row in specific_preferences.iter_rows():
+    vacation_preferences = pl.read_csv("real_2026_vacations.csv", try_parse_dates=True)
+
+    for vacation_row in vacation_preferences.iter_rows():
         resident, rotation, week = vacation_row
         preferences = preferences.with_columns(
             preference=pl.when(
