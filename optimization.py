@@ -65,9 +65,7 @@ def create_preference_objective(
     """
     Create a preference-based objective function for the scheduling model.
 
-    The objective maximizes the weighted sum of scheduled assignments, where
-    each assignment is weighted by its preference score. Positive scores
-    represent desired assignments, negative scores represent undesired assignments.
+    It will be maximized, therefore higher is more likely to be respected.
 
     Args:
         scheduled: DataFrame with boolean variables
@@ -81,6 +79,7 @@ def create_preference_objective(
         # Negative score for undesirable assignments
         # Zero score for neutral assignments
     """
+
     joined = join_preferences_with_scheduled(scheduled, preferences)
 
     # Create weighted sum: sum(boolvar * preference_score)
@@ -91,7 +90,7 @@ def create_preference_objective(
         objective_terms.append(boolvar * preference)
 
     if not objective_terms:
-        return 0  # Return 0 if no objective terms
+        return 0
 
     return cp.sum(objective_terms)
 

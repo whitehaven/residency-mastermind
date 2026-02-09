@@ -23,6 +23,7 @@ from display import (
     extract_solved_schedule,
     convert_melted_to_block_schedule,
 )
+from optimization import generate_blank_preferences_df
 from requirement_builder import RequirementBuilder
 from test_constraints import verify_enforce_requirement_constraints
 
@@ -534,3 +535,41 @@ def test_2026_real_data_constraint_only(real_2026_data):
         block.write_csv("test_2026_data.csv")
         logger.success("wrote csv to test_2026_data.csv")
     logger.success(">> End of Program <<")
+
+
+def test_2026_preferences_accumulation(
+    generate_2026_preference_dataframe, real_2026_data
+) -> None:
+    preferences = generate_2026_preference_dataframe
+    print()
+
+
+@pytest.fixture
+def generate_2026_preference_dataframe(real_2026_data) -> pl.DataFrame:
+    """
+
+    Returns:
+
+    """
+    (
+        residents,
+        rotations,
+        weeks,
+        current_requirements,
+        scheduled,
+        prior_rotations_completed,
+    ) = real_2026_data
+
+    preferences = generate_blank_preferences_df(
+        residents[config.RESIDENTS_PRIMARY_LABEL].to_list(),
+        rotations[config.ROTATIONS_PRIMARY_LABEL].to_list(),
+        weeks[config.WEEKS_PRIMARY_LABEL].to_list(),
+    )
+
+    # specifics
+    specific_preferences = pl.read_csv("real_2026_preferences.csv")
+
+    # general
+    logger.debug("Generating categorical preference values")
+
+    return preferences

@@ -6,7 +6,6 @@ RESIDENTS_PRIMARY_LABEL = "full_name"
 ROTATIONS_PRIMARY_LABEL = "rotation"
 WEEKS_PRIMARY_LABEL = "monday_date"
 DEFAULT_CPMPY_SOLVER = "ortools"
-DEFAULT_MAXIMUM_CONTIGUITY = 4
 DEFAULT_REQUIREMENTS_PATH = "requirements.yaml"
 TESTING_DB_PATH = "seniors_only_anonymized_current_reqs.db"
 TESTING_FILES = {
@@ -24,3 +23,4 @@ TESTING_FILES = {
         "full_three_years": "test_data/test_weeks_2024_2027_three_years.csv",
         "full_academic_year_2025_2026": "test_data/test_weeks_2025_2026.csv",
     }, }
+PAYOUTS = {"Vacation": 10}
