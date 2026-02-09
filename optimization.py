@@ -120,5 +120,4 @@ def calculate_total_preference_satisfaction(
         .sum()
         .item()
     )
-
     return total_score

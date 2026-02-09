@@ -23,7 +23,11 @@ from display import (
     extract_solved_schedule,
     convert_melted_to_block_schedule,
 )
-from optimization import generate_blank_preferences_df
+from optimization import (
+    generate_blank_preferences_df,
+    create_preferences_objective,
+    calculate_total_preference_satisfaction,
+)
 from requirement_builder import RequirementBuilder
 from test_constraints import verify_enforce_requirement_constraints
 
@@ -35,9 +39,9 @@ WRITE_2026_XLSX_OUTPUT = True
 WRITE_2026_CSV_OUTPUT = False
 PERFORM_VERIFICATION = False
 
+
 @pytest.fixture
 def real_2026_data():
-
     residents = pl.read_csv("real_2026_data_residents.csv")
     weeks = pl.read_csv("real_2026_data_weeks.csv", try_parse_dates=True)
     rotations = pl.read_csv("real_2026_data_rotations.csv")
@@ -324,6 +328,7 @@ def test_2026_req_generation():
     assert True
 
 
+@pytest.mark.skip(reason="Replaced by total solution, test_2026_real_data")
 def test_2026_real_data_constraint_only(real_2026_data):
     (
         residents,
@@ -368,15 +373,12 @@ def test_2026_real_data_constraint_only(real_2026_data):
         logger.success(
             f"created and logged requirements {len(this_group_requirement_constraints)} constraints for {label}, total {len(requirement_constraints)}"
         )
-
     model += requirement_constraints
-
     model += require_one_rotation_per_resident_per_week(
         residents, rotations, weeks, scheduled
     )
     model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
     model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
-
     logger.success(f"Added basic constraints to model")
 
     logger.debug(f"Generating manual specification constraints...")
@@ -388,12 +390,10 @@ def test_2026_real_data_constraint_only(real_2026_data):
         datetime.date(2027, 3, 1),
         datetime.date(2027, 3, 8),
     ]
-
     SOM_unavail = scheduled.filter(
         (~pl.col("week").is_in(SOM_openings))
         & (pl.col("rotation").eq("Systems of Medicine"))
     )
-
     SOM_constraints = force_literal_value_over_range(SOM_unavail, False)
     model += SOM_constraints
     logger.debug(f"Added {len(SOM_constraints)=}")
@@ -431,7 +431,223 @@ def test_2026_real_data_constraint_only(real_2026_data):
     melted_solved_schedule = extract_solved_schedule(scheduled)
 
     if PERFORM_VERIFICATION:
+        logger.debug(f"Starting constraint verification...")
 
+        for label, filtered_resident_group in residents.group_by(
+            pl.col("year", "track")
+        ):
+            match label:
+                case ("R2", "PCT"):
+                    relevant_requirements = current_requirements["R2_PCT"]
+                case ("R3", "PCT"):
+                    relevant_requirements = current_requirements["R3_PCT"]
+                case ("R2", "fellowship") | ("R2", "standard"):
+                    relevant_requirements = current_requirements["R2_standard"]
+                case ("R3", "fellowship") | ("R3", "standard"):
+                    relevant_requirements = current_requirements["R3_standard"]
+                case _:
+                    raise ValueError("Label not accounted for")
+            logger.debug(f"Starting verification for class {label}")
+            assert verify_enforce_requirement_constraints(
+                relevant_requirements,
+                filtered_resident_group,
+                rotations,
+                weeks,
+                prior_rotations_completed,
+                melted_solved_schedule,
+            ), "verify_enforce_requirement_constraints returns False"
+            logger.success(f"Constraints verified as met for class {label}")
+        logger.success(f"All constraints verified successfully.")
+    else:
+        logger.warning(f"Skipping constraint verification.")
+
+    if WRITE_2026_XLSX_OUTPUT:
+        block = convert_melted_to_block_schedule(melted_solved_schedule)
+        block = block.join(
+            residents, left_on="resident", right_on=config.RESIDENTS_PRIMARY_LABEL
+        ).select(
+            [
+                "resident",
+                "year",
+                "track",
+                cs.all().exclude(["resident", "year", "track"]),
+            ]
+        )
+        block.write_excel(
+            "test_2026_output.xlsx",
+            conditional_formats={
+                cs.all(): [
+                    {
+                        "type": "text",
+                        "criteria": "containing",
+                        "value": "Green",
+                        "format": {"bg_color": "#88E788"},
+                    },
+                    {
+                        "type": "text",
+                        "criteria": "containing",
+                        "value": "Orange",
+                        "format": {"bg_color": "#FFA500"},
+                    },
+                    {
+                        "type": "text",
+                        "criteria": "containing",
+                        "value": "Purple",
+                        "format": {"bg_color": "#b758e0"},
+                    },
+                    {
+                        "type": "text",
+                        "criteria": "containing",
+                        "value": "Night",
+                        "format": {"bg_color": "#898bfa"},
+                    },
+                    {
+                        "type": "text",
+                        "criteria": "containing",
+                        "value": "STHC",
+                        "format": {"bg_color": "#f57171"},
+                    },
+                    {
+                        "type": "text",
+                        "criteria": "containing",
+                        "value": "SHMC ICU Senior",
+                        "format": {"bg_color": "#77edd3"},
+                    },
+                    {
+                        "type": "text",
+                        "criteria": "containing",
+                        "value": "Systems of Medicine",
+                        "format": {"bg_color": "#ede977"},
+                    },
+                    {
+                        "type": "text",
+                        "criteria": "containing",
+                        "value": "Vacation",
+                        "format": {"bg_color": "#f593d1"},
+                    },
+                ]
+            },
+        )
+        logger.success("wrote xlsx to test_2026_output.xlsx")
+    if WRITE_2026_CSV_OUTPUT:
+        block = convert_melted_to_block_schedule(melted_solved_schedule)
+        block.write_csv("test_2026_data.csv")
+        logger.success("wrote csv to test_2026_data.csv")
+    logger.success(">> End of Program <<")
+
+
+def test_2026_real_data_total(real_2026_data, generate_2026_preferences_dataframe):
+    (
+        residents,
+        rotations,
+        weeks,
+        current_requirements,
+        scheduled,
+        prior_rotations_completed,
+    ) = real_2026_data
+
+    model = cp.Model()
+
+    residents = residents.filter(pl.col("year") != "super_R3")
+    warnings.warn("filtering out super_R3s")
+    logger.warning("super_R3 filtered out")
+
+    requirement_constraints = list()
+
+    for label, filtered_resident_group in residents.group_by(pl.col("year", "track")):
+        match label:
+            case ("R2", "PCT"):
+                relevant_requirements = current_requirements["R2_PCT"]
+            case ("R3", "PCT"):
+                relevant_requirements = current_requirements["R3_PCT"]
+            case ("R2", "fellowship") | ("R2", "standard"):
+                relevant_requirements = current_requirements["R2_standard"]
+            case ("R3", "fellowship") | ("R3", "standard"):
+                relevant_requirements = current_requirements["R3_standard"]
+            case _:
+                raise ValueError("Label not accounted for")
+
+        this_group_requirement_constraints = enforce_requirement_constraints(
+            relevant_requirements,
+            filtered_resident_group,
+            rotations,
+            weeks,
+            prior_rotations_completed,
+            scheduled,
+        )
+
+        requirement_constraints.extend(this_group_requirement_constraints)
+        logger.success(
+            f"created and logged requirements {len(this_group_requirement_constraints)} constraints for {label}, total {len(requirement_constraints)}"
+        )
+    model += requirement_constraints
+    model += require_one_rotation_per_resident_per_week(
+        residents, rotations, weeks, scheduled
+    )
+    model += enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
+    model += enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
+    logger.success(f"Added basic constraints to model")
+
+    logger.debug(f"Generating manual specification constraints...")
+
+    # restrict SOM
+    SOM_openings = [
+        datetime.date(2026, 10, 12),
+        datetime.date(2026, 10, 19),
+        datetime.date(2027, 3, 1),
+        datetime.date(2027, 3, 8),
+    ]
+    SOM_unavail = scheduled.filter(
+        (~pl.col("week").is_in(SOM_openings))
+        & (pl.col("rotation").eq("Systems of Medicine"))
+    )
+    SOM_constraints = force_literal_value_over_range(SOM_unavail, False)
+    model += SOM_constraints
+    logger.debug(f"Added {len(SOM_constraints)=}")
+
+    manual_true_targets = pl.read_csv(
+        "real_2026_manual_true_constraints.csv", try_parse_dates=True
+    )
+
+    manual_true_targets_with_boolvars = scheduled.join(
+        manual_true_targets, on=["resident", "rotation", "week"], how="right"
+    )
+
+    vacation_constraints = force_literal_value_over_range(
+        manual_true_targets_with_boolvars, True
+    )
+    model += vacation_constraints
+    logger.debug(f"Added {len(vacation_constraints)=}.")
+
+    total_manual_constraints = len(SOM_constraints) + len(vacation_constraints)
+
+    logger.success(f"Generated {total_manual_constraints=}.")
+
+    logger.info(">> Starting preference assignment...")
+    preferences = generate_2026_preferences_dataframe
+    preference_maximization = create_preferences_objective(scheduled, preferences)
+    model.objective(preference_maximization, minimize=False)
+    logger.success(f"Maximization objective compiled and integrated to model.")
+
+    logger.info(f">> Starting solve...")
+    is_feasible = model.solve(
+        solver=config.DEFAULT_CPMPY_SOLVER, log_search_progress=True, time_limit=60 * 1
+    )
+
+    if not is_feasible:
+        min_unsat_result = get_MUS(model)
+        print(min_unsat_result)
+        raise ValueError("Infeasible")
+
+    logger.success(f"solver completed; is_feasible = {is_feasible}")
+
+    melted_solved_schedule = extract_solved_schedule(scheduled)
+
+    logger.info(
+        f"Total preference satisfaction = {calculate_total_preference_satisfaction(melted_solved_schedule,preferences)}"
+    )
+
+    if PERFORM_VERIFICATION:
         logger.debug(f"Starting constraint verification...")
 
         for label, filtered_resident_group in residents.group_by(
@@ -538,14 +754,25 @@ def test_2026_real_data_constraint_only(real_2026_data):
 
 
 def test_2026_preferences_accumulation(
-    generate_2026_preference_dataframe, real_2026_data
+    generate_2026_preferences_dataframe, real_2026_data
 ) -> None:
-    preferences = generate_2026_preference_dataframe
-    print()
+    (
+        residents,
+        rotations,
+        weeks,
+        current_requirements,
+        scheduled,
+        prior_rotations_completed,
+    ) = real_2026_data
+
+    preferences = generate_2026_preferences_dataframe
+
+    create_preferences_objective(scheduled, preferences)
+    assert True
 
 
 @pytest.fixture
-def generate_2026_preference_dataframe(real_2026_data) -> pl.DataFrame:
+def generate_2026_preferences_dataframe(real_2026_data) -> pl.DataFrame:
     """
 
     Returns:
@@ -566,10 +793,29 @@ def generate_2026_preference_dataframe(real_2026_data) -> pl.DataFrame:
         weeks[config.WEEKS_PRIMARY_LABEL].to_list(),
     )
 
-    # specifics
-    specific_preferences = pl.read_csv("real_2026_preferences.csv")
-
     # general
-    logger.debug("Generating categorical preference values")
+    logger.debug("Generating categorical preference values:")
+
+    preferences = preferences.with_columns(
+        preference=pl.when((pl.col("rotation") == "Elective"))
+        .then(pl.col("preference") + 1)
+        .otherwise(pl.col("preference"))
+    )
+
+    # specifics
+    specific_preferences = pl.read_csv("real_2026_vacations.csv", try_parse_dates=True)
+
+    # Add vacation preferences
+    for vacation_row in specific_preferences.iter_rows():
+        resident, rotation, week = vacation_row
+        preferences = preferences.with_columns(
+            preference=pl.when(
+                (pl.col("resident") == resident)
+                & (pl.col("rotation") == rotation)
+                & (pl.col("week") == week)
+            )
+            .then(pl.col("preference") + config.PAYOUTS["Vacation"])
+            .otherwise(pl.col("preference"))
+        )
 
     return preferences
