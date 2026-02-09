@@ -578,7 +578,9 @@ def test_2026_real_data_total(real_2026_data, generate_2026_preferences_datafram
 
         requirement_constraints.extend(this_group_requirement_constraints)
         logger.success(
-            f"created and logged requirements {len(this_group_requirement_constraints)} constraints for {label}, total {len(requirement_constraints)}"
+            f"created {len(this_group_requirement_constraints)} constraints"
+            f"for resident type {label} containing {filtered_resident_group.shape[0]} residents, "
+            f"total {len(requirement_constraints)}"
         )
     model += requirement_constraints
     model += require_one_rotation_per_resident_per_week(
