@@ -7,7 +7,9 @@ import cpmpy as cp
 import polars as pl
 import polars.selectors as cs
 import pytest
+from cpmpy.expressions.core import Comparison
 from loguru import logger
+from polars import DataFrame
 
 import config
 from constraints import (
@@ -399,7 +401,7 @@ def test_2026_real_data_constraint_only(real_2026_data):
     logger.debug(f"Added {len(SOM_constraints)=}")
 
     manual_true_targets = pl.read_csv(
-        "real_2026_manual_true_constraints.csv", try_parse_dates=True
+        "real_2026_forced_trues.csv", try_parse_dates=True
     )
 
     manual_true_targets_with_boolvars = scheduled.join(
@@ -607,22 +609,12 @@ def test_2026_real_data_total(real_2026_data, generate_2026_preferences_datafram
     model += SOM_constraints
     logger.debug(f"Added {len(SOM_constraints)=}")
 
-    manual_true_targets = pl.read_csv(
-        "real_2026_manual_true_constraints.csv", try_parse_dates=True
-    )
+    # manual_true to force all rotations already committed
+    manual_true_constraints = generate_manual_true_constraints(scheduled)
+    model += manual_true_constraints
+    logger.debug(f"Added {len(manual_true_constraints)=}.")
 
-    manual_true_targets_with_boolvars = scheduled.join(
-        manual_true_targets, on=["resident", "rotation", "week"], how="right"
-    )
-
-    vacation_constraints = force_literal_value_over_range(
-        manual_true_targets_with_boolvars, True
-    )
-    model += vacation_constraints
-    logger.debug(f"Added {len(vacation_constraints)=}.")
-
-    total_manual_constraints = len(SOM_constraints) + len(vacation_constraints)
-
+    total_manual_constraints = len(SOM_constraints) + len(manual_true_constraints)
     logger.success(f"Generated {total_manual_constraints=}.")
 
     logger.info(">> Starting preference assignment...")
@@ -633,7 +625,9 @@ def test_2026_real_data_total(real_2026_data, generate_2026_preferences_datafram
 
     logger.info(f">> Starting solve...")
     is_feasible = model.solve(
-        solver=config.DEFAULT_CPMPY_SOLVER, log_search_progress=True, time_limit=60 * 1
+        solver=config.DEFAULT_CPMPY_SOLVER,
+        log_search_progress=True,
+        time_limit=config.SOLVER_TIME_LIMIT_S,
     )
 
     if not is_feasible:
@@ -755,6 +749,22 @@ def test_2026_real_data_total(real_2026_data, generate_2026_preferences_datafram
     logger.success(">> End of Program <<")
 
 
+def generate_manual_true_constraints(
+    scheduled: DataFrame, manual_true_filepath="real_2026_forced_trues.csv"
+) -> list[Comparison]:
+    manual_true_targets = pl.read_csv(manual_true_filepath, try_parse_dates=True)
+
+    manual_true_targets_with_boolvars = scheduled.join(
+        manual_true_targets, on=["resident", "rotation", "week"], how="right"
+    )
+
+    manual_true_constraints = force_literal_value_over_range(
+        manual_true_targets_with_boolvars, True
+    )
+    return manual_true_constraints
+
+
+@pytest.mark.skip("For introspection only")
 def test_2026_preferences_accumulation(
     generate_2026_preferences_dataframe, real_2026_data
 ) -> None:
@@ -805,10 +815,11 @@ def generate_2026_preferences_dataframe(real_2026_data) -> pl.DataFrame:
     )
 
     # specifics
-    vacation_preferences = pl.read_csv("real_2026_vacations.csv", try_parse_dates=True)
 
     # Add vacation preferences
-    vacation_preferences = pl.read_csv("real_2026_vacations.csv", try_parse_dates=True)
+    vacation_preferences = pl.read_csv(
+        "real_2026_vacation_preferences.csv", try_parse_dates=True
+    )
 
     for vacation_row in vacation_preferences.iter_rows():
         resident, rotation, week = vacation_row

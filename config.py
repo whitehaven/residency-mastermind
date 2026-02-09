@@ -24,3 +24,4 @@ TESTING_FILES = {
         "full_academic_year_2025_2026": "test_data/test_weeks_2025_2026.csv",
     }, }
 PAYOUTS = {"Vacation": 10}
+SOLVER_TIME_LIMIT_S = 10*60
