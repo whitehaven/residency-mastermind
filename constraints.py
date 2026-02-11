@@ -7,6 +7,8 @@ import cpmpy as cp
 import polars as pl
 from cpmpy.tools import mus
 
+import datetime
+
 import config
 from selection import group_scheduled_df_by_for_each, subset_scheduled_by
 
@@ -536,9 +538,20 @@ def enforce_requirement_constraints(
                         weeks,
                         scheduled,
                     )
-                case "precede_rotation":
-
-                    raise NotImplementedError
+                case "next_rotation_must_be":
+                    residents_subject_to_req = residents.filter(
+                        pl.col("year").is_in(constraint.resident_years)
+                    )
+                    rotations_fulfilling_req = rotations.filter(
+                        pl.col("rotation").is_in(requirement_body.fulfilled_by)
+                    )
+                    constraints = enforce_next_rotation_must_be(
+                        constraint.allowable_next_rotations,
+                        rotations_fulfilling_req,
+                        residents_subject_to_req,
+                        weeks,
+                        scheduled,
+                    )
                 case _:
                     raise LookupError(
                         f"{constraint.type=} is not a known requirement constraint type"
@@ -659,7 +672,6 @@ def enforce_block_alignment(
                 "week", config.CPMPY_VARIABLE_COLUMN
             )
 
-
             is_only_1_long = schedule_data.height < 2
             if is_only_1_long:
                 continue
@@ -728,4 +740,58 @@ def enforce_next_rotation_must_be(
     weeks: pl.DataFrame,
     scheduled: pl.DataFrame,
 ) -> list[cp.core.Comparison]:
-    raise NotImplementedError
+    """
+    Generate constraints that require a rotation, if scheduled, can only be followed by
+    rotations listed in allowed_next_rotations, or can be the last rotation of the year.
+
+    Args:
+        allowed_next_rotations: List of rotation names that can follow the current rotation
+        residents: DataFrame of residents subject to constraints
+        rotations: DataFrame of rotations that have next-rotation requirements
+        weeks: DataFrame of weeks in the academic year, ordered by date
+        scheduled: DataFrame with boolean variables for scheduling
+
+    Returns:
+        List of constraints enforcing next rotation requirements
+
+    Future Directions:
+        Could add option for last day of year, but I can't think of a time this would make sense to turn off.
+    """
+    cumulative_constraints = []
+
+    for resident_dict in residents.iter_rows(named=True):
+        resident_name = resident_dict[config.RESIDENTS_PRIMARY_LABEL]
+        for rotation_dict in rotations.iter_rows(named=True):
+            rotation_name = rotation_dict[config.ROTATIONS_PRIMARY_LABEL]
+            for week_dict in weeks.head(n=len(weeks - 1)).iter_rows(named=True):
+                current_week = week_dict[config.WEEKS_PRIMARY_LABEL]
+                next_week = current_week + datetime.timedelta(days=7)
+
+                current_rotation_var = scheduled.filter(
+                    (pl.col("resident") == resident_name)
+                    & (pl.col("rotation") == rotation_name)
+                    & (pl.col("week") == current_week)
+                )[config.CPMPY_VARIABLE_COLUMN].item()
+
+                if len(current_rotation_var) != 1:
+                    raise ValueError(
+                        f"0 or >1 variable found for {resident_name=}, {rotation_name=}, {current_week=} "
+                        f"which should not be possible."
+                    )
+
+                allowed_next_vars = scheduled.filter(
+                    (pl.col("resident") == resident_name)
+                    & (pl.col("rotation").is_in(allowed_next_rotations))
+                    & (pl.col("week") == next_week)
+                )[config.CPMPY_VARIABLE_COLUMN].to_list()
+
+                if len(allowed_next_vars) < 1:
+                    raise ValueError(
+                        f">1 possibility found for {resident_name=}, {allowed_next_rotations=}, {current_week=} "
+                        f"which should not be possible."
+                    )
+
+                constraint = current_rotation_var.implies(cp.any(allowed_next_vars))
+                cumulative_constraints.append(constraint)
+
+    return cumulative_constraints

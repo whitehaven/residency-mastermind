@@ -21,6 +21,7 @@ from constraints import (
     force_literal_value_over_range,
     require_one_rotation_per_resident_per_week,
     get_MUS,
+    enforce_next_rotation_must_be,
 )
 from data_io import generate_pl_wrapped_boolvar
 from display import (
@@ -1083,6 +1084,20 @@ def verify_enforce_requirement_constraints(
                         weeks,
                         solved_schedule,
                     )
+                case "next_rotation_must_be":
+                    residents_subject_to_req = residents.filter(
+                        pl.col("year").is_in(constraint.resident_years)
+                    )
+                    rotations_fulfilling_req = rotations.filter(
+                        pl.col("rotation").is_in(requirement_body.fulfilled_by)
+                    )
+                    assert verify_next_rotation_must_be(
+                        constraint.allowable_next_rotations,
+                        rotations_fulfilling_req,
+                        residents_subject_to_req,
+                        weeks,
+                        solved_schedule,
+                    )
                 case _:
                     raise LookupError(
                         f"{constraint.type=} is not a known requirement constraint type"
@@ -1867,7 +1882,17 @@ def verify_block_alignment(residents, rotations, weeks, solved_schedule) -> bool
     return True
 
 
-def test_correct_purple_ordering(sample_purple_ordering_rules):
+def verify_next_rotation_must_be(
+    allowable_next_rotations: list[str],
+    residents: pl.DataFrame,
+    rotations: pl.DataFrame,
+    weeks: pl.DataFrame,
+    solved_schedule: pl.DataFrame,
+) -> bool:
+    raise NotImplementedError
+
+
+def test_next_rotation_must_be(sample_purple_ordering_rules):
     (
         residents,
         rotations,
