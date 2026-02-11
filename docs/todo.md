@@ -1,24 +1,25 @@
 # To Do List
 
-## Minimum Viable
+- [ ] (A) add AHF rotation
+- [ ] (A) create "paternity leave" rotation
+- [ ] (A) eliminate CICU except for requesters
+- [ ] (A) incorporate super R3s
+- [ ] (A) no r3 clinic last 3 (disincent)
+- [ ] (A) sequence purple-> (consults | elective > clinic if stuck | end of year)*
+- [ ] (A) split HS r3 q2wk if poss but should be 11**|11**.
+- [ ] (B) call schedule - must have two, one for fri-sa and one for emergency; must be on non-6d/wk
+- [ ] (B) convert to requirement sets applied to lists of residents
+- [ ] (C) see if can remove year specification in enforce_requirements - currently we pre-filter residents long before
+- [ ] (D) exterminate "use_rotations_data" test bodge
+- [ ] (D) Move to sql?
 
-- [x] add block alignment
-  - [x] incorporate block alignment where needed to main data
-- [x] manually fixate vacations decided already
-- [x] get optimization working
-- [ ] incorporate super R3s
-- [ ] create "paternity leave" rotation
-- [ ] penalize CICU except for requesters
-- [ ] add AHF rotation
-- [ ] split HS r3 q2wk if poss but should be 11**|11**.
-- [ ] no r3 clinic last 3 (disincent)
-- [ ] sequence purple-> (consults | elective > clinic if stuck | end of year)
 
-## Someday
+| priority | significance                       |
+| -------- | ---------------------------------- |
+| A        | Mission-critical / useless without |
+| B        | Anticipated need                   |
+| C        | Long-term need                     |
+| D        | QOL / Nice to have                 |
+| E        | Someday/Possiblity                 |
 
-- [x] add logging
-- [ ] call schedule - must have two, one for fri-sa and one for emergency; must be on non-6wk
-- [ ] see if can remove year specification in enforce_requirements - currently we pre-filter residents long before
-- [ ] convert to requirement sets applied to lists of residents
-- [ ] exterminate "use_rotations_data" test bodge
-- [ ] Move to sql?
+\* separate project file in directory.
