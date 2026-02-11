@@ -493,7 +493,7 @@ def is_consecutive(week1, week2) -> bool:
     """
     # If weeks are date-flavored objects
     if hasattr(week1, "year") and hasattr(week2, "year"):
-        return week2 == week1 + timedelta(weeks=1)
+        return week2 == week1 + datetime.timedelta(weeks=1)
 
     # If weeks are integers representing week numbers
     if isinstance(week1, int) and isinstance(week2, int):
