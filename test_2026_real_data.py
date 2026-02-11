@@ -420,9 +420,10 @@ def test_2026_real_data_constraint_only(real_2026_data):
 
     logger.info(f">> Starting solve...")
     is_feasible = model.solve(
-        solver=config.DEFAULT_CPMPY_SOLVER, log_search_progress=True
+        solver=config.DEFAULT_CPMPY_SOLVER,
+        log_search_progress=True,
+        time_limit=config.SOLVER_TIME_LIMIT_S,
     )
-
     if not is_feasible:
         min_unsat_result = get_MUS(model)
         print(min_unsat_result)
