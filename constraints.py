@@ -1,3 +1,4 @@
+import datetime
 import pprint
 import warnings
 from typing import Callable, LiteralString
@@ -6,8 +7,6 @@ import box
 import cpmpy as cp
 import polars as pl
 from cpmpy.tools import mus
-
-import datetime
 
 import config
 from selection import group_scheduled_df_by_for_each, subset_scheduled_by
@@ -547,8 +546,8 @@ def enforce_requirement_constraints(
                     )
                     constraints = enforce_next_rotation_must_be(
                         constraint.allowable_next_rotations,
-                        rotations_fulfilling_req,
                         residents_subject_to_req,
+                        rotations_fulfilling_req,
                         weeks,
                         scheduled,
                     )
@@ -662,7 +661,6 @@ def enforce_block_alignment(
 
     for rotation_dict in rotations.iter_rows(named=True):
         for resident_dict in residents.iter_rows(named=True):
-            # Get all scheduling variables for this resident and rotation, sorted by week
             is_scheduled_for_res_on_rot = scheduled.filter(
                 (pl.col("resident") == resident_dict[config.RESIDENTS_PRIMARY_LABEL])
                 & (pl.col("rotation") == rotation_dict[config.ROTATIONS_PRIMARY_LABEL])
@@ -763,7 +761,7 @@ def enforce_next_rotation_must_be(
         resident_name = resident_dict[config.RESIDENTS_PRIMARY_LABEL]
         for rotation_dict in rotations.iter_rows(named=True):
             rotation_name = rotation_dict[config.ROTATIONS_PRIMARY_LABEL]
-            for week_dict in weeks.head(n=len(weeks - 1)).iter_rows(named=True):
+            for week_dict in weeks.head(n=len(weeks) - 1).iter_rows(named=True):
                 current_week = week_dict[config.WEEKS_PRIMARY_LABEL]
                 next_week = current_week + datetime.timedelta(days=7)
 
@@ -773,10 +771,10 @@ def enforce_next_rotation_must_be(
                     & (pl.col("week") == current_week)
                 )[config.CPMPY_VARIABLE_COLUMN].item()
 
-                if len(current_rotation_var) != 1:
+                if current_rotation_var is None:
                     raise ValueError(
-                        f"0 or >1 variable found for {resident_name=}, {rotation_name=}, {current_week=} "
-                        f"which should not be possible."
+                        f"Variable not found at {resident_name=}, "
+                        f"{allowed_next_rotations=}, {current_week=}"
                     )
 
                 allowed_next_vars = scheduled.filter(
