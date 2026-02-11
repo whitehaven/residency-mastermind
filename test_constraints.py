@@ -1,7 +1,7 @@
+import datetime
 import pprint
 import sys
 import warnings
-from datetime import timedelta
 from typing import Union
 
 import box
@@ -21,7 +21,6 @@ from constraints import (
     force_literal_value_over_range,
     require_one_rotation_per_resident_per_week,
     get_MUS,
-    enforce_next_rotation_must_be,
 )
 from data_io import generate_pl_wrapped_boolvar
 from display import (
@@ -1093,8 +1092,8 @@ def verify_enforce_requirement_constraints(
                     )
                     assert verify_next_rotation_must_be(
                         constraint.allowable_next_rotations,
-                        rotations_fulfilling_req,
                         residents_subject_to_req,
+                        rotations_fulfilling_req,
                         weeks,
                         solved_schedule,
                     )
@@ -1889,7 +1888,61 @@ def verify_next_rotation_must_be(
     weeks: pl.DataFrame,
     solved_schedule: pl.DataFrame,
 ) -> bool:
-    raise NotImplementedError
+    """
+    Verify that if a rotation is scheduled, it can only be followed by rotations
+    listed in allowable_next_rotations, or can be the last rotation in a sequence.
+
+    Args:
+        allowable_next_rotations: List of rotation names that can follow the current rotation
+        residents: DataFrame of residents subject to constraints
+        rotations: DataFrame of rotations that have next-rotation requirements
+        weeks: DataFrame of weeks in the academic year, ordered by date
+        solved_schedule: Melted schedule DataFrame with solved boolean results
+
+    Returns:
+        bool: True if all next rotation constraints are satisfied, False otherwise
+
+    # MAYBE there may be a way to pre-filter scheduled and avoid all the iter_rows here into a groupby
+    """
+    for resident_dict in residents.iter_rows(named=True):
+        resident_name = resident_dict[config.RESIDENTS_PRIMARY_LABEL]
+        for rotation_dict in rotations.iter_rows(named=True):
+            rotation_name = rotation_dict[config.ROTATIONS_PRIMARY_LABEL]
+            for week_dict in weeks.head(n=len(weeks) - 1).iter_rows(named=True):
+                current_week = week_dict[config.WEEKS_PRIMARY_LABEL]
+                next_week = current_week + datetime.timedelta(days=7)
+
+                is_current_rotation_scheduled = solved_schedule.filter(
+                    (pl.col("resident") == resident_name)
+                    & (pl.col("rotation") == rotation_name)
+                    & (pl.col("week") == current_week)
+                )[config.CPMPY_RESULT_COLUMN].item()
+
+                if not is_current_rotation_scheduled:
+                    continue
+
+                is_next_week_rotation_allowable = (
+                    solved_schedule.filter(
+                        (pl.col("resident") == resident_name)
+                        & (pl.col("rotation").is_in(allowable_next_rotations))
+                        & (pl.col("week") == next_week)
+                    ).height
+                    == 1
+                )
+
+                if not is_next_week_rotation_allowable:
+                    next_rotation_name = (
+                        solved_schedule.filter(pl.col("resident") == resident_name)
+                        & (pl.col("week") == next_week)
+                        & pl.col(config.CPMPY_RESULT_COLUMN == True)["rotation"].item()
+                    )
+                    logger.critical(
+                        f"NEXT ROTATION VIOLATION: Resident {resident_name} on rotation {rotation_name} "
+                        f"week {current_week} followed by {next_rotation_name} week {next_week} "
+                        f"but only {allowable_next_rotations} are allowed"
+                    )
+                    return False
+    return True
 
 
 def test_next_rotation_must_be(sample_purple_ordering_rules):
@@ -1913,19 +1966,32 @@ def test_next_rotation_must_be(sample_purple_ordering_rules):
         scheduled,
     )
     model += requirement_constraints
-    logger.debug(f"Added {len(requirement_constraints)=}")
+    logger.debug(f"Added {len(requirement_constraints)=} which include `next_rotation_must_be` enforcement.")
 
-    basic_reqs = require_one_rotation_per_resident_per_week(
-        residents, rotations, weeks, scheduled
+    basic_reqs = list()
+    basic_reqs.extend(
+        require_one_rotation_per_resident_per_week(
+            residents, rotations, weeks, scheduled
+        )
+    )
+    basic_reqs.extend(
+        enforce_rotation_capacity_minimum(residents, rotations, weeks, scheduled)
+    )
+    basic_reqs.extend(
+        enforce_rotation_capacity_maximum(residents, rotations, weeks, scheduled)
     )
     model += basic_reqs
     logger.debug(f"Added {len(basic_reqs)=}")
 
+    logger.debug("Starting solver...")
     is_feasible = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
     if not is_feasible:
         min_unsat_result = get_MUS(model)
         print(min_unsat_result)
+        logger.critical(f"Infeasible result with {model=}")
         raise ValueError("Infeasible")
+
+    logger.success(f"Model solution completed: {model.cpm_status=}")
 
     melted_solved_schedule = extract_solved_schedule(scheduled)
 
@@ -1937,6 +2003,8 @@ def test_next_rotation_must_be(sample_purple_ordering_rules):
         prior_rotations_completed,
         melted_solved_schedule,
     ), "verify_enforce_requirement_constraints returns False"
+
+    logger.success(f"Verified all constraints.")
 
 
 @pytest.fixture
