@@ -145,11 +145,11 @@ class RequirementRule:
                 constraint["type"] == "min_contiguity_in_period"
                 and constraint["weeks"] > 1
             ):
-                raise ValueError("Conflicting constraint with next_rotation_must_be.")
+                raise ValueError("{constraint=} conflicts with next_rotation_must_be.")
 
         self._constraints.append(
             {
-                "type": "precede_rotation",
+                "type": "next_rotation_must_be",
                 "allowable_next_rotations": allowable_next_rotations,
                 "resident_years": resident_years,
             }

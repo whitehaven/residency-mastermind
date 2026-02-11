@@ -723,8 +723,8 @@ def get_MUS(model: cp.Model) -> str:
 
 def enforce_next_rotation_must_be(
     allowed_next_rotations: list[str],
-    rotations: pl.DataFrame,
     residents: pl.DataFrame,
+    rotations: pl.DataFrame,
     weeks: pl.DataFrame,
     scheduled: pl.DataFrame,
 ) -> list[cp.core.Comparison]:
