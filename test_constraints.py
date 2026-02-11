@@ -1,4 +1,5 @@
 import pprint
+import sys
 import warnings
 from datetime import timedelta
 from typing import Union
@@ -8,6 +9,7 @@ import cpmpy as cp
 import polars as pl
 import pytest
 from cpmpy.tools import mus
+from loguru import logger
 
 import config
 from constraints import (
@@ -28,6 +30,10 @@ from display import (
 )
 from requirement_builder import RequirementBuilder
 from selection import group_scheduled_df_by_for_each, subset_scheduled_by
+
+logger.add(
+    sys.stderr, format="{time} {level} {message}", filter="my_module", level="INFO"
+)
 
 real_size_residents = pl.read_csv(
     config.TESTING_FILES["residents"]["real_size_seniors"]
@@ -1859,3 +1865,130 @@ def verify_block_alignment(residents, rotations, weeks, solved_schedule) -> bool
                         )
 
     return True
+
+
+def test_correct_purple_ordering(sample_purple_ordering_rules):
+    (
+        residents,
+        rotations,
+        weeks,
+        current_requirements,
+        prior_rotations_completed,
+        scheduled,
+    ) = sample_purple_ordering_rules
+
+    model = cp.Model()
+
+    requirement_constraints = enforce_requirement_constraints(
+        current_requirements,
+        residents,
+        rotations,
+        weeks,
+        prior_rotations_completed,
+        scheduled,
+    )
+    model += requirement_constraints
+    logger.debug(f"Added {len(requirement_constraints)=}")
+
+    basic_reqs = require_one_rotation_per_resident_per_week(
+        residents, rotations, weeks, scheduled
+    )
+    model += basic_reqs
+    logger.debug(f"Added {len(basic_reqs)=}")
+
+    is_feasible = model.solve(config.DEFAULT_CPMPY_SOLVER, log_search_progress=False)
+    if not is_feasible:
+        min_unsat_result = get_MUS(model)
+        print(min_unsat_result)
+        raise ValueError("Infeasible")
+
+    melted_solved_schedule = extract_solved_schedule(scheduled)
+
+    assert verify_enforce_requirement_constraints(
+        current_requirements,
+        residents,
+        rotations,
+        weeks,
+        prior_rotations_completed,
+        melted_solved_schedule,
+    ), "verify_enforce_requirement_constraints returns False"
+
+
+@pytest.fixture
+def sample_purple_ordering_rules() -> (
+    tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame, box.Box, pl.DataFrame, pl.DataFrame]
+):
+    """
+    Should require a tight schedule:
+    First Guy	V	P	C	P	C
+    Second Guy	P	C	P	C	V
+
+    V:= Vacation
+    P:= Purple
+    C:= Consults
+
+    Returns:
+
+    """
+
+    residents = pl.DataFrame(
+        {
+            "full_name": ["First Guy", "Second Guy"],
+            "year": ["R2", "R2"],
+        }
+    )
+    rotations = pl.DataFrame(
+        {
+            "rotation": [
+                "Consults",
+                "Purple HS Senior",
+                "Vacation",
+            ],
+            "category": ["Consults", "HS Admitting Senior", "Vacation"],
+            "minimum_residents_assigned": [
+                0,
+                0,
+                0,
+            ],
+            "maximum_residents_assigned": [10, 1, 10],
+        }
+    )
+    weeks = one_academic_year_weeks.head(n=5)
+
+    allowable_rotations_after_purple = ["Consults"]
+    builder = RequirementBuilder()
+    builder.add_requirement(
+        name="HS Admitting Senior", fulfilled_by=["Purple HS Senior"]
+    ).min_weeks_over_resident_years(2, ["R2"]).next_rotation_must_be(
+        allowable_next_rotations=allowable_rotations_after_purple, resident_years=["R2"]
+    )
+    builder.add_requirement(
+        name="Consults", fulfilled_by=["Consults"]
+    ).min_weeks_over_resident_years(2, ["R2"])
+
+    builder.add_requirement(
+        name="Vacation", fulfilled_by=["Vacation"]
+    ).min_weeks_over_resident_years(1, ["R2"])
+    current_requirements = builder.accumulate_constraints_by_rule()
+
+    scheduled = generate_pl_wrapped_boolvar(
+        residents,
+        rotations,
+        weeks,
+    )
+    prior_rotations_completed = pl.DataFrame(
+        {
+            "resident": [],
+            "rotation": [],
+            "completed_weeks": [],
+        }
+    )
+
+    return (
+        residents,
+        rotations,
+        weeks,
+        current_requirements,
+        prior_rotations_completed,
+        scheduled,
+    )

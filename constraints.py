@@ -536,6 +536,9 @@ def enforce_requirement_constraints(
                         weeks,
                         scheduled,
                     )
+                case "precede_rotation":
+
+                    raise NotImplementedError
                 case _:
                     raise LookupError(
                         f"{constraint.type=} is not a known requirement constraint type"
@@ -716,3 +719,13 @@ def get_MUS(model: cp.Model) -> str:
         + pprint.pformat(mus(model.constraints))
         + "\n<<<"
     )
+
+
+def enforce_next_rotation_must_be(
+    allowed_next_rotations: list[str],
+    rotations: pl.DataFrame,
+    residents: pl.DataFrame,
+    weeks: pl.DataFrame,
+    scheduled: pl.DataFrame,
+) -> list[cp.core.Comparison]:
+    raise NotImplementedError

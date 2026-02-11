@@ -123,6 +123,38 @@ class RequirementRule:
             }
         )
 
+    def next_rotation_must_be(
+        self, allowable_next_rotations: list[str], resident_years: list[str]
+    ):
+        """
+        Constrains rotations following current requirement-fulfilling rotation such that the next rotation is in the allowable_next_rotations list.
+
+        Note:
+            - It will be allowed to be the final rotation of the period.
+            - Only handles single-week rotations. No accounting is made for a contiguous block. (In fact it will force 1-contiguity.)
+
+        Args:
+            allowable_next_rotations:
+            resident_years:
+
+        Returns:
+
+        """
+        for constraint in self._constraints:
+            if (
+                constraint["type"] == "min_contiguity_in_period"
+                and constraint["weeks"] > 1
+            ):
+                raise ValueError("Conflicting constraint with next_rotation_must_be.")
+
+        self._constraints.append(
+            {
+                "type": "precede_rotation",
+                "allowable_next_rotations": allowable_next_rotations,
+                "resident_years": resident_years,
+            }
+        )
+
     def get_constraints(self) -> list[dict[str, Any]]:
         """Get all constraints for this requirement"""
         return self._constraints
