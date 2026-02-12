@@ -39,7 +39,9 @@ def generate_blank_preferences_df(
         orient="row",
         schema=["resident", "rotation", "week"],
     )
-    blank_preferences = blank_preferences.with_columns(preference=pl.lit(0))
+    blank_preferences = blank_preferences.with_columns(
+        preference=pl.lit(0, dtype=pl.Int64)
+    )
     return blank_preferences
 
 
@@ -56,7 +58,18 @@ def join_preferences_with_scheduled(
     Returns:
         Joined DataFrame with both boolean variables and preference scores
     """
-    return scheduled.join(preferences, on=["resident", "rotation", "week"], how="inner")
+    # Ensure week columns have same type for joining
+    preferences_normalized = preferences.with_columns(
+        week=(
+            pl.col("week").cast(pl.Date)
+            if scheduled["week"].dtype == pl.Date
+            else pl.col("week")
+        )
+    )
+
+    return scheduled.join(
+        preferences_normalized, on=["resident", "rotation", "week"], how="inner"
+    )
 
 
 def create_preferences_objective(
@@ -108,8 +121,17 @@ def calculate_total_preference_satisfaction(
     Returns:
         Total preference score (sum of preference * scheduled_boolean)
     """
+    # Ensure week columns have same type for joining
+    preferences_normalized = preferences.with_columns(
+        week=(
+            pl.col("week").cast(pl.Date)
+            if solved_schedule["week"].dtype == pl.Date
+            else pl.col("week")
+        )
+    )
+
     joined = solved_schedule.join(
-        preferences, on=["resident", "rotation", "week"], how="inner"
+        preferences_normalized, on=["resident", "rotation", "week"], how="inner"
     )
 
     total_score = (
