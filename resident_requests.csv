@@ -1,0 +1,6 @@
+resident,rotation,week_start,week_end,request_type,priority
+Josh Benito,Elective,2026-07-06,2026-07-27,preference,high
+Amanda Scott,Vacation,2026-08-03,2026-08-24,preference,medium
+Brian Lee,ICU Senior,2026-09-14,2026-10-05,avoidance,high
+Ileisa Oleson,Night Senior,2026-11-16,2026-11-30,avoidance,medium
+Josh Benito,OP Cardiology,2026-12-07,2026-12-28,preference,low
