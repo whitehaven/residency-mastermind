@@ -510,7 +510,7 @@ def enforce_requirement_constraints(
                     )
 
                     prereq_fulfilling_rotations = rotations.filter(
-                        pl.col("category").is_in(constraint.prerequisite_fulfillers)
+                        pl.col("requirement").is_in(constraint.prerequisite_fulfillers)
                     )["rotation"].to_list()
 
                     constraints = enforce_prerequisite(
@@ -537,7 +537,6 @@ def enforce_requirement_constraints(
                         scheduled,
                     )
                 case "precede_rotation":
-
                     raise NotImplementedError
                 case _:
                     raise LookupError(
@@ -658,7 +657,6 @@ def enforce_block_alignment(
             schedule_data = is_scheduled_for_res_on_rot.select(
                 "week", config.CPMPY_VARIABLE_COLUMN
             )
-
 
             is_only_1_long = schedule_data.height < 2
             if is_only_1_long:

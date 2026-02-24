@@ -1,0 +1,18 @@
+name: "2026-2027 Academic Year"
+residents_csv: "real_2026_data_residents.csv"
+weeks_csv: "real_2026_data_weeks.csv"
+rotations_yaml: "rotations_2026.yaml"
+
+requirements:
+  R2_standard: "requirements_R2_standard.yaml"
+  R2_PCT: "requirements_R2_pct.yaml"
+  R3_standard: "requirements_R3_standard.yaml"
+  R3_PCT: "requirements_R3_pct.yaml"
+
+manual_overrides:
+  forced_assignments_csv: "real_2026_forced_trues.csv"
+  som_available_weeks:
+    - "2026-10-12"
+    - "2026-10-19"
+    - "2027-03-01"
+    - "2027-03-08"

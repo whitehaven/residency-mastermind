@@ -155,9 +155,9 @@ def verify_enforce_rotation_capacity_minimum(rotations, solved_schedule) -> bool
             if min_residents_this_rotation is None:
                 min_residents_this_rotation = 0
 
-            assert (
-                sum(decision_vars) >= min_residents_this_rotation
-            ), f"sum decision_vars = {decision_vars} != minimum_residents_assigned for {rotation}"
+            assert sum(decision_vars) >= min_residents_this_rotation, (
+                f"sum decision_vars = {decision_vars} != minimum_residents_assigned for {rotation}"
+            )
     return True
 
 
@@ -207,13 +207,13 @@ def verify_enforce_rotation_capacity_maximum(rotations, solved_schedule) -> bool
                 pl.col("maximum_residents_assigned")
             ).item()
             if max_residents_this_rotation is None:
-                assert (
-                    False
-                ), f"max_residents_this_rotation == {max_residents_this_rotation}? Doesn't make sense."
+                assert False, (
+                    f"max_residents_this_rotation == {max_residents_this_rotation}? Doesn't make sense."
+                )
 
-            assert (
-                sum(decision_vars) <= max_residents_this_rotation
-            ), f"sum decision_vars = {decision_vars} != maximum_residents_assigned for {rotation}"
+            assert sum(decision_vars) <= max_residents_this_rotation, (
+                f"sum decision_vars = {decision_vars} != maximum_residents_assigned for {rotation}"
+            )
     return True
 
 
@@ -288,7 +288,7 @@ def test_enforce_minimum_contiguity() -> None:
 #     rotations = pl.DataFrame(
 #         {
 #             "rotation": ["Test Rotation A", "Test Rotation B"],
-#             "category": ["Test Category A", "Test Category B"],
+#             "requirement": ["Test Category A", "Test Category B"],
 #             "required_role": ["Senior", "Senior"],
 #             "minimum_residents_assigned": [0, 0],
 #             "maximum_residents_assigned": [2, 2],
@@ -520,7 +520,7 @@ def sample_barely_fit_R2s_no_prereqs():
     rotations = pl.DataFrame(
         {
             "rotation": ["Green HS Senior", "Orange HS Senior", "Elective"],
-            "category": ["HS Rounding Senior", "HS Rounding Senior", "Elective"],
+            "requirement": ["HS Rounding Senior", "HS Rounding Senior", "Elective"],
             "required_role": ["Senior", "Senior", "Any"],
             "minimum_residents_assigned": [1, 1, 0],
             "maximum_residents_assigned": [1, 1, 10],
@@ -572,9 +572,9 @@ def sample_barely_fit_R2s_no_prereqs():
 
 
 @pytest.fixture
-def sample_simple_prerequisites_no_priors() -> (
-    tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame, box.Box, pl.DataFrame, pl.DataFrame]
-):
+def sample_simple_prerequisites_no_priors() -> tuple[
+    pl.DataFrame, pl.DataFrame, pl.DataFrame, box.Box, pl.DataFrame, pl.DataFrame
+]:
     residents = pl.DataFrame(
         {
             "full_name": ["First Guy", "Second Guy", "Third Guy"],
@@ -589,7 +589,7 @@ def sample_simple_prerequisites_no_priors() -> (
                 "Elective",
                 "Purple HS Senior",
             ],
-            "category": [
+            "requirement": [
                 "HS Rounding Senior",
                 "HS Rounding Senior",
                 "Elective",
@@ -727,7 +727,7 @@ def sample_simple_prerequisites_with_priors():
                 "Elective",
                 "Purple HS Senior",
             ],
-            "category": [
+            "requirement": [
                 "HS Rounding Senior",
                 # "HS Rounding Senior",
                 "Elective",
@@ -769,7 +769,8 @@ def sample_simple_prerequisites_with_priors():
                 "Green HS Senior",
                 # "Orange HS Senior",
             ],
-        ).min_weeks_over_resident_years(1, ["R2"])
+        )
+        .min_weeks_over_resident_years(1, ["R2"])
         # .min_contiguity_over_resident_years(2, ["R2"])
         .after_prerequisite(
             prereq_fulfilling_rotations=["Purple HS Senior"],
@@ -1057,7 +1058,7 @@ def verify_enforce_requirement_constraints(
                         pl.col("rotation").is_in(requirement_body.fulfilled_by)
                     )
                     prereq_fulfilling_rotations = rotations.filter(
-                        pl.col("category").is_in(constraint.prerequisite_fulfillers)
+                        pl.col("requirement").is_in(constraint.prerequisite_fulfillers)
                     )["rotation"].to_list()
 
                     assert verify_prerequisite_met(
@@ -1608,7 +1609,7 @@ def sample_rarely_available_rotation():
     rotations = pl.DataFrame(
         {
             "rotation": ["Green HS Senior", "Elective", "SOM"],
-            "category": ["HS Rounding Senior", "Elective", "SOM"],
+            "requirement": ["HS Rounding Senior", "Elective", "SOM"],
             "required_role": ["Senior", "Any", "Senior"],
             "minimum_residents_assigned": [1, 0, 0],
             "maximum_residents_assigned": [1, 10, 10],
@@ -1757,7 +1758,7 @@ def test_enforce_block_alignment():
     rotations = pl.DataFrame(
         {
             "rotation": ["Test Rotation A", "Test Rotation B"],
-            "category": ["Test Category A", "Test Category B"],
+            "requirement": ["Test Category A", "Test Category B"],
             "required_role": ["Senior", "Senior"],
             "minimum_residents_assigned": [0, 0],
             "maximum_residents_assigned": [1, 1],
@@ -1915,9 +1916,9 @@ def test_correct_purple_ordering(sample_purple_ordering_rules):
 
 
 @pytest.fixture
-def sample_purple_ordering_rules() -> (
-    tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame, box.Box, pl.DataFrame, pl.DataFrame]
-):
+def sample_purple_ordering_rules() -> tuple[
+    pl.DataFrame, pl.DataFrame, pl.DataFrame, box.Box, pl.DataFrame, pl.DataFrame
+]:
     """
     Should require a tight schedule:
     First Guy	V	P	C	P	C
@@ -1944,7 +1945,7 @@ def sample_purple_ordering_rules() -> (
                 "Purple HS Senior",
                 "Vacation",
             ],
-            "category": ["Consults", "HS Admitting Senior", "Vacation"],
+            "requirement": ["Consults", "HS Admitting Senior", "Vacation"],
             "minimum_residents_assigned": [
                 0,
                 0,

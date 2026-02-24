@@ -12,6 +12,7 @@ from loguru import logger
 from polars import DataFrame
 
 import config
+from schedule_config import load_schedule_config
 from constraints import (
     enforce_requirement_constraints,
     enforce_rotation_capacity_maximum,
@@ -58,6 +59,45 @@ def real_2026_data():
         "R2_PCT": R2_primary_care_track_reqs,
         "R3_standard": R3_standard_reqs,
         "R3_PCT": R3_primary_care_tract_reqs,
+    }
+
+    scheduled = generate_pl_wrapped_boolvar(
+        residents,
+        rotations,
+        weeks,
+    )
+
+    prior_rotations_completed = pl.DataFrame(
+        {
+            "resident": [],
+            "rotation": [],
+            "completed_weeks": [],
+        }
+    )
+
+    return (
+        residents,
+        rotations,
+        weeks,
+        current_requirements,
+        scheduled,
+        prior_rotations_completed,
+    )
+
+
+@pytest.fixture
+def real_2026_data_from_config():
+    schedule_config = load_schedule_config("schedule_2026.yaml")
+
+    residents = schedule_config.get_residents_df()
+    weeks = schedule_config.get_weeks_df()
+    rotations = schedule_config.get_rotations_df()
+
+    current_requirements = {
+        "R2_standard": schedule_config.get_requirements_for_type("R2_standard"),
+        "R2_PCT": schedule_config.get_requirements_for_type("R2_PCT"),
+        "R3_standard": schedule_config.get_requirements_for_type("R3_standard"),
+        "R3_PCT": schedule_config.get_requirements_for_type("R3_PCT"),
     }
 
     scheduled = generate_pl_wrapped_boolvar(
@@ -640,7 +680,7 @@ def test_2026_real_data_total(real_2026_data, generate_2026_preferences_datafram
     melted_solved_schedule = extract_solved_schedule(scheduled)
 
     logger.info(
-        f"Total preference satisfaction = {calculate_total_preference_satisfaction(melted_solved_schedule,preferences)}"
+        f"Total preference satisfaction = {calculate_total_preference_satisfaction(melted_solved_schedule, preferences)}"
     )
 
     if PERFORM_VERIFICATION:

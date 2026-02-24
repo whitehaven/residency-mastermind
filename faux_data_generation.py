@@ -20,7 +20,7 @@ def generate_fake_residents(residents_structure: dict) -> pd.DataFrame:
             faked_residents.update(
                 {
                     f"{year}_{resident_index}": {
-                        "full_name": f"{fake.first_name()} {fake.last_name()} {fake.random_element(["MD", "DO"])}",
+                        "full_name": f"{fake.first_name()} {fake.last_name()} {fake.random_element(['MD', 'DO'])}",
                         "year": year,
                         "role": roles_mapping[year],
                     }
@@ -93,22 +93,25 @@ def generate_completed_rotation(
         {"resident": [resident], "rotation": [rotation], "weeks": [weeks]}
     )
 
+
 def get_rotations_needing_preferences(
-    residents: pd.DataFrame, rotations: pd.DataFrame, rotation_categories: pd.DataFrame
+    residents: pd.DataFrame,
+    rotations: pd.DataFrame,
+    rotation_requirements: pd.DataFrame,
 ) -> pd.DataFrame:
     fake = Faker()
 
-    rotations_with_categories = pd.merge(
+    rotations_with_requirements = pd.merge(
         left=rotations,
-        right=rotation_categories,
-        left_on="category",
+        right=rotation_requirements,
+        left_on="requirement",
         right_index=True,
         how="inner",
-        suffixes=("_rotation", "_category"),
+        suffixes=("_rotation", "_requirement"),
     )
 
-    elective_rotations = rotations_with_categories.loc[
-        rotations_with_categories.elective == "elective"
+    elective_rotations = rotations_with_requirements.loc[
+        rotations_with_requirements.elective == "elective"
     ]
 
     return elective_rotations

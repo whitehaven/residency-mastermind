@@ -1,20 +1,20 @@
+import sqlite3
+import yaml
 from dataclasses import dataclass, field
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 
 import polars as pl
 
 
 @dataclass
-class RotationRule:
+class Rotation:
     name: str
+    requirement: Optional[str] = None
+    min_residents: Optional[int] = None
+    max_residents: Optional[int] = None
     _constraints: List[Dict[str, Any]] = field(default_factory=list)
 
     def unavailable_weeks_this_year(self, weeks: List[int]):
-        """
-        Mark off weeks.
-        Args:
-            weeks: unavailable weeks
-        """
         self._constraints.append(
             {
                 "type": "exclude_weeks",
@@ -25,11 +25,6 @@ class RotationRule:
         return self
 
     def only_available_weeks_this_year(self, weeks: List[int]):
-        """
-        Mark only available weeks. Not for use with unavailable_weeks_this_year()
-        Args:
-            weeks: weeks available
-        """
         self._constraints.append(
             {
                 "type": "only_include_weeks",
@@ -66,7 +61,7 @@ class RotationRule:
         if period == "full":
             self._constraints.append(
                 {
-                    "type": "minimum_residents",
+                    "type": "maximum_residents",
                     "value": max_residents,
                     "filter": None,
                 },
@@ -74,18 +69,18 @@ class RotationRule:
         else:
             self._constraints.append(
                 {
-                    "type": "minimum_residents",
+                    "type": "maximum_residents",
                     "value": max_residents,
                     "filter": {"weeks": period},
                 },
             )
         return self
 
-    def exactly_n_residents(self, n_residents, period: List[int] | str):
+    def exactly_n_residents(self, n_residents: int, period: List[int] | str):
         if period == "full":
             self._constraints.append(
                 {
-                    "type": "minimum_residents",
+                    "type": "exactly_residents",
                     "value": n_residents,
                     "filter": None,
                 },
@@ -93,61 +88,149 @@ class RotationRule:
         else:
             self._constraints.append(
                 {
-                    "type": "minimum_residents",
+                    "type": "exactly_residents",
                     "value": n_residents,
                     "filter": {"weeks": period},
                 },
             )
+        return self
 
     def get_constraints(self) -> List[Dict[str, Any]]:
-        """Get all constraints for this requirement"""
         return self._constraints
 
 
 class RotationBuilder:
-
     def __init__(self):
-        self.rotations: Dict[str, RotationRule] = {}
+        self.requirements: List[str] = []
+        self.rotations: Dict[str, Rotation] = {}
 
-    def add_rotation(self, name: str) -> RotationRule:
-        rule = RotationRule(name=name)
+    def add_requirement(self, name: str) -> "RotationBuilder":
+        if name not in self.requirements:
+            self.requirements.append(name)
+        return self
+
+    def add_rotation(
+        self,
+        name: str,
+        requirement: Optional[str] = None,
+        min_residents: Optional[int] = None,
+        max_residents: Optional[int] = None,
+    ) -> Rotation:
+        if requirement:
+            self.add_requirement(requirement)
+        rule = Rotation(
+            name=name,
+            requirement=requirement,
+            min_residents=min_residents,
+            max_residents=max_residents,
+        )
         self.rotations[name] = rule
         return rule
 
-    def generate_requirements_df(self) -> pl.DataFrame:
+    def get_rotations_for_requirement(self, requirement: str) -> List[Rotation]:
+        return [
+            rot for rot in self.rotations.values() if rot.requirement == requirement
+        ]
 
-        rotations_data = []
-        constraints_data = []
-
-        for req_name, req in self.rotations.items():
-            # Requirements DataFrame
-            rotations_data.append(
+    def to_yaml(self, path: str) -> None:
+        data = {
+            "requirements": self.requirements,
+            "rotations": [
                 {
-                    "name": req.name,
-                },
+                    "name": rot.name,
+                    "requirement": rot.requirement,
+                    "min_residents": rot.min_residents,
+                    "max_residents": rot.max_residents,
+                }
+                for rot in self.rotations.values()
+            ],
+        }
+        with open(path, "w") as f:
+            yaml.dump(data, f, default_flow_style=False, sort_keys=False)
+
+    @classmethod
+    def from_yaml(cls, path: str) -> "RotationBuilder":
+        with open(path, "r") as f:
+            data = yaml.safe_load(f)
+
+        builder = cls()
+        for req in data.get("requirements", []):
+            builder.add_requirement(req)
+
+        for rot_data in data.get("rotations", []):
+            builder.add_rotation(
+                name=rot_data["name"],
+                requirement=rot_data.get("requirement"),
+                min_residents=rot_data.get("min_residents"),
+                max_residents=rot_data.get("max_residents"),
             )
 
-        complete_rotations_df = pl.DataFrame(rotations_data)
+        return builder
 
-        return complete_rotations_df
+    @classmethod
+    def from_csv(cls, path: str) -> "RotationBuilder":
+        df = pl.read_csv(path)
+        builder = cls()
+
+        for row in df.iter_rows(named=True):
+            requirement = row.get("requirement")
+            if requirement and requirement != "":
+                builder.add_requirement(requirement)
+
+            builder.add_rotation(
+                name=row["rotation"],
+                requirement=requirement if requirement else None,
+                min_residents=row.get("minimum_residents_assigned"),
+                max_residents=row.get("maximum_residents_assigned"),
+            )
+
+        return builder
+
+    def to_polars(self) -> pl.DataFrame:
+        rows = []
+        for rot in self.rotations.values():
+            rows.append(
+                {
+                    "rotation": rot.name,
+                    "requirement": rot.requirement,
+                    "minimum_residents_assigned": rot.min_residents,
+                    "maximum_residents_assigned": rot.max_residents,
+                }
+            )
+        return pl.DataFrame(rows)
+
+    def generate_rotations_df(self) -> pl.DataFrame:
+        return self.to_polars()
 
     def generate_constraints_df(self) -> pl.DataFrame:
-
-        rotations_data = []
         constraints_data = []
-
-        for req_name, req in self.rotations.items():
-            # Constraints DataFrame
-            for i, constraint in enumerate(req.get_constraints()):
+        for rot_name, rot in self.rotations.items():
+            for i, constraint in enumerate(rot.get_constraints()):
                 constraints_data.append(
                     {
-                        "requirement_name": req.name,
-                        "constraint_id": f"{req_name}_constraint_{i}",
+                        "rotation_name": rot_name,
+                        "constraint_id": f"{rot_name}_constraint_{i}",
                         "constraint_type": constraint["type"],
                         "constraint_value": constraint["value"],
                         "period_filter": constraint["filter"],
                     },
                 )
-        completed_constraints_df = pl.DataFrame(constraints_data)
+        return pl.DataFrame(constraints_data)
 
-        return completed_constraints_df
+
+def read_rotation_builder_from_sqlite(
+    db_path: str, table_name: str = "rotations"
+) -> RotationBuilder:
+    builder = RotationBuilder()
+    with sqlite3.connect(db_path) as con:
+        df = pl.read_database(f"SELECT * FROM {table_name}", con)
+
+    for row in df.iter_rows(named=True):
+        builder.add_rotation(
+            name=row["rotation"],
+            requirement=row.get("requirement"),
+            min_residents=row.get("minimum_residents_assigned"),
+            max_residents=row.get("maximum_residents_assigned"),
+        )
+
+    return builder

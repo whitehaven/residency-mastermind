@@ -41,9 +41,9 @@ def test_generate_blank_preferences_df():
         4,
     ), "generated df is wrong dimension"
     assert preferences.columns == ["resident", "rotation", "week", "preference"]
-    assert (
-        preferences["preference"] == 0
-    ).all(), "All preferences should be 0 in blank df"
+    assert (preferences["preference"] == 0).all(), (
+        "All preferences should be 0 in blank df"
+    )
 
 
 def test_join_preferences_with_scheduled():
@@ -54,7 +54,7 @@ def test_join_preferences_with_scheduled():
     rotations = pl.DataFrame(
         {
             "rotation": ["Elective", "Wards"],
-            "category": ["Elective", "Wards"],
+            "requirement": ["Elective", "Wards"],
             "required_role": ["Any", "Any"],
             "minimum_residents_assigned": [0, 0],
             "maximum_residents_assigned": [10, 10],
@@ -72,15 +72,15 @@ def test_join_preferences_with_scheduled():
 
     joined = join_preferences_with_scheduled(scheduled, preferences)
 
-    assert len(joined) == len(
-        scheduled
-    ), "Joined should have same number of rows as scheduled"
-    assert (
-        "preference" in joined.columns
-    ), "Preference column should be in joined DataFrame"
-    assert (
-        config.CPMPY_VARIABLE_COLUMN in joined.columns
-    ), "Boolean variable column should be preserved"
+    assert len(joined) == len(scheduled), (
+        "Joined should have same number of rows as scheduled"
+    )
+    assert "preference" in joined.columns, (
+        "Preference column should be in joined DataFrame"
+    )
+    assert config.CPMPY_VARIABLE_COLUMN in joined.columns, (
+        "Boolean variable column should be preserved"
+    )
 
 
 @pytest.fixture
@@ -92,7 +92,7 @@ def simple_optimization_setup():
     rotations = pl.DataFrame(
         {
             "rotation": ["Elective", "Wards"],
-            "category": ["Elective", "Wards"],
+            "requirement": ["Elective", "Wards"],
             "required_role": ["Any", "Any"],
             "minimum_residents_assigned": [0, 0],
             "maximum_residents_assigned": [10, 10],
@@ -180,7 +180,7 @@ def vacation_request_setup():
     rotations = pl.DataFrame(
         {
             "rotation": ["Vacation", "Wards"],
-            "category": ["Vacation", "Wards"],
+            "requirement": ["Vacation", "Wards"],
             "required_role": ["Any", "Any"],
             "minimum_residents_assigned": [0, 1],
             "maximum_residents_assigned": [10, 10],
@@ -246,9 +246,9 @@ def test_vacation_optimization(vacation_request_setup):
         & (pl.col(config.CPMPY_RESULT_COLUMN) == True)
     )
 
-    assert (
-        len(vacation_assignments) > 0
-    ), "Vacation resident should be assigned to vacation"
+    assert len(vacation_assignments) > 0, (
+        "Vacation resident should be assigned to vacation"
+    )
 
 
 @pytest.fixture
@@ -263,7 +263,7 @@ def complex_optimization_setup():
     rotations = pl.DataFrame(
         {
             "rotation": ["Elective", "Wards", "ICU", "Clinic"],
-            "category": ["Elective", "Wards", "ICU", "Clinic"],
+            "requirement": ["Elective", "Wards", "ICU", "Clinic"],
             "required_role": ["Any", "Any", "Senior", "Any"],
             "minimum_residents_assigned": [0, 1, 0, 0],
             "maximum_residents_assigned": [10, 10, 2, 10],
@@ -364,7 +364,7 @@ def test_optimization_improves_over_feasibility():
     rotations = pl.DataFrame(
         {
             "rotation": ["Preferred", "Unpreferred"],
-            "category": ["Preferred", "Unpreferred"],
+            "requirement": ["Preferred", "Unpreferred"],
             "required_role": ["Any", "Any"],
             "minimum_residents_assigned": [0, 0],
             "maximum_residents_assigned": [1, 1],
@@ -433,7 +433,7 @@ def test_minimal_preference_validity():
     rotations = pl.DataFrame(
         {
             "rotation": ["TestRotation"],
-            "category": ["Test"],
+            "requirement": ["Test"],
             "required_role": ["Any"],
             "minimum_residents_assigned": [0],
             "maximum_residents_assigned": [1],
