@@ -214,6 +214,7 @@ def merge_with_existing_preferences(
     existing_preferences_normalized = existing_preferences
 
     # Remove any existing entries that conflict with new preferences
+    # TODO unclear if this logic is right actually; seems like we're chucking existing data
     existing_filtered = existing_preferences_normalized.join(
         new_preferences.select(["resident", "rotation", "week"]),
         on=["resident", "rotation", "week"],
