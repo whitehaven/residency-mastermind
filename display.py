@@ -2,9 +2,12 @@ import polars as pl
 
 import config
 
-test_residents_path = pl.read_csv(config.TESTING_FILES["residents"]["real_size_seniors"])
+test_residents_path = pl.read_csv(
+    config.TESTING_FILES["residents"]["real_size_seniors"]
+)
 test_rotations_path = pl.read_csv(config.TESTING_FILES["rotations"]["real_size"])
 test_weeks_path = config.TESTING_FILES["weeks"]["full_academic_year_2025_2026"]
+
 
 def extract_solved_schedule(scheduled: pl.DataFrame) -> pl.DataFrame:
     """
@@ -39,7 +42,9 @@ def convert_melted_to_block_schedule(solved_schedule: pl.DataFrame) -> pl.DataFr
     Returns:
         block_schedule: pivoted df
     """
-    renderable_df = solved_schedule.select(pl.all().exclude(config.CPMPY_VARIABLE_COLUMN))
+    renderable_df = solved_schedule.select(
+        pl.all().exclude(config.CPMPY_VARIABLE_COLUMN)
+    )
     filtered_long_format = renderable_df.filter(pl.col(config.CPMPY_RESULT_COLUMN))
     block_schedule = filtered_long_format.pivot(
         "week", index="resident", values="rotation"

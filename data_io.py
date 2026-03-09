@@ -31,7 +31,8 @@ def generate_pl_wrapped_boolvar(
     ]
 
     scheduled_vars: list[str] = cp.boolvar(
-        shape=(len(residents) * len(rotations) * len(weeks)), name=variable_labels  # type: ignore
+        shape=(len(residents) * len(rotations) * len(weeks)),
+        name=variable_labels,  # type: ignore
     )
 
     scheduled = pl.DataFrame(

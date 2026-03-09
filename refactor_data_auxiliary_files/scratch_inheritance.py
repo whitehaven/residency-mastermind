@@ -27,7 +27,6 @@ output = mergedeep.merge(fake_yaml, more_specific, strategy=mergedeep.Strategy.R
 
 
 if __name__ == "__main__":
-
     import pprint
 
     pprint.pprint(output)

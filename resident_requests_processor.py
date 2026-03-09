@@ -10,6 +10,7 @@ logger.add(
     sys.stderr, format="{time} {level} {message}", filter="my_module", level="INFO"
 )
 
+
 def validate_resident_requests(
     requests_df: pl.DataFrame,
     residents_df: pl.DataFrame,
@@ -31,7 +32,9 @@ def validate_resident_requests(
     Raises:
         ValueError: If validation fails
     """
-    valid_residents = residents_df[config.RESIDENTS_PRIMARY_LABEL].to_list() # TODO gotta be a better way for membership check
+    valid_residents = residents_df[
+        config.RESIDENTS_PRIMARY_LABEL
+    ].to_list()  # TODO gotta be a better way for membership check
     valid_rotations = rotations_df[config.ROTATIONS_PRIMARY_LABEL].to_list()
     valid_weeks = weeks_df[config.WEEKS_PRIMARY_LABEL].to_list()
 
@@ -134,7 +137,7 @@ def convert_requests_to_preferences(expanded_requests: pl.DataFrame) -> pl.DataF
     """
     # Handle priority mapping with when-then logic using config values
     preferences = expanded_requests.with_columns(
-        preference=pl.when( # TODO I have to believe this could be done better than this with a join
+        preference=pl.when(  # TODO I have to believe this could be done better than this with a join
             (pl.col("priority") == "high") & (pl.col("request_type") == "preference")
         )
         .then(config.REQUEST_PRIORITY_SCORES["high"]["preference"])

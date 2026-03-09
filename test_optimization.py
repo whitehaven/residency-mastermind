@@ -48,9 +48,9 @@ def test_generate_blank_preferences_df():
         4,
     ), "generated df is wrong dimension"
     assert preferences.columns == ["resident", "rotation", "week", "preference"]
-    assert (
-        preferences["preference"] == 0
-    ).all(), "All preferences should be 0 in blank df"
+    assert (preferences["preference"] == 0).all(), (
+        "All preferences should be 0 in blank df"
+    )
 
 
 def test_join_preferences_with_scheduled():
@@ -79,15 +79,15 @@ def test_join_preferences_with_scheduled():
 
     joined = join_preferences_with_scheduled(scheduled, preferences)
 
-    assert len(joined) == len(
-        scheduled
-    ), "Joined should have same number of rows as scheduled"
-    assert (
-        "preference" in joined.columns
-    ), "Preference column should be in joined DataFrame"
-    assert (
-        config.CPMPY_VARIABLE_COLUMN in joined.columns
-    ), "Boolean variable column should be preserved"
+    assert len(joined) == len(scheduled), (
+        "Joined should have same number of rows as scheduled"
+    )
+    assert "preference" in joined.columns, (
+        "Preference column should be in joined DataFrame"
+    )
+    assert config.CPMPY_VARIABLE_COLUMN in joined.columns, (
+        "Boolean variable column should be preserved"
+    )
 
 
 @pytest.fixture
@@ -253,9 +253,9 @@ def test_vacation_optimization(vacation_request_setup):
         & (pl.col(config.CPMPY_RESULT_COLUMN) == True)
     )
 
-    assert (
-        len(vacation_assignments) > 0
-    ), "Vacation resident should be assigned to vacation"
+    assert len(vacation_assignments) > 0, (
+        "Vacation resident should be assigned to vacation"
+    )
 
 
 @pytest.fixture
@@ -516,9 +516,9 @@ def test_resident_requests_processor():
 
     # Test date expansion
     expanded_requests = expand_date_ranges(validated_requests, weeks)
-    assert (
-        len(expanded_requests) > 3
-    ), "Date ranges should be expanded to individual weeks"
+    assert len(expanded_requests) > 3, (
+        "Date ranges should be expanded to individual weeks"
+    )
 
     # Test preference conversion
     preferences = convert_requests_to_preferences(expanded_requests)
@@ -528,16 +528,16 @@ def test_resident_requests_processor():
     high_pref = preferences.filter(
         (pl.col("resident") == "Test Resident 1") & (pl.col("rotation") == "Elective")
     )["preference"].max()
-    assert (
-        high_pref == config.REQUEST_PRIORITY_SCORES["high"]["preference"]
-    ), "High preference should have correct score"
+    assert high_pref == config.REQUEST_PRIORITY_SCORES["high"]["preference"], (
+        "High preference should have correct score"
+    )
 
     medium_avoid = preferences.filter(
         (pl.col("resident") == "Test Resident 2") & (pl.col("rotation") == "ICU")
     )["preference"].min()
-    assert (
-        medium_avoid == config.REQUEST_PRIORITY_SCORES["medium"]["avoidance"]
-    ), "Medium avoidance should have correct score"
+    assert medium_avoid == config.REQUEST_PRIORITY_SCORES["medium"]["avoidance"], (
+        "Medium avoidance should have correct score"
+    )
 
 
 def test_resident_requests_optimization():
@@ -625,9 +625,9 @@ def test_resident_requests_optimization():
         & (pl.col("rotation") == "Elective")
         & (pl.col(config.CPMPY_RESULT_COLUMN) == True)
     )
-    assert (
-        len(dr_smith_elective) > 0
-    ), "Dr. Smith should be assigned to Elective (high preference)"
+    assert len(dr_smith_elective) > 0, (
+        "Dr. Smith should be assigned to Elective (high preference)"
+    )
 
     # Check that avoidance requests are likely avoided (minimized)
     dr_smith_wards = solved_schedule.filter(
@@ -695,9 +695,9 @@ def test_resident_requests_with_existing_vacation_preferences():
     )
 
     # Should contain both vacation and elective preferences
-    assert len(merged_preferences) > len(
-        existing_vacation_prefs
-    ), "Should have more preferences after merge"
+    assert len(merged_preferences) > len(existing_vacation_prefs), (
+        "Should have more preferences after merge"
+    )
 
     # Check that both types are present
     vacation_prefs = merged_preferences.filter(pl.col("rotation") == "Vacation")

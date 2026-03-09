@@ -7,7 +7,7 @@ import config
 
 
 def get_resident_week_vars(
-        scheduled: pl.DataFrame, resident_name: str, week_date
+    scheduled: pl.DataFrame, resident_name: str, week_date
 ) -> list:
     # TODO test if works
     """Get all rotation variables for a specific resident and week."""
@@ -17,7 +17,7 @@ def get_resident_week_vars(
 
 
 def get_rotation_week_vars(
-        scheduled: pl.DataFrame, rotation_name: str, week_date
+    scheduled: pl.DataFrame, rotation_name: str, week_date
 ) -> list:
     # TODO test if works
     """Get all resident variables for a specific rotation and week."""
@@ -27,7 +27,7 @@ def get_rotation_week_vars(
 
 
 def get_resident_rotation_vars(
-        scheduled: pl.DataFrame, resident_name: str, rotation_name: str
+    scheduled: pl.DataFrame, resident_name: str, rotation_name: str
 ) -> list:
     # TODO test if works
     """Get all week variables for a specific resident and rotation."""
@@ -82,15 +82,17 @@ def subset_scheduled_by(
     )
 
     if len(subset_scheduled) == 0:
-        warnings.warn(f"Note {len(subset_scheduled)=} which may not be the expected outcome.")
+        warnings.warn(
+            f"Note {len(subset_scheduled)=} which may not be the expected outcome."
+        )
 
     return subset_scheduled
 
 
 def group_scheduled_df_by_for_each(
-        subset_scheduled: pl.DataFrame,
-        for_each_individual: list[str] | str,
-        group_on_column: str,
+    subset_scheduled: pl.DataFrame,
+    for_each_individual: list[str] | str,
+    group_on_column: str,
 ) -> pl.DataFrame:
     """
     Get grouped subframes containing grouped decision variables by those fields which are "for each (individual)" when used for
@@ -112,9 +114,9 @@ def group_scheduled_df_by_for_each(
     1. In that case, for_each should receive `resident` and `week`. This means the `rotation` field is subject to
     constraint application and can then be processed in the next function.
     """
-    assert (
-            group_on_column in subset_scheduled.columns
-    ), f"{group_on_column} not in {subset_scheduled.columns}"
+    assert group_on_column in subset_scheduled.columns, (
+        f"{group_on_column} not in {subset_scheduled.columns}"
+    )
     grouped = subset_scheduled.group_by(for_each_individual).agg(
         pl.col(group_on_column)
     )

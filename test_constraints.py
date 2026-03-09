@@ -155,9 +155,9 @@ def verify_enforce_rotation_capacity_minimum(rotations, solved_schedule) -> bool
             if min_residents_this_rotation is None:
                 min_residents_this_rotation = 0
 
-            assert (
-                sum(decision_vars) >= min_residents_this_rotation
-            ), f"sum decision_vars = {decision_vars} != minimum_residents_assigned for {rotation}"
+            assert sum(decision_vars) >= min_residents_this_rotation, (
+                f"sum decision_vars = {decision_vars} != minimum_residents_assigned for {rotation}"
+            )
     return True
 
 
@@ -207,13 +207,13 @@ def verify_enforce_rotation_capacity_maximum(rotations, solved_schedule) -> bool
                 pl.col("maximum_residents_assigned")
             ).item()
             if max_residents_this_rotation is None:
-                assert (
-                    False
-                ), f"max_residents_this_rotation == {max_residents_this_rotation}? Doesn't make sense."
+                assert False, (
+                    f"max_residents_this_rotation == {max_residents_this_rotation}? Doesn't make sense."
+                )
 
-            assert (
-                sum(decision_vars) <= max_residents_this_rotation
-            ), f"sum decision_vars = {decision_vars} != maximum_residents_assigned for {rotation}"
+            assert sum(decision_vars) <= max_residents_this_rotation, (
+                f"sum decision_vars = {decision_vars} != maximum_residents_assigned for {rotation}"
+            )
     return True
 
 
@@ -572,9 +572,9 @@ def sample_barely_fit_R2s_no_prereqs():
 
 
 @pytest.fixture
-def sample_simple_prerequisites_no_priors() -> (
-    tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame, box.Box, pl.DataFrame, pl.DataFrame]
-):
+def sample_simple_prerequisites_no_priors() -> tuple[
+    pl.DataFrame, pl.DataFrame, pl.DataFrame, box.Box, pl.DataFrame, pl.DataFrame
+]:
     residents = pl.DataFrame(
         {
             "full_name": ["First Guy", "Second Guy", "Third Guy"],
@@ -768,7 +768,8 @@ def sample_simple_prerequisites_with_priors():
                 "Green HS Senior",
                 # "Orange HS Senior",
             ],
-        ).min_weeks_over_resident_years(1)
+        )
+        .min_weeks_over_resident_years(1)
         # .min_contiguity_over_resident_years(2)
         .after_prerequisite(
             prereq_fulfilling_rotations=["Purple HS Senior"],
@@ -1998,9 +1999,9 @@ def test_next_rotation_must_be(sample_purple_ordering_rules):
 
 
 @pytest.fixture
-def sample_purple_ordering_rules() -> (
-    tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame, box.Box, pl.DataFrame, pl.DataFrame]
-):
+def sample_purple_ordering_rules() -> tuple[
+    pl.DataFrame, pl.DataFrame, pl.DataFrame, box.Box, pl.DataFrame, pl.DataFrame
+]:
     """
     Should require a tight schedule:
     First Guy	V	P	C	P	C
