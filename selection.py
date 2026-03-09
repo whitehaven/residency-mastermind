@@ -3,38 +3,6 @@ import warnings
 
 import polars as pl
 
-import config
-
-
-def get_resident_week_vars(
-    scheduled: pl.DataFrame, resident_name: str, week_date
-) -> list:
-    # TODO test if works
-    """Get all rotation variables for a specific resident and week."""
-    return scheduled.filter(
-        (pl.col("resident") == resident_name) & (pl.col("week") == week_date)
-    )[config.CPMPY_VARIABLE_COLUMN].to_list()
-
-
-def get_rotation_week_vars(
-    scheduled: pl.DataFrame, rotation_name: str, week_date
-) -> list:
-    # TODO test if works
-    """Get all resident variables for a specific rotation and week."""
-    return scheduled.filter(
-        (pl.col("rotation") == rotation_name) & (pl.col("week") == week_date)
-    )[config.CPMPY_VARIABLE_COLUMN].to_list()
-
-
-def get_resident_rotation_vars(
-    scheduled: pl.DataFrame, resident_name: str, rotation_name: str
-) -> list:
-    # TODO test if works
-    """Get all week variables for a specific resident and rotation."""
-    return scheduled.filter(
-        (pl.col("resident") == resident_name) & (pl.col("rotation") == rotation_name)
-    )[config.CPMPY_VARIABLE_COLUMN].to_list()
-
 
 def subset_scheduled_by(
     residents: pl.DataFrame | list[str],
