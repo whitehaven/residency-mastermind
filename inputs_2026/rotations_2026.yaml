@@ -1,0 +1,77 @@
+rotations:
+- name: Green HS Senior
+  requirement: HS Rounding Senior
+  min_residents: 1
+  max_residents: 1
+- name: Orange HS Senior
+  requirement: HS Rounding Senior
+  min_residents: 1
+  max_residents: 1
+- name: Purple HS Senior
+  requirement: HS Admitting Senior
+  min_residents: 1
+  max_residents: 1
+- name: Consults
+  requirement: Consults
+  min_residents: 0
+  max_residents: 2
+- name: SHMC ICU Senior
+  requirement: ICU Senior
+  min_residents: 1
+  max_residents: 1
+- name: SHMC CICU
+  requirement: ICU Senior
+  min_residents: 0
+  max_residents: 1
+- name: Night Senior
+  requirement: Night Senior
+  min_residents: 1
+  max_residents: 1
+- name: STHC Senior
+  requirement: STHC Senior
+  min_residents: 1
+  max_residents: 4
+- name: Vacation
+  requirement: Vacation
+  min_residents: 0
+  max_residents: 30
+- name: Systems of Medicine
+  requirement: Systems of Medicine
+  min_residents: 0
+  max_residents: 7
+- name: IP Cardiology Senior
+  requirement: IP Cardiology Senior
+  min_residents: 0
+  max_residents: 1
+- name: Geriatrics
+  requirement: Geriatrics
+  min_residents: 0
+  max_residents: 2
+- name: OP Cardiology
+  requirement: OP Cardiology
+  min_residents: 0
+  max_residents: 2
+- name: Psych Consult
+  requirement: Psych Consult
+  min_residents: 0
+  max_residents: 1
+- name: Dermatology
+  requirement: Dermatology
+  min_residents: 0
+  max_residents: 2
+- name: Elective
+  requirement: Elective
+  min_residents: 0
+  max_residents: 30
+- name: GIM
+  requirement: GIM
+  min_residents: 0
+  max_residents: 4
+- name: Hospitalist
+  requirement: Hospitalist
+  min_residents: 0
+  max_residents: 3
+- name: OP Pulmonology
+  requirement: OP Pulmonology
+  min_residents: 0
+  max_residents: 2
