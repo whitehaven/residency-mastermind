@@ -6,7 +6,6 @@ import pytest
 
 import config
 from display import convert_melted_to_block_schedule, extract_solved_schedule
-from main import solve_schedule
 from test_constraints import (
     verify_enforce_requirement_constraints,
     verify_enforce_rotation_capacity_maximum,
@@ -17,6 +16,7 @@ from test_constraints import (
 test_residents_path = config.TESTING_FILES["residents"]["real_size_seniors"]
 test_rotations_path = config.TESTING_FILES["rotations"]["real_size"]
 test_weeks_path = config.TESTING_FILES["weeks"]["full_academic_year_2025_2026"]
+
 
 @pytest.mark.skip(
     reason="duplicates function of constraint tests at this point, only needed when optimization also implemented"

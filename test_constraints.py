@@ -155,9 +155,9 @@ def verify_enforce_rotation_capacity_minimum(rotations, solved_schedule) -> bool
             if min_residents_this_rotation is None:
                 min_residents_this_rotation = 0
 
-            assert sum(decision_vars) >= min_residents_this_rotation, (
-                f"sum decision_vars = {decision_vars} != minimum_residents_assigned for {rotation}"
-            )
+            assert (
+                sum(decision_vars) >= min_residents_this_rotation
+            ), f"sum decision_vars = {decision_vars} != minimum_residents_assigned for {rotation}"
     return True
 
 
@@ -207,13 +207,13 @@ def verify_enforce_rotation_capacity_maximum(rotations, solved_schedule) -> bool
                 pl.col("maximum_residents_assigned")
             ).item()
             if max_residents_this_rotation is None:
-                assert False, (
-                    f"max_residents_this_rotation == {max_residents_this_rotation}? Doesn't make sense."
-                )
+                assert (
+                    False
+                ), f"max_residents_this_rotation == {max_residents_this_rotation}? Doesn't make sense."
 
-            assert sum(decision_vars) <= max_residents_this_rotation, (
-                f"sum decision_vars = {decision_vars} != maximum_residents_assigned for {rotation}"
-            )
+            assert (
+                sum(decision_vars) <= max_residents_this_rotation
+            ), f"sum decision_vars = {decision_vars} != maximum_residents_assigned for {rotation}"
     return True
 
 
@@ -538,13 +538,13 @@ def sample_barely_fit_R2s_no_prereqs():
                 "Orange HS Senior",
             ],
         )
-        .min_weeks_over_resident_years(4, ["R2"])
-        .min_contiguity_over_resident_years(4, ["R2"])
+        .min_weeks_over_resident_years(4)
+        .min_contiguity_over_resident_years(4)
     )
     (
         builder.add_requirement(
             name="Elective", fulfilled_by=["Elective"]
-        ).max_weeks_over_resident_years(12, ["R2"])
+        ).max_weeks_over_resident_years(12)
     )
     current_requirements = builder.accumulate_constraints_by_rule()
 
@@ -572,9 +572,9 @@ def sample_barely_fit_R2s_no_prereqs():
 
 
 @pytest.fixture
-def sample_simple_prerequisites_no_priors() -> tuple[
-    pl.DataFrame, pl.DataFrame, pl.DataFrame, box.Box, pl.DataFrame, pl.DataFrame
-]:
+def sample_simple_prerequisites_no_priors() -> (
+    tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame, box.Box, pl.DataFrame, pl.DataFrame]
+):
     residents = pl.DataFrame(
         {
             "full_name": ["First Guy", "Second Guy", "Third Guy"],
@@ -612,25 +612,24 @@ def sample_simple_prerequisites_no_priors() -> tuple[
                 "Orange HS Senior",
             ],
         )
-        .min_weeks_over_resident_years(2, ["R2"])
-        .min_contiguity_over_resident_years(2, ["R2"])
+        .min_weeks_over_resident_years(2)
+        .min_contiguity_over_resident_years(2)
         .after_prerequisite(
             prereq_fulfilling_rotations=["Purple HS Senior"],
             weeks_required=2,  # deliberately short so that the four can rotate through Elective to get out of the way
-            resident_years=["R2"],
         )
     )
     (
         builder.add_requirement(
             name="HS Admitting Senior", fulfilled_by=["Purple HS Senior"]
         )
-        .min_weeks_over_resident_years(2, ["R2"])
-        .min_contiguity_over_resident_years(2, ["R2"])
+        .min_weeks_over_resident_years(2)
+        .min_contiguity_over_resident_years(2)
     )
     (
         builder.add_requirement(
             name="Elective", fulfilled_by=["Elective"]
-        ).max_weeks_over_resident_years(12, ["R2"])
+        ).max_weeks_over_resident_years(12)
     )
     current_requirements = builder.accumulate_constraints_by_rule()
 
@@ -769,25 +768,23 @@ def sample_simple_prerequisites_with_priors():
                 "Green HS Senior",
                 # "Orange HS Senior",
             ],
-        )
-        .min_weeks_over_resident_years(1, ["R2"])
-        # .min_contiguity_over_resident_years(2, ["R2"])
+        ).min_weeks_over_resident_years(1)
+        # .min_contiguity_over_resident_years(2)
         .after_prerequisite(
             prereq_fulfilling_rotations=["Purple HS Senior"],
             weeks_required=1,  # deliberately short so that the four can rotate through Elective to get out of the way
-            resident_years=["R2"],
         )
     )
     (
         builder.add_requirement(
             name="HS Admitting Senior", fulfilled_by=["Purple HS Senior"]
-        ).min_weeks_over_resident_years(1, ["R2"])
-        # .min_contiguity_over_resident_years(2, ["R2"])
+        ).min_weeks_over_resident_years(1)
+        # .min_contiguity_over_resident_years(2)
     )
     (
         builder.add_requirement(
             name="Elective", fulfilled_by=["Elective"]
-        ).max_weeks_over_resident_years(12, ["R2"])
+        ).max_weeks_over_resident_years(12)
     )
     current_requirements = builder.accumulate_constraints_by_rule()
 
@@ -976,9 +973,7 @@ def verify_enforce_requirement_constraints(
         for constraint in requirement_body.constraints:
             match constraint.type:
                 case "min_by_period":
-                    residents_subject_to_req = residents.filter(
-                        pl.col("year").is_in(constraint.resident_years)
-                    )
+                    residents_subject_to_req = residents
                     rotations_fulfilling_req = rotations.filter(
                         pl.col("rotation").is_in(requirement_body.fulfilled_by)
                     )
@@ -991,9 +986,7 @@ def verify_enforce_requirement_constraints(
                     ), "verify_minimum_week_requirement == False"
 
                 case "max_by_period":
-                    residents_subject_to_req = residents.filter(
-                        pl.col("year").is_in(constraint.resident_years)
-                    )
+                    residents_subject_to_req = residents
                     rotations_fulfilling_req = rotations.filter(
                         pl.col("rotation").is_in(requirement_body.fulfilled_by)
                     )
@@ -1006,9 +999,7 @@ def verify_enforce_requirement_constraints(
                     ), "verify_maximum_week_requirement == False"
 
                 case "exact_by_period":
-                    residents_subject_to_req = residents.filter(
-                        pl.col("year").is_in(constraint.resident_years)
-                    )
+                    residents_subject_to_req = residents
                     rotations_fulfilling_req = rotations.filter(
                         pl.col("rotation").is_in(requirement_body.fulfilled_by)
                     )
@@ -1021,9 +1012,7 @@ def verify_enforce_requirement_constraints(
                     ), "verify_exact_week_constraint failed"
 
                 case "min_contiguity_in_period":
-                    residents_subject_to_req = residents.filter(
-                        pl.col("year").is_in(constraint.resident_years)
-                    )
+                    residents_subject_to_req = residents
                     rotations_fulfilling_req = rotations.filter(
                         pl.col("rotation").is_in(requirement_body.fulfilled_by)
                     )
@@ -1035,9 +1024,7 @@ def verify_enforce_requirement_constraints(
                         solved_schedule,
                     ), "verify_minimum_contiguity failed"
                 case "max_contiguity_in_period":
-                    residents_subject_to_req = residents.filter(
-                        pl.col("year").is_in(constraint.resident_years)
-                    )
+                    residents_subject_to_req = residents
                     rotations_fulfilling_req = rotations.filter(
                         pl.col("rotation").is_in(requirement_body.fulfilled_by)
                     )
@@ -1051,9 +1038,7 @@ def verify_enforce_requirement_constraints(
                 case "prerequisite":
                     prereq_demanding_rotations = requirement_body.fulfilled_by
                     prereq_weeks = constraint.weeks
-                    residents_subject_to_req = residents.filter(
-                        pl.col("year").is_in(constraint.resident_years)
-                    )
+                    residents_subject_to_req = residents
                     rotations_fulfilling_req = rotations.filter(
                         pl.col("rotation").is_in(requirement_body.fulfilled_by)
                     )
@@ -1072,9 +1057,7 @@ def verify_enforce_requirement_constraints(
                         solved_schedule,
                     ), "verify_prerequisite_met failed"
                 case "respect_block_alignment":
-                    residents_subject_to_req = residents.filter(
-                        pl.col("year").is_in(constraint.resident_years)
-                    )
+                    residents_subject_to_req = residents
                     rotations_fulfilling_req = rotations.filter(
                         pl.col("rotation").is_in(requirement_body.fulfilled_by)
                     )
@@ -1085,9 +1068,7 @@ def verify_enforce_requirement_constraints(
                         solved_schedule,
                     )
                 case "next_rotation_must_be":
-                    residents_subject_to_req = residents.filter(
-                        pl.col("year").is_in(constraint.resident_years)
-                    )
+                    residents_subject_to_req = residents
                     rotations_fulfilling_req = rotations.filter(
                         pl.col("rotation").is_in(requirement_body.fulfilled_by)
                     )
@@ -1648,18 +1629,24 @@ def sample_rarely_available_rotation():
                 "Green HS Senior",
             ],
         )
-        .min_weeks_over_resident_years(4, ["R2"])
-        .min_contiguity_over_resident_years(4, ["R2"])
+        .min_weeks_over_resident_years(
+            4,
+        )
+        .min_contiguity_over_resident_years(
+            4,
+        )
     )
     (
         builder.add_requirement(
             name="Elective", fulfilled_by=["Elective"]
-        ).max_weeks_over_resident_years(12, ["R2"])
+        ).max_weeks_over_resident_years(
+            12,
+        )
     )
     (
         builder.add_requirement(name="SOM", fulfilled_by=["SOM"])
-        .min_weeks_over_resident_years(1, ["R2"])
-        .max_weeks_over_resident_years(1, ["R2"])
+        .min_weeks_over_resident_years(1)
+        .max_weeks_over_resident_years(1)
     )
     current_requirements = builder.accumulate_constraints_by_rule()
 
@@ -1967,7 +1954,9 @@ def test_next_rotation_must_be(sample_purple_ordering_rules):
         scheduled,
     )
     model += requirement_constraints
-    logger.debug(f"Added {len(requirement_constraints)=} which include `next_rotation_must_be` enforcement.")
+    logger.debug(
+        f"Added {len(requirement_constraints)=} which include `next_rotation_must_be` enforcement."
+    )
 
     basic_reqs = list()
     basic_reqs.extend(
@@ -2009,9 +1998,9 @@ def test_next_rotation_must_be(sample_purple_ordering_rules):
 
 
 @pytest.fixture
-def sample_purple_ordering_rules() -> tuple[
-    pl.DataFrame, pl.DataFrame, pl.DataFrame, box.Box, pl.DataFrame, pl.DataFrame
-]:
+def sample_purple_ordering_rules() -> (
+    tuple[pl.DataFrame, pl.DataFrame, pl.DataFrame, box.Box, pl.DataFrame, pl.DataFrame]
+):
     """
     Should require a tight schedule:
     First Guy	V	P	C	P	C
@@ -2053,16 +2042,16 @@ def sample_purple_ordering_rules() -> tuple[
     builder = RequirementBuilder()
     builder.add_requirement(
         name="HS Admitting Senior", fulfilled_by=["Purple HS Senior"]
-    ).min_weeks_over_resident_years(2, ["R2"]).next_rotation_must_be(
-        allowable_next_rotations=allowable_rotations_after_purple, resident_years=["R2"]
+    ).min_weeks_over_resident_years(2).next_rotation_must_be(
+        allowable_next_rotations=allowable_rotations_after_purple,
     )
     builder.add_requirement(
         name="Consults", fulfilled_by=["Consults"]
-    ).min_weeks_over_resident_years(2, ["R2"])
+    ).min_weeks_over_resident_years(2)
 
     builder.add_requirement(
         name="Vacation", fulfilled_by=["Vacation"]
-    ).min_weeks_over_resident_years(1, ["R2"])
+    ).min_weeks_over_resident_years(1)
     current_requirements = builder.accumulate_constraints_by_rule()
 
     scheduled = generate_pl_wrapped_boolvar(

@@ -1,6 +1,6 @@
 import sqlite3
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Optional
 
 import box
 import polars as pl
@@ -12,71 +12,56 @@ class RequirementRule:
     fulfilled_by: list[str]
     _constraints: list[dict[str, Any]] = field(default_factory=list)
 
-    def min_weeks_over_resident_years(self, min_weeks: int, resident_years: list[str]):
+    def min_weeks_over_resident_years(self, min_weeks: int):
         self._constraints.append(
             {
                 "type": "min_by_period",
                 "weeks": min_weeks,
-                "resident_years": resident_years,
             }
         )
         return self
 
-    def max_weeks_over_resident_years(self, max_weeks: int, resident_years: list[str]):
+    def max_weeks_over_resident_years(self, max_weeks: int):
         self._constraints.append(
             {
                 "type": "max_by_period",
                 "weeks": max_weeks,
-                "resident_years": resident_years,
             }
         )
         return self
 
-    def range_weeks_over_resident_years(
-        self, min_weeks: int, max_weeks: int, resident_years: list[str]
-    ):
+    def range_weeks_over_resident_years(self, min_weeks: int, max_weeks: int):
         assert min_weeks <= max_weeks, f"{min_weeks=} > {max_weeks=} and shouldn't be"
         if min_weeks == max_weeks:
-            return self.exact_weeks_over_resident_years(min_weeks, resident_years)
+            return self.exact_weeks_over_resident_years(min_weeks)
         else:
             return self.min_weeks_over_resident_years(
-                min_weeks=min_weeks, resident_years=resident_years
-            ).max_weeks_over_resident_years(
-                max_weeks=max_weeks, resident_years=resident_years
-            )
+                min_weeks=min_weeks
+            ).max_weeks_over_resident_years(max_weeks=max_weeks)
 
-    def exact_weeks_over_resident_years(
-        self, exact_weeks: int, resident_years: list[str]
-    ):
+    def exact_weeks_over_resident_years(self, exact_weeks: int):
         self._constraints.append(
             {
                 "type": "exact_by_period",
                 "weeks": exact_weeks,
-                "resident_years": resident_years,
             }
         )
         return self
 
-    def min_contiguity_over_resident_years(
-        self, min_contiguity: int, resident_years: list[str]
-    ):
+    def min_contiguity_over_resident_years(self, min_contiguity: int):
         self._constraints.append(
             {
                 "type": "min_contiguity_in_period",
                 "weeks": min_contiguity,
-                "resident_years": resident_years,
             }
         )
         return self
 
-    def max_contiguity_over_resident_years(
-        self, max_contiguity: int, resident_years: list[str]
-    ):
+    def max_contiguity_over_resident_years(self, max_contiguity: int):
         self._constraints.append(
             {
                 "type": "max_contiguity_in_period",
                 "weeks": max_contiguity,
-                "resident_years": resident_years,
             }
         )
         return self
@@ -85,21 +70,17 @@ class RequirementRule:
         self,
         prereq_fulfilling_rotations: list[str],
         weeks_required: int,
-        resident_years: list[str],
     ):
         self._constraints.append(
             {
                 "type": "prerequisite",
                 "prerequisite_fulfillers": prereq_fulfilling_rotations,
                 "weeks": weeks_required,
-                "resident_years": resident_years,
             },
         )
         return self
 
-    def exclude_weeks_for_resident_years(
-        self, weeks: list[int], resident_years: list[str]
-    ):
+    def exclude_weeks_for_resident_years(self, weeks: list[int]):
         """
         Note DOES NOT filter by a resident year - excludes use for purposes of year being solved
 
@@ -110,22 +91,18 @@ class RequirementRule:
             {
                 "type": "exclude_weeks",
                 "excluded_weeks": weeks,
-                "resident_years": resident_years,
             },
         )
         return self
 
-    def must_respect_block_alignment(self, resident_years: list[str]):
+    def must_respect_block_alignment(self):
         self._constraints.append(
             {
                 "type": "respect_block_alignment",
-                "resident_years": resident_years,
             }
         )
 
-    def next_rotation_must_be(
-        self, allowable_next_rotations: list[str], resident_years: list[str]
-    ):
+    def next_rotation_must_be(self, allowable_next_rotations: list[str]):
         """
         Constrains rotations following current requirement-fulfilling rotation such that the next rotation is in the allowable_next_rotations list.
 
@@ -151,7 +128,6 @@ class RequirementRule:
             {
                 "type": "next_rotation_must_be",
                 "allowable_next_rotations": allowable_next_rotations,
-                "resident_years": resident_years,
             }
         )
 
@@ -161,7 +137,6 @@ class RequirementRule:
 
 
 class RequirementBuilder:
-
     def __init__(self):
         self.requirements: dict[str, RequirementRule] = {}
 
@@ -191,17 +166,14 @@ class RequirementBuilder:
         ) in self.accumulate_constraints_by_rule().items():
             fulfilled_by = rotation_data.get("fulfilled_by", [])
             for constraint in rotation_data.get("constraints", []):
-                resident_years = constraint.get("resident_years", [])
-                for resident_year in resident_years:
-                    row = {
-                        "rotation_name": rotation_name,
-                        "constraint_type": constraint["type"],
-                        "weeks": constraint.get("weeks"),
-                        "resident_year": resident_year,
-                        "prerequisite": constraint.get("prerequisite"),
-                        "fulfilled_by": fulfilled_by,
-                    }
-                    rows.append(row)
+                row = {
+                    "rotation_name": rotation_name,
+                    "constraint_type": constraint["type"],
+                    "weeks": constraint.get("weeks"),
+                    "prerequisite": constraint.get("prerequisite"),
+                    "fulfilled_by": fulfilled_by,
+                }
+                rows.append(row)
         return pl.DataFrame(rows)
 
     def write_polars_df_to_sqlite(
@@ -242,10 +214,10 @@ def generate_builder_with_current_requirements() -> RequirementBuilder:
             name="HS Rounding Senior",
             fulfilled_by=["Orange HS Senior", "Green HS Senior"],
         )
-        .range_weeks_over_resident_years(2, 4, ["R2"])
-        .min_contiguity_over_resident_years(2, ["R2"])
-        .exact_weeks_over_resident_years(8, ["R3"])
-        .min_contiguity_over_resident_years(4, ["R3"])
+        .range_weeks_over_resident_years(2, 4)
+        .min_contiguity_over_resident_years(2)
+        .exact_weeks_over_resident_years(8)
+        .min_contiguity_over_resident_years(4)
         # .after_prerequisite("HS Admitting Senior", 2, ["R2", "R3"])
     )
 
@@ -253,44 +225,44 @@ def generate_builder_with_current_requirements() -> RequirementBuilder:
         builder.add_requirement(
             name="HS Admitting Senior", fulfilled_by=["Purple/Consults"]
         )
-        .min_weeks_over_resident_years(5, ["R2"])
-        .max_weeks_over_resident_years(6, ["R2"])
-        .min_contiguity_over_resident_years(2, ["R2"])
+        .min_weeks_over_resident_years(5)
+        .max_weeks_over_resident_years(6)
+        .min_contiguity_over_resident_years(2)
     )
 
     (
         builder.add_requirement(name="ICU Senior", fulfilled_by=["SHMC ICU Senior"])
-        .min_weeks_over_resident_years(4, ["R2"])
-        .min_contiguity_over_resident_years(4, ["R2"])
+        .min_weeks_over_resident_years(4)
+        .min_contiguity_over_resident_years(4)
     )
     (
         builder.add_requirement(
             name="Systems of Medicine", fulfilled_by=["Systems of Medicine"]
         )
-        .min_weeks_over_resident_years(2, ["R2"])
-        .min_contiguity_over_resident_years(2, ["R2"])
+        .min_weeks_over_resident_years(2)
+        .min_contiguity_over_resident_years(2)
     )
 
     (
         builder.add_requirement(name="Elective", fulfilled_by=["Elective"])
-        .min_weeks_over_resident_years(10, ["R2"])
-        .max_weeks_over_resident_years(30, ["R2"])
-        .min_weeks_over_resident_years(10, ["R3"])
-        .max_weeks_over_resident_years(30, ["R3"])
+        .min_weeks_over_resident_years(10)
+        .max_weeks_over_resident_years(30)
+        .min_weeks_over_resident_years(10)
+        .max_weeks_over_resident_years(30)
     )
 
     (
         builder.add_requirement(
             name="Ethics", fulfilled_by=["Ethics"]
-        ).exact_weeks_over_resident_years(1, ["R2", "R3"])
+        ).exact_weeks_over_resident_years(1)
     )
 
     (
         builder.add_requirement(name="Ambulatory Senior", fulfilled_by=["STHC Senior"])
-        .min_weeks_over_resident_years(4, ["R2"])
-        .min_contiguity_over_resident_years(2, ["R2"])
-        .min_weeks_over_resident_years(4, ["R3"])
-        .min_contiguity_over_resident_years(2, ["R3"])
+        .min_weeks_over_resident_years(4)
+        .min_contiguity_over_resident_years(2)
+        .min_weeks_over_resident_years(4)
+        .min_contiguity_over_resident_years(2)
     )
 
     (  # TODO how does early nights backup work? is it R2s?
@@ -298,17 +270,17 @@ def generate_builder_with_current_requirements() -> RequirementBuilder:
             name="SHMC Night Senior",
             fulfilled_by=["SHMC Night Senior"],
         )
-        .exact_weeks_over_resident_years(4, ["R2"])
-        .min_contiguity_over_resident_years(4, ["R2"])
-        .min_weeks_over_resident_years(1, ["R3"])
-        .max_weeks_over_resident_years(2, ["R3"])
+        .exact_weeks_over_resident_years(4)
+        .min_contiguity_over_resident_years(4)
+        .min_weeks_over_resident_years(1)
+        .max_weeks_over_resident_years(2)
         # .never_broken_up_in_year("R3")
     )
 
     (
         builder.add_requirement(name="Vacation", fulfilled_by=["Vacation"])
-        .exact_weeks_over_resident_years(4, ["R2"])
-        .exact_weeks_over_resident_years(3, ["R3"])
+        .exact_weeks_over_resident_years(4)
+        .exact_weeks_over_resident_years(3)
         # TODO need to get number that R1s actually get, or would just go on R1 schedule?
     )
 
@@ -332,35 +304,35 @@ def generate_builder_doable_with_R2s_only() -> RequirementBuilder:
             name="HS Rounding Senior",
             fulfilled_by=["Orange HS Senior", "Green HS Senior"],
         )
-        .range_weeks_over_resident_years(2, 4, ["R2"])
-        .min_contiguity_over_resident_years(2, ["R2"])
+        .range_weeks_over_resident_years(2, 4)
+        .min_contiguity_over_resident_years(2)
     )
 
     (
         builder.add_requirement(
             name="HS Admitting Senior", fulfilled_by=["Purple/Consults"]
         )
-        .min_weeks_over_resident_years(4, ["R2"])
-        .max_weeks_over_resident_years(8, ["R2"])
-        .min_contiguity_over_resident_years(2, ["R2"])
+        .min_weeks_over_resident_years(4)
+        .max_weeks_over_resident_years(8)
+        .min_contiguity_over_resident_years(2)
     )
 
     (
         builder.add_requirement(name="Elective", fulfilled_by=["Elective"])
-        .min_weeks_over_resident_years(10, ["R2"])
-        .max_weeks_over_resident_years(30, ["R2"])
+        .min_weeks_over_resident_years(10)
+        .max_weeks_over_resident_years(30)
     )
 
     (
         builder.add_requirement(name="Ambulatory Senior", fulfilled_by=["STHC Senior"])
-        .min_weeks_over_resident_years(4, ["R2"])
-        .min_contiguity_over_resident_years(2, ["R2"])
+        .min_weeks_over_resident_years(4)
+        .min_contiguity_over_resident_years(2)
     )
 
     (
         builder.add_requirement(name="Vacation", fulfilled_by=["Vacation"])
-        .exact_weeks_over_resident_years(4, ["R2"])
-        .exact_weeks_over_resident_years(3, ["R3"])
+        .exact_weeks_over_resident_years(4)
+        .exact_weeks_over_resident_years(3)
     )
     return builder
 
@@ -373,35 +345,35 @@ def generate_builder_doable_with_R2s_only_and_prereqs() -> RequirementBuilder:
             name="HS Rounding Senior",
             fulfilled_by=["Orange HS Senior", "Green HS Senior"],
         )
-        .range_weeks_over_resident_years(2, 4, ["R2"])
-        .min_contiguity_over_resident_years(2, ["R2"])
-        .after_prerequisite(["Purple/Consults"], 4, resident_years=["R2", "R3"])
+        .range_weeks_over_resident_years(2, 4)
+        .min_contiguity_over_resident_years(2)
+        .after_prerequisite(["Purple/Consults"], 4)
     )
 
     (
         builder.add_requirement(
             name="HS Admitting Senior", fulfilled_by=["Purple/Consults"]
         )
-        .min_weeks_over_resident_years(5, ["R2"])
-        .max_weeks_over_resident_years(6, ["R2"])
-        .min_contiguity_over_resident_years(2, ["R2"])
+        .min_weeks_over_resident_years(5)
+        .max_weeks_over_resident_years(6)
+        .min_contiguity_over_resident_years(2)
     )
 
     (
         builder.add_requirement(name="Elective", fulfilled_by=["Elective"])
-        .min_weeks_over_resident_years(10, ["R2"])
-        .max_weeks_over_resident_years(30, ["R2"])
+        .min_weeks_over_resident_years(10)
+        .max_weeks_over_resident_years(30)
     )
 
     (
         builder.add_requirement(name="Ambulatory Senior", fulfilled_by=["STHC Senior"])
-        .min_weeks_over_resident_years(4, ["R2"])
-        .min_contiguity_over_resident_years(2, ["R2"])
+        .min_weeks_over_resident_years(4)
+        .min_contiguity_over_resident_years(2)
     )
 
     (
         builder.add_requirement(
             name="Vacation", fulfilled_by=["Vacation"]
-        ).exact_weeks_over_resident_years(4, ["R2"])
+        ).exact_weeks_over_resident_years(4)
     )
     return builder

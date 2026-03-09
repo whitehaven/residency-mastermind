@@ -433,9 +433,7 @@ def enforce_requirement_constraints(
         for constraint in requirement_body.constraints:
             match constraint.type:
                 case "min_by_period":
-                    residents_subject_to_req = residents.filter(  # TODO not sure if need this line at all in any of these
-                        pl.col("year").is_in(constraint.resident_years)
-                    )
+                    residents_subject_to_req = residents
                     rotations_fulfilling_req = rotations.filter(
                         pl.col("rotation").is_in(requirement_body.fulfilled_by)
                     )
@@ -447,9 +445,7 @@ def enforce_requirement_constraints(
                         scheduled,
                     )
                 case "max_by_period":
-                    residents_subject_to_req = residents.filter(
-                        pl.col("year").is_in(constraint.resident_years)
-                    )
+                    residents_subject_to_req = residents
                     rotations_fulfilling_req = rotations.filter(
                         pl.col("rotation").is_in(requirement_body.fulfilled_by)
                     )
@@ -461,9 +457,7 @@ def enforce_requirement_constraints(
                         scheduled,
                     )
                 case "exact_by_period":
-                    residents_subject_to_req = residents.filter(
-                        pl.col("year").is_in(constraint.resident_years)
-                    )
+                    residents_subject_to_req = residents
                     rotations_fulfilling_req = rotations.filter(
                         pl.col("rotation").is_in(requirement_body.fulfilled_by)
                     )
@@ -475,9 +469,7 @@ def enforce_requirement_constraints(
                         scheduled,
                     )
                 case "min_contiguity_in_period":
-                    residents_subject_to_req = residents.filter(
-                        pl.col("year").is_in(constraint.resident_years)
-                    )
+                    residents_subject_to_req = residents
                     rotations_fulfilling_req = rotations.filter(
                         pl.col("rotation").is_in(requirement_body.fulfilled_by)
                     )
@@ -489,9 +481,7 @@ def enforce_requirement_constraints(
                         scheduled,
                     )
                 case "max_contiguity_in_period":
-                    residents_subject_to_req = residents.filter(
-                        pl.col("year").is_in(constraint.resident_years)
-                    )
+                    residents_subject_to_req = residents
                     rotations_fulfilling_req = rotations.filter(
                         pl.col("rotation").is_in(requirement_body.fulfilled_by)
                     )
@@ -503,9 +493,7 @@ def enforce_requirement_constraints(
                         scheduled,
                     )
                 case "prerequisite":
-                    residents_subject_to_req = residents.filter(
-                        pl.col("year").is_in(constraint.resident_years)
-                    )
+                    residents_subject_to_req = residents
                     rotations_fulfilling_req = rotations.filter(
                         pl.col("rotation").is_in(requirement_body.fulfilled_by)
                     )
@@ -525,9 +513,7 @@ def enforce_requirement_constraints(
                         scheduled=scheduled,
                     )
                 case "respect_block_alignment":
-                    residents_subject_to_req = residents.filter(
-                        pl.col("year").is_in(constraint.resident_years)
-                    )
+                    residents_subject_to_req = residents
                     rotations_fulfilling_req = rotations.filter(
                         pl.col("rotation").is_in(requirement_body.fulfilled_by)
                     )
@@ -538,9 +524,7 @@ def enforce_requirement_constraints(
                         scheduled,
                     )
                 case "next_rotation_must_be":
-                    residents_subject_to_req = residents.filter(
-                        pl.col("year").is_in(constraint.resident_years)
-                    )
+                    residents_subject_to_req = residents
                     rotations_fulfilling_req = rotations.filter(
                         pl.col("rotation").is_in(requirement_body.fulfilled_by)
                     )

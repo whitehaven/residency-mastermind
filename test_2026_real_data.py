@@ -131,95 +131,94 @@ def generate_R2_base_reqs_builder() -> RequirementBuilder:
             "HS Rounding Senior",
             fulfilled_by=["Green HS Senior", "Orange HS Senior"],
         )
-        .min_weeks_over_resident_years(2, ["R2"])
-        .max_weeks_over_resident_years(4, ["R2"])
-        .min_contiguity_over_resident_years(2, ["R2"])
-        .max_contiguity_over_resident_years(4, ["R2"])
+        .min_weeks_over_resident_years(2)
+        .max_weeks_over_resident_years(4)
+        .min_contiguity_over_resident_years(2)
+        .max_contiguity_over_resident_years(4)
         .after_prerequisite(
             prereq_fulfilling_rotations=["HS Admitting Senior"],
             weeks_required=2,
-            resident_years=["R2"],
         )
-        .must_respect_block_alignment(["R2"])
+        .must_respect_block_alignment()
     )
     (
         builder.add_requirement(
             name="HS Admitting Senior", fulfilled_by=["Purple HS Senior"]
         )
-        .min_weeks_over_resident_years(5, ["R2"])
-        .max_weeks_over_resident_years(6, ["R2"])
-        .next_rotation_must_be(["Consults", "Elective"], ["R2"])
+        .min_weeks_over_resident_years(5)
+        .max_weeks_over_resident_years(6)
+        .next_rotation_must_be(["Consults", "Elective"])
     )
     (
         builder.add_requirement(name="Night Senior", fulfilled_by=["Night Senior"])
-        .min_weeks_over_resident_years(4, ["R2"])
-        .max_weeks_over_resident_years(4, ["R2"])
-        .min_contiguity_over_resident_years(4, ["R2"])
+        .min_weeks_over_resident_years(4)
+        .max_weeks_over_resident_years(4)
+        .min_contiguity_over_resident_years(4)
     )
     (
         builder.add_requirement(name="ICU Senior", fulfilled_by=["SHMC ICU Senior"])
-        .min_weeks_over_resident_years(4, ["R2"])
-        .max_weeks_over_resident_years(4, ["R2"])
-        .min_contiguity_over_resident_years(4, ["R2"])
+        .min_weeks_over_resident_years(4)
+        .max_weeks_over_resident_years(4)
+        .min_contiguity_over_resident_years(4)
     )
     (
         builder.add_requirement(
             name="Consults", fulfilled_by=["Consults"]
-        ).min_weeks_over_resident_years(4, ["R2"])
+        ).min_weeks_over_resident_years(4)
     )
     (
         builder.add_requirement(
             name="Hospitalist", fulfilled_by=["Hospitalist"]
-        ).exact_weeks_over_resident_years(0, ["R2"])
+        ).exact_weeks_over_resident_years(0)
     )
     (
         builder.add_requirement(name="STHC Senior", fulfilled_by=["STHC Senior"])
-        .exact_weeks_over_resident_years(4, ["R2"])
-        .min_contiguity_over_resident_years(4, ["R2"])
-        .max_contiguity_over_resident_years(4, ["R2"])
-        .must_respect_block_alignment(["R2"])
+        .exact_weeks_over_resident_years(4)
+        .min_contiguity_over_resident_years(4)
+        .max_contiguity_over_resident_years(4)
+        .must_respect_block_alignment()
     )
     (
         builder.add_requirement(name="OP Cardiology", fulfilled_by=["OP Cardiology"])
-        .min_weeks_over_resident_years(4, ["R2"])
-        .min_contiguity_over_resident_years(2, ["R2"])
+        .min_weeks_over_resident_years(4)
+        .min_contiguity_over_resident_years(2)
     )
     (
         builder.add_requirement(name="Dermatology", fulfilled_by=["Dermatology"])
-        .exact_weeks_over_resident_years(2, ["R2"])
-        .min_contiguity_over_resident_years(2, ["R2"])
+        .exact_weeks_over_resident_years(2)
+        .min_contiguity_over_resident_years(2)
     )
     (
         builder.add_requirement(name="Geriatrics", fulfilled_by=["Geriatrics"])
-        .exact_weeks_over_resident_years(2, ["R2"])
-        .min_contiguity_over_resident_years(2, ["R2"])
+        .exact_weeks_over_resident_years(2)
+        .min_contiguity_over_resident_years(2)
     )
     (
         builder.add_requirement(name="Psych Consult", fulfilled_by=["Psych Consult"])
-        .exact_weeks_over_resident_years(2, ["R2"])
-        .min_contiguity_over_resident_years(2, ["R2"])
+        .exact_weeks_over_resident_years(2)
+        .min_contiguity_over_resident_years(2)
     )
     (
         builder.add_requirement(
             name="Systems of Medicine", fulfilled_by=["Systems of Medicine"]
         )
-        .exact_weeks_over_resident_years(2, ["R2"])
-        .min_contiguity_over_resident_years(2, ["R2"])
+        .exact_weeks_over_resident_years(2)
+        .min_contiguity_over_resident_years(2)
     )
     (
         builder.add_requirement(
             name="Elective", fulfilled_by=["Elective"]
-        ).max_weeks_over_resident_years(20, ["R2"])
+        ).max_weeks_over_resident_years(20)
     )
     (
         builder.add_requirement(name="Vacation", fulfilled_by=["Vacation"])
-        .exact_weeks_over_resident_years(4, ["R2"])
-        .max_contiguity_over_resident_years(1, ["R2"])
+        .exact_weeks_over_resident_years(4)
+        .max_contiguity_over_resident_years(1)
     )
     (
         builder.add_requirement(
             name="OP Pulmonology", fulfilled_by=["OP Pulmonology"]
-        ).exact_weeks_over_resident_years(0, ["R2"])
+        ).exact_weeks_over_resident_years(0)
     )
     return builder
 
@@ -230,7 +229,7 @@ def generate_R2_standard_reqs() -> box.Box:
     # 0 GIM for standard R2
     builder.add_requirement(
         name="GIM", fulfilled_by=["GIM"]
-    ).max_weeks_over_resident_years(0, ["R2"])
+    ).max_weeks_over_resident_years(0)
 
     current_requirements = builder.accumulate_constraints_by_rule()
     return current_requirements
@@ -240,9 +239,9 @@ def generate_R2_primary_care_track_reqs() -> box.Box:
     builder = generate_R2_base_reqs_builder()
     (
         builder.add_requirement(name="GIM", fulfilled_by=["GIM"])
-        .exact_weeks_over_resident_years(4, ["R2"])
-        .min_contiguity_over_resident_years(2, ["R2"])
-        .max_contiguity_over_resident_years(2, ["R2"])
+        .exact_weeks_over_resident_years(4)
+        .min_contiguity_over_resident_years(2)
+        .max_contiguity_over_resident_years(2)
     )
 
     current_requirements = builder.accumulate_constraints_by_rule()
@@ -257,57 +256,57 @@ def generate_R3_base_reqs_builder() -> RequirementBuilder:
             "HS Rounding Senior",
             fulfilled_by=["Green HS Senior", "Orange HS Senior"],
         )
-        .min_weeks_over_resident_years(8, ["R3"])
-        .min_contiguity_over_resident_years(2, ["R3"])
-        .max_contiguity_over_resident_years(4, ["R3"])
-        .must_respect_block_alignment(["R3"])
+        .min_weeks_over_resident_years(8)
+        .min_contiguity_over_resident_years(2)
+        .max_contiguity_over_resident_years(4)
+        .must_respect_block_alignment()
     )
     # 1-2 NF
     (
         builder.add_requirement(name="Night Senior", fulfilled_by=["Night Senior"])
-        .min_weeks_over_resident_years(1, ["R3"])
-        .max_weeks_over_resident_years(2, ["R3"])
+        .min_weeks_over_resident_years(1)
+        .max_weeks_over_resident_years(2)
     )
     # 4 hosp
     (
         builder.add_requirement(
             name="Hospitalist", fulfilled_by=["Hospitalist"]
-        ).min_weeks_over_resident_years(4, ["R3"])
+        ).min_weeks_over_resident_years(4)
     )
     # 4 IP cards
     (
         builder.add_requirement(
             name="IP Cardiology Senior", fulfilled_by=["IP Cardiology Senior"]
         )
-        .min_weeks_over_resident_years(4, ["R3"])
-        .min_contiguity_over_resident_years(2, ["R3"])
+        .min_weeks_over_resident_years(4)
+        .min_contiguity_over_resident_years(2)
     )
     # 4 OP pulm
     (
         builder.add_requirement(name="OP Pulmonology", fulfilled_by=["OP Pulmonology"])
-        .exact_weeks_over_resident_years(4, ["R3"])
-        .min_contiguity_over_resident_years(2, ["R3"])
+        .exact_weeks_over_resident_years(4)
+        .min_contiguity_over_resident_years(2)
     )
     # electives
     (
         builder.add_requirement(
             name="Elective", fulfilled_by=["Elective"]
-        ).max_weeks_over_resident_years(20, ["R3"])
+        ).max_weeks_over_resident_years(20)
     )
     (
         builder.add_requirement(name="Vacation", fulfilled_by=["Vacation"])
-        .exact_weeks_over_resident_years(4, ["R3"])
-        .max_contiguity_over_resident_years(1, ["R3"])
+        .exact_weeks_over_resident_years(4)
+        .max_contiguity_over_resident_years(1)
     )
     (
         builder.add_requirement(
             name="OP Cardiology", fulfilled_by=["OP Cardiology"]
-        ).exact_weeks_over_resident_years(0, ["R3"])
+        ).exact_weeks_over_resident_years(0)
     )
     (
         builder.add_requirement(
             name="Systems of Medicine", fulfilled_by=["Systems of Medicine"]
-        ).max_weeks_over_resident_years(0, ["R3"])
+        ).max_weeks_over_resident_years(0)
     )
 
     return builder
@@ -318,19 +317,19 @@ def generate_R3_standard_reqs() -> box.Box:
     # 4 amb
     (
         builder.add_requirement(name="STHC Senior", fulfilled_by=["STHC Senior"])
-        .exact_weeks_over_resident_years(4, ["R3"])
-        .min_contiguity_over_resident_years(4, ["R3"])
-        .max_contiguity_over_resident_years(4, ["R3"])
-        .must_respect_block_alignment(["R3"])
+        .exact_weeks_over_resident_years(4)
+        .min_contiguity_over_resident_years(4)
+        .max_contiguity_over_resident_years(4)
+        .must_respect_block_alignment()
     )
     # 4 ICU or CICU
     (
         builder.add_requirement(
             name="ICU Senior", fulfilled_by=["SHMC ICU Senior", "SHMC CICU"]
         )
-        .exact_weeks_over_resident_years(4, ["R3"])
-        .min_contiguity_over_resident_years(4, ["R3"])
-        .must_respect_block_alignment(["R3"])
+        .exact_weeks_over_resident_years(4)
+        .min_contiguity_over_resident_years(4)
+        .must_respect_block_alignment()
     )
     current_requirements = builder.accumulate_constraints_by_rule()
     return current_requirements
@@ -341,21 +340,21 @@ def generate_R3_primary_care_track_reqs() -> box.Box:
     # 4 amb + 4
     (
         builder.add_requirement(name="STHC Senior", fulfilled_by=["STHC Senior"])
-        .min_weeks_over_resident_years(8, ["R3"])
-        .min_contiguity_over_resident_years(2, ["R3"])
-        .max_contiguity_over_resident_years(4, ["R3"])
+        .min_weeks_over_resident_years(8)
+        .min_contiguity_over_resident_years(2)
+        .max_contiguity_over_resident_years(4)
     )
     # GIM 4 / 2*2wk
     (
         builder.add_requirement(name="GIM", fulfilled_by=["GIM"])
-        .min_weeks_over_resident_years(4, ["R3"])
-        .max_weeks_over_resident_years(4, ["R3"])
-        .min_contiguity_over_resident_years(2, ["R3"])
+        .min_weeks_over_resident_years(4)
+        .max_weeks_over_resident_years(4)
+        .min_contiguity_over_resident_years(2)
     )
     (
         builder.add_requirement(
             name="ICU Senior", fulfilled_by=["SHMC ICU Senior", "SHMC CICU"]
-        ).exact_weeks_over_resident_years(0, ["R3"])
+        ).exact_weeks_over_resident_years(0)
     )
     current_requirements = builder.accumulate_constraints_by_rule()
     return current_requirements
@@ -368,6 +367,7 @@ def test_2026_req_generation():
     R3_standard_reqs = generate_R3_standard_reqs()
     R3_primary_care_tract_reqs = generate_R3_primary_care_track_reqs()
     assert True
+
 
 def test_2026_real_data_total(real_2026_data, generate_2026_preferences_dataframe):
     (
