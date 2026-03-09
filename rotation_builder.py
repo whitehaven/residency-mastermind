@@ -1,4 +1,3 @@
-import sqlite3
 import yaml
 from dataclasses import dataclass, field
 from typing import Dict, List, Any, Optional
@@ -216,21 +215,3 @@ class RotationBuilder:
                     },
                 )
         return pl.DataFrame(constraints_data)
-
-
-def read_rotation_builder_from_sqlite(
-    db_path: str, table_name: str = "rotations"
-) -> RotationBuilder:
-    builder = RotationBuilder()
-    with sqlite3.connect(db_path) as con:
-        df = pl.read_database(f"SELECT * FROM {table_name}", con)
-
-    for row in df.iter_rows(named=True):
-        builder.add_rotation(
-            name=row["rotation"],
-            requirement=row.get("requirement"),
-            min_residents=row.get("minimum_residents_assigned"),
-            max_residents=row.get("maximum_residents_assigned"),
-        )
-
-    return builder

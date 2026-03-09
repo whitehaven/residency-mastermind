@@ -3,22 +3,8 @@ import pytest
 
 import config
 from data_io import (
-    read_bulk_data_sqlite3,
     generate_pl_wrapped_boolvar,
 )
-
-
-@pytest.mark.skip("project not currently using sqlite, return to this later")
-def test_read_bulk_data_sqlite3():
-    test_read_tables = read_bulk_data_sqlite3(config.TESTING_DB_PATH)
-    assert isinstance(test_read_tables["residents"], pl.DataFrame)
-
-    dtype_of_weeks_monday_date = (
-        test_read_tables["weeks"].select("monday_date").dtypes[0]
-    )
-    assert isinstance(
-        dtype_of_weeks_monday_date, pl.Date
-    ), "weeks monday_date column type != pl.Date"
 
 
 def test_generate_pl_wrapped_boolvar():

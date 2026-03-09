@@ -176,35 +176,6 @@ class RequirementBuilder:
                 rows.append(row)
         return pl.DataFrame(rows)
 
-    def write_polars_df_to_sqlite(
-        self, db_path: str, table_name: str = "requirements"
-    ) -> None:
-        builder_as_df = self.to_polars()
-        builder_as_df = builder_as_df.with_columns(
-            fulfilled_by='["' + pl.col("fulfilled_by").list.join('","') + '"]'
-        )
-
-        builder_as_df.write_database(
-            table_name=table_name,
-            connection="sqlite:///" + db_path,
-            if_table_exists="replace",
-        )
-
-    def write_builder_to_yaml(self, path: str = "requirements.yaml"):
-        builder_box = box.Box(self.accumulate_constraints_by_rule())
-        builder_box.to_yaml(path)
-
-
-def read_builder_polars_df_from_sqlite(
-    db_path: str, table_name: str = "requirements"
-) -> pl.DataFrame:
-    with sqlite3.connect(db_path) as con:
-        builder_df_from_db = pl.read_database(f"SELECT * FROM {table_name}", con)
-    builder_df_from_db = builder_df_from_db.with_columns(
-        pl.col("fulfilled_by").str.json_decode(dtype=pl.List(pl.String))
-    )
-    return builder_df_from_db
-
 
 def generate_builder_with_current_requirements() -> RequirementBuilder:
     builder = RequirementBuilder()

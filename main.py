@@ -11,7 +11,7 @@ from constraints import (
     enforce_rotation_capacity_minimum,
     require_one_rotation_per_resident_per_week,
 )
-from data_io import generate_pl_wrapped_boolvar, read_bulk_data_sqlite3
+from data_io import generate_pl_wrapped_boolvar
 from display import convert_melted_to_block_schedule, extract_solved_schedule
 from optimization import (
     calculate_total_preference_satisfaction,
