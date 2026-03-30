@@ -1,15 +1,16 @@
 # Data Model
 
-
 ## Residents
 
 - Structure: N3 1-to-1 records
 - file type : csv
+
 ```csv
 | resident_name    | year | track \| (subtype) |
 |------------------|------|--------------------|
 | Doctor So-and-So | R2   | Standard           |
 ```
+
 ### Validation
 
 - no name repeats
@@ -33,7 +34,7 @@ Orange HS Senior:
 Systems of Medicine:
   min_residents: 3
   max_residents: 6
-  available_weeks: 
+  available_weeks: # should mark any excluded weeks as unavailable
     - 2026-10-12
     - 2026-10-19
     - 2027-03-01
@@ -42,8 +43,9 @@ Systems of Medicine:
 
 ### Validation
 
-- min_residents <= max_residents
-- (exist(available_weeks) xor exist(unavailable_weeks)) or (~exist(available_weeks) and ~exist(unavailable_weeks))
+- datatypes must match
+- `min_residents <= max_residents`; min* must be below max*, etc.
+- no overlap of available/unavailable risks
 
 ## Requirements
 
@@ -83,7 +85,13 @@ HS Rounding Senior:
     - Orange HS Senior
 ```
 
+### Special problem: Inheritance Merge for Specific Requirement Sets
+
+
+
 ### Validation:
 
 - `fulfilled_by` and `prerequisite_fulfillers` must be members of `Rotations`
 - min_by_period <= max_by_period; likewise for contiguity
+- constraints must exist
+- prerequisites_fulfillers must be member of relevant requirements
