@@ -36,8 +36,17 @@ def minimal_case_setup():
             {"monday_date": "2026-07-27", "week": 4, "block": 1},
         ]
     )
+    requirements = {
+        "HS Rounding Senior": {
+            "constraints": [
+                {"type": "min_by_period", "weeks": 2},
+                {"type": "max_by_period", "weeks": 4},
+            ],
+            "fulfilled_by": ["Green HS Senior", "Orange HS Senior"],
+        },
+    }
 
-    return workers, rotations, weeks
+    return workers, rotations, weeks, requirements
 
 
 @pytest.fixture
@@ -224,12 +233,14 @@ def large_case_setup():
         ]
     )
 
-    return workers, rotations, weeks
+    requirements = None
+
+    return workers, rotations, weeks, requirements
 
 
 def test_generate_pl_wrapped_boolvar(minimal_case_setup):
 
-    workers, rotations, weeks = minimal_case_setup
+    workers, rotations, weeks, _requirements = minimal_case_setup
 
     wrapped = generate_pl_wrapped_boolvar(workers, rotations, weeks)
 
