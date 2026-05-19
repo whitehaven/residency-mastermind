@@ -1,16 +1,3 @@
-# exclude scratch files/directory for notebook investigations
-scratch/
-scratch.*
-
-# exclude confidential IMR policies
-IMR_policy/
-
-# exclude scratch paper .ipynb
-*.ipynb
-
-# exclude binary sqlite db
-*.db
-
 # exlude pycharm and vscode chaff files
 .idea/
 .vscode/

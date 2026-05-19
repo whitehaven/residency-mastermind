@@ -1,39 +1,30 @@
 [project]
 name = "residency-mastermind"
-version = "0.7.2dev2"
+version = "0.8.0dev1"
 description = "Constraint satisfaction-based residency scheduling solver with support for complex structures of rotations, requirements, and preferences."
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 dependencies = []
 
 [dependency-groups]
 core = [
-    "fastexcel>=0.19.0",
-    "numpy>=2.4.2",
-    "polars>=1.35.1",
-    "python-box>=7.3.2",
-    "pyyaml>=6.0.3",
-    "xlsxwriter>=3.2.9",
     "mergedeep>=1.3.4",
+    "polars>=1.40.1",
+    "pyyaml>=6.0.3",
 ]
 solver = [
     "cpmpy>=0.9.28",
-    "ortools>=9.14.6206",
-]
-testing = [
-    "pytest>=9.0.1",
-    "pytest-cov>=7.0.0",
-    "faker>=37.12.0",
-    "loguru>=0.7.3",
+    "ortools>=9.15.6755",
 ]
 
 [project.optional-dependencies]
+testing = [
+    "loguru>=0.7.3",
+    "pytest>=9.0.3",
+]
 code-editor = [
-    "black>=25.9.0",
-    "isort>=7.0.0",
-    "ruff>=0.15.5",
+    "ruff>=0.15.13",
 ]
 hand-profiling = [
-    "marimo>=0.17.6",
+    "marimo>=0.23.6",
 ]
-
