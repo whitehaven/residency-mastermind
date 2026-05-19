@@ -35,20 +35,11 @@ def generate_pl_wrapped_boolvar(
         pl.Series("is_scheduled_cp_var", scheduled_vars)
     )
 
-    # TODO: I don't know what this does; something to do with date parsing
-    scheduled = scheduled.with_columns(
-        pl.col("week").str.to_datetime()
-        if scheduled["week"].dtype == pl.Utf8
-        else pl.col("week")
-    )
-
-    # # TODO: shouldn't be necessary - aren't we carrying everything forward?
-    # years_col = scheduled.join(
-    #     pl.DataFrame({"workers": workers}), left_on="resident", right_on="full_name"
-    # ).select("year")
-    # scheduled_with_resident_year = pl.concat([scheduled, years_col], how="horizontal")
-    # scheduled_with_resident_year_and_ordered = scheduled_with_resident_year.select(
-    #     "resident", "year", "rotation", "week", "is_scheduled_cp_var"
+    # # TODO: I don't know what this does; something to do with date parsing
+    # scheduled = scheduled.with_columns(
+    #     pl.col("week").str.to_datetime()
+    #     if scheduled["week"].dtype == pl.Utf8
+    #     else pl.col("week")
     # )
 
     return scheduled
