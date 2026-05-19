@@ -235,4 +235,3 @@ def test_generate_pl_wrapped_boolvar(minimal_case_setup):
 
     assert isinstance(wrapped, pl.DataFrame)
     assert wrapped.shape[0] == len(workers) * len(rotations) * len(weeks)
-    print(wrapped)
