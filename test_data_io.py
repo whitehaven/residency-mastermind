@@ -1,8 +1,6 @@
 import sys
 
-import mergedeep
 import polars as pl
-import pytest
 from loguru import logger
 
 from data_io import compose_requirements_to_workers, generate_pl_wrapped_boolvar
@@ -33,9 +31,13 @@ def test_compose_requirements_to_workers(minimal_case_setup, minimal_req_composi
                 "name": "Aaron Aaronson",
                 "req_set": {
                     "HS Rounding Senior": {
-                        "constraints": {"min_weeks": 0, "max_weeks": 4},
+                        "constraints": {"max_weeks": 4, "min_weeks": 0},
                         "fulfilled_by": ["Green HS Senior", "Orange HS Senior"],
-                    }
+                    },
+                    "ICU Senior": {
+                        "constraints": {"max_weeks": 4, "min_weeks": 4},
+                        "fulfilled_by": ["SHMC ICU Senior"],
+                    },
                 },
                 "year": "R2",
                 "track": "Standard",
@@ -44,9 +46,13 @@ def test_compose_requirements_to_workers(minimal_case_setup, minimal_req_composi
                 "name": "Bill Byornsen",
                 "req_set": {
                     "HS Rounding Senior": {
-                        "constraints": {"min_weeks": 0, "max_weeks": 4},
+                        "constraints": {"max_weeks": 4, "min_weeks": 0},
                         "fulfilled_by": ["Green HS Senior", "Orange HS Senior"],
-                    }
+                    },
+                    "ICU Senior": {
+                        "constraints": {"max_weeks": 4, "min_weeks": 0},
+                        "fulfilled_by": ["SHMC ICU Senior"],
+                    },
                 },
                 "year": "R2",
                 "track": "PCT",
