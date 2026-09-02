@@ -51,6 +51,7 @@ def compose_requirements_to_workers(
         this_workers_reqs = {}
         match worker["year"]:
             case "R2":
+                this_workers_reqs.update(requirement_sets["R2 Base"])
                 match worker["track"]:
                     case "PCT":
                         this_workers_reqs = mergedeep.merge(
@@ -61,11 +62,13 @@ def compose_requirements_to_workers(
                     case "Fellowship":
                         this_workers_reqs = mergedeep.merge(
                             this_workers_reqs,
+                            requirement_sets["R2 Fellowship"],
                             strategy=mergedeep.Strategy.REPLACE,
                         )
                     case "Standard":
                         this_workers_reqs = mergedeep.merge(
                             this_workers_reqs,
+                            requirement_sets["R2 Standard"],
                             strategy=mergedeep.Strategy.REPLACE,
                         )
                     case _:
