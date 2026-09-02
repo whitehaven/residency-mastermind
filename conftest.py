@@ -3,8 +3,8 @@ import pytest
 
 
 @pytest.fixture(scope="session")
-def minimal_req_composition() -> dict[str, dict]:
-    """Minimum realistic requirement set for quick composition testing."""
+def small_req_composition() -> dict[str, dict]:
+    """Small realistic requirement set for quick composition testing."""
     req_set = {
         "R2 Base": {
             "HS Rounding Senior": {
@@ -27,6 +27,26 @@ def minimal_req_composition() -> dict[str, dict]:
                 "fulfilled_by": ["SHMC ICU Senior"],
             }
         },
+    }
+
+    return req_set
+
+
+@pytest.fixture(scope="session")
+def minimal_req_composition() -> dict[str, dict | None]:
+    """Minimal requirement set for total solver testing."""
+    req_set = {
+        "R2 Base": {
+            "HS Rounding Senior": {
+                "constraints": {"min_weeks": 2, "max_weeks": 2},
+                "fulfilled_by": [
+                    "Green HS Senior",
+                    "Orange HS Senior",
+                ],
+            },
+        },
+        "R2 PCT": None,
+        "R2 Standard": None,
     }
 
     return req_set
