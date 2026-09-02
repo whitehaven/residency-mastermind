@@ -1,7 +1,14 @@
+import sys
+
 import polars as pl
 import pytest
+from loguru import logger
 
 from data_io import generate_pl_wrapped_boolvar
+
+logger.add(
+    sys.stderr, format="{time} {level} {message}", filter="my_module", level="INFO"
+)
 
 
 @pytest.fixture
@@ -12,22 +19,16 @@ def minimal_case_setup():
             {"name": "Bill Byornsen", "year": "R1", "track": "PCT"},
         ]
     )
-    rotations = pl.DataFrame(
-        [
-            {
-                "rotation": "Green HS Senior",
-                "requirement": "HS Rounding Senior",
-                "minimum_residents_assigned": 1,
-                "maximum_residents_assigned": 1,
-            },
-            {
-                "rotation": "Orange HS Senior",
-                "requirement": "HS Rounding Senior",
-                "minimum_residents_assigned": 1,
-                "maximum_residents_assigned": 1,
-            },
-        ]
-    )
+    rotations = {
+        "Green HS Senior": {
+            "minimum_workers_assigned": 1,
+            "maximum_workers_assigned": 1,
+        },
+        "Orange HS Senior": {
+            "minimum_workers_assigned": 1,
+            "maximum_workers_assigned": 1,
+        },
+    }
     weeks = pl.DataFrame(
         [
             {"monday_date": "2026-07-06", "week": 1, "block": 1},
@@ -38,12 +39,12 @@ def minimal_case_setup():
     )
     requirements = {
         "HS Rounding Senior": {
-            "constraints": [
-                {"type": "min_by_period", "weeks": 2},
-                {"type": "max_by_period", "weeks": 4},
-            ],
-            "fulfilled_by": ["Green HS Senior", "Orange HS Senior"],
+            "constraints": {"min_weeks_by_period": 2, "max_weeks_by_period": 4},
         },
+        "fulfilled_by": [
+            "Green HS Senior",
+            "Orange HS Senior",
+        ],
     }
 
     return workers, rotations, weeks, requirements
