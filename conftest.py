@@ -33,7 +33,7 @@ def small_req_composition() -> dict[str, dict]:
 
 
 @pytest.fixture(scope="session")
-def minimal_req_composition() -> dict[str, dict | None]:
+def minimal_req_composition():
     """Minimal requirement set for total solver testing."""
     req_set = {
         "R2 Base": {
@@ -45,8 +45,8 @@ def minimal_req_composition() -> dict[str, dict | None]:
                 ],
             },
         },
-        "R2 PCT": None,
-        "R2 Standard": None,
+        "R2 PCT": {},
+        "R2 Standard": {},
     }
 
     return req_set
