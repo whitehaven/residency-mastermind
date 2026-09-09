@@ -9,7 +9,7 @@ logger.add(
 )
 
 
-def enforce_requirement_constraints(
+def generate_requirement_constraints(
     workers_with_reqsets: pl.DataFrame,
     rotations: dict[str, dict],
     weeks: pl.DataFrame,
@@ -18,7 +18,7 @@ def enforce_requirement_constraints(
     """
     Generates and accumulates all constraints which pertain to supplied workers, rotations, and weeks.
 
-    :param workers_with_reqsets: workers df with assigned reqs columns
+    :param workers_with_reqsets: workers df with assigned reqs columns as ["req_set"]
     :param rotations:
     :param weeks:
     :param scheduled:
@@ -40,4 +40,34 @@ def enforce_requirement_constraints(
                             f"{constraint=} not a known constraint"
                         )
 
-    raise NotImplementedError
+    logger.warning("note generate_requirement_constraints not completed and returns []")
+
+    return cumulative_constraints
+
+
+def generate_rotation_constraints(
+    workers_with_reqsets: pl.DataFrame,
+    rotations: dict[str, dict],
+    weeks: pl.DataFrame,
+    scheduled: pl.DataFrame,
+) -> list[cp.core.Comparison]:
+    """
+    Generate rotation-specific constraints which are applied to all workers. These represent nonfungible locations.
+
+    :param workers_with_reqsets:
+    :param rotations:
+    :param weeks:
+    :param scheduled:
+    :return:
+    """
+    for rot_name, rot_body in rotations.items():
+        for constraint_name, constraint_body in rot_body.items():
+            match constraint_name:
+                case "max_workers_assigned":
+                    pass
+                case "min_workers_assigned":
+                    pass
+                case _:
+                    raise NotImplementedError(
+                        f"{constraint_name=} not a known constraint"
+                    )
