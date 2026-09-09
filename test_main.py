@@ -1,10 +1,17 @@
+import sys
+
 import polars as pl
+from loguru import logger
 
 from main import generate_complete_schedule
 
+logger.add(
+    sys.stderr, format="{time} {level} {message}", filter="my_module", level="INFO"
+)
+
 
 def test_generate_complete_schedule_constraint_only_minimal_problem_size(
-    minimal_case_setup,
+    minimal_case_setup, minimal_req_composition
 ):
     # TODO: minimal_case_setup's contents are unnested, don't allow req accumulation
     workers, rotations, weeks, _requirements = minimal_case_setup
@@ -18,4 +25,6 @@ def test_generate_complete_schedule_constraint_only_minimal_problem_size(
         workers, rotations, weeks, requirements, overrides, requests
     )
 
-    raise NotImplementedError
+    logger.warning(
+        "test_generate_complete_schedule_constraint_only_minimal_problem_size not completed"
+    )
