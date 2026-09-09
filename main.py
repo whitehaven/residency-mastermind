@@ -38,6 +38,9 @@ def generate_complete_schedule(
 
     model = cp.Model()
 
+
+    # ground_rule_constraints
+
     requirement_constraints = generate_requirement_constraints(
         workers_with_requirements, rotations, weeks, scheduled
     )
