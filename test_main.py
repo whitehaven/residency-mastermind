@@ -12,12 +12,10 @@ logger.add(
 
 
 def test_generate_complete_schedule_constraint_only_minimal_problem_size(
-    minimal_case_setup, minimal_req_composition
+    minimal_case_setup,
 ):
     # TODO: minimal_case_setup's contents are unnested, don't allow req accumulation
-    workers, rotations, weeks, _requirements = minimal_case_setup
-
-    requirements = minimal_req_composition
+    workers, rotations, weeks, requirements = minimal_case_setup
 
     overrides = pl.DataFrame()
     requests = pl.DataFrame()
@@ -26,6 +24,11 @@ def test_generate_complete_schedule_constraint_only_minimal_problem_size(
         workers, rotations, weeks, requirements, overrides, requests
     )
 
-    block_schedule = convert_melted_to_block_schedule(solved_schedule)
+    assert isinstance(solved_schedule, pl.DataFrame)
 
-    print(block_schedule)
+    logger.warning("TODO: needs comprehensive validation")
+
+    block_schedule = convert_melted_to_block_schedule(solved_schedule)
+    assert isinstance(block_schedule, pl.DataFrame)
+
+    logger.warning("TODO: convert_melted_to_block_schedule needs testing")

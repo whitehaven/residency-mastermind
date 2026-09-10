@@ -6,8 +6,8 @@ from loguru import logger
 
 import config
 from constraints import (
+    accumulate_req_constraints,
     generate_every_worker_is_somewhere_constraints,
-    generate_requirement_constraints,
     generate_rotation_constraints,
 )
 from data_io import (
@@ -49,28 +49,26 @@ def generate_complete_schedule(
 
     scheduled = generate_pl_wrapped_boolvar(workers, rotations, weeks)
 
-    workers_with_requirements = compose_requirements_to_workers(
-        workers, requirement_sets
-    )
+    workers_with_reqs = compose_requirements_to_workers(workers, requirement_sets)
 
     every_worker_is_somewhere_constraints = (
         generate_every_worker_is_somewhere_constraints(scheduled)
     )
     model += every_worker_is_somewhere_constraints
 
-    requirement_constraints = generate_requirement_constraints(
-        workers_with_requirements, rotations, weeks, scheduled
+    requirement_constraints = accumulate_req_constraints(
+        workers_with_reqs, rotations, weeks, scheduled
     )
     model += requirement_constraints
 
     rotations_constraints = generate_rotation_constraints(
-        workers_with_requirements, rotations, weeks, scheduled
+        workers_with_reqs, rotations, weeks, scheduled
     )
 
     model += rotations_constraints
 
     logger.warning("TODO: missing overrides functionality")
-    logger.warning("TODO: missing preference optimization functionality")
+    logger.info("this test doesn't include preference optimization functionality")
 
     is_feasible = model.solve(
         solver=config.DEFAULT_CPMPY_SOLVER,
@@ -78,7 +76,6 @@ def generate_complete_schedule(
         time_limit=config.SOLVER_TIME_LIMIT,
     )
 
-    logger.warning("TODO: missing MUS functionality")
     if not is_feasible:
         min_unsat_result = get_MUS_output(model)
         print(min_unsat_result)
