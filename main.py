@@ -2,7 +2,11 @@ import cpmpy as cp
 import polars as pl
 
 import config
-from constraints import generate_requirement_constraints, generate_rotation_constraints
+from constraints import (
+    generate_every_worker_is_somewhere_constraints,
+    generate_requirement_constraints,
+    generate_rotation_constraints,
+)
 from data_io import compose_requirements_to_workers, generate_pl_wrapped_boolvar
 
 
@@ -38,8 +42,11 @@ def generate_complete_schedule(
 
     model = cp.Model()
 
+    every_worker_is_somewhere_constraints = (
+        generate_every_worker_is_somewhere_constraints(scheduled)
+    )
 
-    # ground_rule_constraints
+    model += every_worker_is_somewhere_constraints
 
     requirement_constraints = generate_requirement_constraints(
         workers_with_requirements, rotations, weeks, scheduled
