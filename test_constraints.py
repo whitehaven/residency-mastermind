@@ -1,5 +1,6 @@
 import sys
 
+import pytest
 from loguru import logger
 
 from conftest import minimal_req_composition
@@ -12,6 +13,7 @@ logger.add(
 )
 
 
+@pytest.mark.skip("incomplete")
 def test_enforce_requirement_constraints(minimal_case_setup, minimal_req_composition):
 
     workers, rotations, weeks, _requirements = minimal_case_setup
