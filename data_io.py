@@ -28,7 +28,7 @@ def generate_pl_wrapped_boolvar(
     combinations = workers.join(rotations_df, how="cross").join(weeks, how="cross")
 
     variable_labels = [
-        f"boolvar@({combo['name']}, {combo['rotation']}, {combo['monday_date']})"
+        f"boolvar@<{combo['name']}, {combo['rotation']}, {combo['monday_date']}>"
         for combo in combinations.iter_rows(named=True)
     ]
 
@@ -123,12 +123,24 @@ def convert_melted_to_block_schedule(solved_schedule: pl.DataFrame) -> pl.DataFr
     renderable_df = solved_schedule.select(
         pl.all().exclude(config.CPMPY_VARIABLE_COLUMN)
     )
+
     filtered_long_format = renderable_df.filter(pl.col(config.CPMPY_RESULT_COLUMN))
-    block_schedule = filtered_long_format.pivot("week", index="name", values="rotation")
-    if block_schedule.is_empty():
+
+    block_schedule_unsorted = filtered_long_format.pivot(
+        "monday_date", index=["name", "year", "track"], values="rotation"
+    )
+
+    if block_schedule_unsorted.is_empty():
         raise ValueError(
-            f"{block_schedule.is_empty()=}, usually occurs because > 1 True rotation slot per resident:week locus"
+            f"{block_schedule_unsorted.is_empty()=}, usually occurs because > 1 True rotation slot per resident:week locus"
         )
+
+    block_schedule = block_schedule_unsorted.select(
+        sorted(block_schedule_unsorted.columns)
+    ).select(
+        pl.col(["name", "year", "track"]), pl.all().exclude(["name", "year", "track"])
+    )
+
     return block_schedule
 
 

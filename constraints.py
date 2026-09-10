@@ -11,7 +11,7 @@ logger.add(
 )
 
 
-def generate_requirement_constraints(
+def accumulate_req_constraints(
     workers_with_reqsets: pl.DataFrame,
     rotations: dict[str, dict],
     weeks: pl.DataFrame,
@@ -27,16 +27,28 @@ def generate_requirement_constraints(
     :return:
     """
 
-    cumulative_constraints = []
+    cumu_constraints = []
 
     for worker in workers_with_reqsets.iter_rows(named=True):
         for req_name, req_body in worker["req_set"].items():
             for constraint in req_body["constraints"]:
                 match constraint:
                     case "max_weeks":
-                        pass
+                        cumu_constraints.extend(
+                            generate_max_weeks_req_constraints(
+                                scheduled.filter(pl.col("name") == worker["name"]),
+                                fulfilling_rotations=req_body["fulfilled_by"],
+                                max_weeks=req_body["constraints"]["max_weeks"],
+                            )
+                        )
                     case "min_weeks":
-                        pass
+                        cumu_constraints.extend(
+                            generate_min_weeks_req_constraints(
+                                scheduled.filter(pl.col("name") == worker["name"]),
+                                fulfilling_rotations=req_body["fulfilled_by"],
+                                min_weeks=req_body["constraints"]["min_weeks"],
+                            )
+                        )
                     case _:
                         raise NotImplementedError(
                             f"{constraint=} not a known constraint"
@@ -44,7 +56,7 @@ def generate_requirement_constraints(
 
     logger.warning("note generate_requirement_constraints not completed and returns []")
 
-    return cumulative_constraints
+    return cumu_constraints
 
 
 def generate_rotation_constraints(
@@ -73,7 +85,11 @@ def generate_rotation_constraints(
                         )
                     )
                 case "min_workers_assigned":
-                    pass
+                    cumu_constraints.extend(
+                        generate_rot_min_workers_constraints(
+                            scheduled, rot_name, constraint_value
+                        )
+                    )
                 case _:
                     raise NotImplementedError(
                         f"{constraint_name=} not a known constraint"
@@ -113,24 +129,96 @@ def generate_rot_max_workers_constraints(
     workers are scheduled to `rotation`. i.e. sum of that week's BoolVars for this
     rotation (one per worker) is <= `max_workers_assigned`.
 
-    Polars cannot `group_by(...).agg(list)` an `Object`-dtype column (the BoolVars),
-    so each week's group is instead materialized with `partition_by("week")` and the
-    Object column unwrapped with `.to_list()` to hand cpmpy a plain list to sum.
+    2026-09-09 Note: Polars cannot `group_by(...).agg(list)` an `Object`-dtype column (the BoolVars), so each week's
+    group is instead materialized with `partition_by("week")` and the Object column unwrapped with `.to_list()` to
+    hand cpmpy a plain list to sum. This was done in prior version (and used in `residency-mastermind` v0.9 and
+    prior) but now deprecated, reflecting intention of group_by to be for calculation purposes only.
 
-    :param scheduled:
+    :param scheduled: *pre-filtered* scheduled df containing cpmpy variables at the config.CPMPY_VARIABLE_COLUMN
     :param rotation:
     :param max_workers:
     :return:
     """
     cumu_constraints = []
 
-    # TODO: need to lift out this functionality to reuse?
-    # TODO: restrict to caller filter
+    # TODO: could this be generalized?
 
-    scheduled_for_rotation = scheduled.filter(pl.col("rotation") == rotation)
+    scheduled_vars_this_rotation = scheduled.filter(pl.col("rotation") == rotation)
 
-    for week_group in scheduled_for_rotation.partition_by("week"):
+    for week_group in scheduled_vars_this_rotation.partition_by("week"):
         week_vars = week_group[config.CPMPY_VARIABLE_COLUMN].to_list()
         cumu_constraints.append(cp.sum(week_vars) <= max_workers)
+
+    return cumu_constraints
+
+
+def generate_rot_min_workers_constraints(
+    scheduled: pl.DataFrame, rotation: str, min_workers: int
+) -> list[cp.core.Comparison]:
+    """
+    For each week in `weeks`, require that no fewer than `min`
+    workers are scheduled to `rotation`. i.e. sum of that week's BoolVars for this
+    rotation (one per worker) is <= `max_workers_assigned`.
+
+    :param scheduled: *pre-filtered* scheduled df containing cpmpy variables at the config.CPMPY_VARIABLE_COLUMN
+    :param rotation:
+    :param min_workers:
+    :return:
+    """
+    cumu_constraints = []
+
+    scheduled_vars_this_rotation = scheduled.filter(pl.col("rotation") == rotation)
+
+    for week_group in scheduled_vars_this_rotation.partition_by("week"):
+        week_vars = week_group[config.CPMPY_VARIABLE_COLUMN].to_list()
+        cumu_constraints.append(cp.sum(week_vars) >= min_workers)
+
+    return cumu_constraints
+
+
+def generate_min_weeks_req_constraints(
+    scheduled: pl.DataFrame, fulfilling_rotations: list[str], min_weeks: int
+) -> list[cp.core.Comparison]:
+    """
+    For each worker included, require that no fewer than `min` weeks are scheduled to `fulfilling rotations`.
+
+    :param scheduled: *pre-filtered* scheduled df containing cpmpy variables at the config.CPMPY_VARIABLE_COLUMN
+    :param fulfilling_rotations:
+    :param min_weeks:
+    :return:
+    """
+    cumu_constraints = []
+
+    scheduled_fulfilling_rotations = scheduled.filter(
+        pl.col("rotation").is_in(fulfilling_rotations)
+    )
+
+    for worker in scheduled_fulfilling_rotations.partition_by("name"):
+        this_workers_vars = worker[config.CPMPY_VARIABLE_COLUMN].to_list()
+        cumu_constraints.append(cp.sum(this_workers_vars) >= min_weeks)
+
+    return cumu_constraints
+
+
+def generate_max_weeks_req_constraints(
+    scheduled: pl.DataFrame, fulfilling_rotations: list[str], max_weeks: int
+) -> list[cp.core.Comparison]:
+    """
+    For each worker included, require that no more than `max` weeks are scheduled to `fulfilling rotations`.
+
+    :param scheduled: *pre-filtered* scheduled df containing cpmpy variables at the config.CPMPY_VARIABLE_COLUMN
+    :param fulfilling_rotations:
+    :param max_weeks:
+    :return:
+    """
+    cumu_constraints = []
+
+    scheduled_fulfilling_rotations = scheduled.filter(
+        pl.col("rotation").is_in(fulfilling_rotations)
+    )
+
+    for worker in scheduled_fulfilling_rotations.partition_by("name"):
+        this_workers_vars = worker[config.CPMPY_VARIABLE_COLUMN].to_list()
+        cumu_constraints.append(cp.sum(this_workers_vars) <= max_weeks)
 
     return cumu_constraints

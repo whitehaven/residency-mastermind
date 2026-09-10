@@ -38,7 +38,7 @@ def minimal_req_composition():
     req_set = {
         "R2 Base": {
             "HS Rounding Senior": {
-                "constraints": {"min_weeks": 2, "max_weeks": 2},
+                "constraints": {"min_weeks": 2, "max_weeks": 4},
                 "fulfilled_by": [
                     "Green HS Senior",
                     "Orange HS Senior",
@@ -70,6 +70,7 @@ def minimal_case_setup():
             "min_workers_assigned": 1,
             "max_workers_assigned": 1,
         },
+        "Vacation": {"max_workers_assigned": 6},
     }
     weeks = pl.DataFrame(
         [
@@ -80,13 +81,18 @@ def minimal_case_setup():
         ]
     )
     requirements = {
-        "HS Rounding Senior": {
-            "constraints": {"min_weeks_by_period": 2, "max_weeks_by_period": 4},
+        "R2 Base": {
+            "HS Rounding Senior": {
+                "constraints": {"min_weeks": 2, "max_weeks": 4},
+                "fulfilled_by": [
+                    "Green HS Senior",
+                    "Orange HS Senior",
+                ],
+            },
+            "Vacation": {"constraints": {"max_weeks": 3}, "fulfilled_by": ["Vacation"]},
         },
-        "fulfilled_by": [
-            "Green HS Senior",
-            "Orange HS Senior",
-        ],
+        "R2 PCT": {},
+        "R2 Standard": {},
     }
 
     return workers, rotations, weeks, requirements
