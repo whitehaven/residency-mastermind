@@ -82,6 +82,25 @@ def generate_rotation_constraints(
     return cumu_constraints
 
 
+def generate_every_worker_is_somewhere_constraints(
+    scheduled: pl.DataFrame,
+) -> list[cp.core.Comparison]:
+    """
+
+    :param scheduled: *pre-filtered* scheduled df
+    :return:
+    """
+    cumu_constraints = []
+    for worker in scheduled.partition_by("name"):
+        for week in worker.partition_by("monday_date"):
+            all_rot_vars_this_worker_this_week = week[
+                config.CPMPY_VARIABLE_COLUMN
+            ].to_list()
+            cumu_constraints.append(cp.sum(all_rot_vars_this_worker_this_week) == 1)
+
+    return cumu_constraints
+
+
 def generate_rot_max_workers_constraints(
     scheduled: pl.DataFrame,
     rotation: str,
@@ -104,6 +123,7 @@ def generate_rot_max_workers_constraints(
     cumu_constraints = []
 
     # TODO: need to lift out this functionality to reuse?
+    # TODO: restrict to caller filter
 
     scheduled_for_rotation = scheduled.filter(pl.col("rotation") == rotation)
 
