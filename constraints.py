@@ -86,8 +86,10 @@ def generate_every_worker_is_somewhere_constraints(
     scheduled: pl.DataFrame,
 ) -> list[cp.core.Comparison]:
     """
+    Generate constraints that require each worker is on exactly one rotation each week.
 
-    :param scheduled: *pre-filtered* scheduled df
+
+    :param scheduled: *pre-filtered* scheduled df containing cpmpy variables at the config.CPMPY_VARIABLE_COLUMN
     :return:
     """
     cumu_constraints = []
