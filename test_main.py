@@ -3,6 +3,7 @@ import sys
 import polars as pl
 from loguru import logger
 
+from data_io import convert_melted_to_block_schedule
 from main import generate_complete_schedule
 
 logger.add(
@@ -25,6 +26,6 @@ def test_generate_complete_schedule_constraint_only_minimal_problem_size(
         workers, rotations, weeks, requirements, overrides, requests
     )
 
-    logger.warning(
-        "test_generate_complete_schedule_constraint_only_minimal_problem_size not completed"
-    )
+    block_schedule = convert_melted_to_block_schedule(solved_schedule)
+
+    print(block_schedule)

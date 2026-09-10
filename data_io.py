@@ -1,7 +1,9 @@
+import pprint
+
 import cpmpy as cp
 import mergedeep
 import polars as pl
-import yaml
+from cpmpy.tools import mus
 
 import config
 
@@ -108,3 +110,31 @@ def compose_requirements_to_workers(
     ).join(workers, on="name")
 
     return workers_df_with_reqs
+
+
+def convert_melted_to_block_schedule(solved_schedule: pl.DataFrame) -> pl.DataFrame:
+    """
+    Restructure output into a block schedule with residents as rows and dates as columns with assigned rotation at each intersection.
+
+    :param solved_schedule: df with solved schedule
+
+    :return block_schedule: pivoted df suitable for tabular viewing
+    """
+    renderable_df = solved_schedule.select(
+        pl.all().exclude(config.CPMPY_VARIABLE_COLUMN)
+    )
+    filtered_long_format = renderable_df.filter(pl.col(config.CPMPY_RESULT_COLUMN))
+    block_schedule = filtered_long_format.pivot("week", index="name", values="rotation")
+    if block_schedule.is_empty():
+        raise ValueError(
+            f"{block_schedule.is_empty()=}, usually occurs because > 1 True rotation slot per resident:week locus"
+        )
+    return block_schedule
+
+
+def get_MUS_output(model: cp.Model) -> str:
+    return (
+        ">>> Minimum Unsatisfiable Core (MUS):\n"
+        + pprint.pformat(mus(model.constraints))
+        + "\n<<<"
+    )

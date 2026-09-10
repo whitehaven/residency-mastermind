@@ -10,7 +10,11 @@ from constraints import (
     generate_requirement_constraints,
     generate_rotation_constraints,
 )
-from data_io import compose_requirements_to_workers, generate_pl_wrapped_boolvar
+from data_io import (
+    compose_requirements_to_workers,
+    generate_pl_wrapped_boolvar,
+    get_MUS_output,
+)
 
 logger.add(
     sys.stderr, format="{time} {level} {message}", filter="my_module", level="INFO"
@@ -76,9 +80,9 @@ def generate_complete_schedule(
 
     logger.warning("TODO: missing MUS functionality")
     if not is_feasible:
-        # min_unsat_result = get_MUS(model)
-        # print(min_unsat_result)
-        raise ValueError("Infeasible")
+        min_unsat_result = get_MUS_output(model)
+        print(min_unsat_result)
+        raise ValueError("Infeasible, see MUS output above")
 
     solved_scheduled = scheduled.with_columns(
         pl.col(config.CPMPY_VARIABLE_COLUMN)
