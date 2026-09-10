@@ -108,30 +108,3 @@ def compose_requirements_to_workers(
     ).join(workers, on="name")
 
     return workers_df_with_reqs
-
-
-def dump_polars_df_to_yaml(df: pl.DataFrame) -> str:
-    return yaml.dump(df.to_dicts())
-
-
-def extract_solved_schedule(scheduled: pl.DataFrame) -> pl.DataFrame:
-    """
-    Process decision variable through the attached solver and returns a polars DataFrame similar to scheduled with new column 'is_scheduled_result".
-
-    Args:
-        scheduled: pl.DataFrame with decision variables
-
-    Returns: COPY OF scheduled dataframe with a new return column 'is_scheduled_result'
-
-    """
-    # MAYBE could make sense to change to return pl.Series of just is_scheduled_result
-
-    solved_values = []
-
-    for decision_variable in scheduled[config.CPMPY_VARIABLE_COLUMN]:
-        solved_values.append(decision_variable.value())
-
-    scheduled_result = scheduled.with_columns(
-        pl.Series(config.CPMPY_RESULT_COLUMN, solved_values).cast(pl.Boolean)
-    )
-    return scheduled_result.sort("week")

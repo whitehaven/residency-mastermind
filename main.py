@@ -1,5 +1,8 @@
+import sys
+
 import cpmpy as cp
 import polars as pl
+from loguru import logger
 
 import config
 from constraints import (
@@ -8,6 +11,10 @@ from constraints import (
     generate_rotation_constraints,
 )
 from data_io import compose_requirements_to_workers, generate_pl_wrapped_boolvar
+
+logger.add(
+    sys.stderr, format="{time} {level} {message}", filter="my_module", level="INFO"
+)
 
 
 def generate_complete_schedule(
@@ -34,18 +41,17 @@ def generate_complete_schedule(
 
         :return: solved_schedule : pl.DataFrame := completed schedule, is `scheduled` above with additional column indicating solved bool for that coordinate
     """
+    model = cp.Model()
+
     scheduled = generate_pl_wrapped_boolvar(workers, rotations, weeks)
 
     workers_with_requirements = compose_requirements_to_workers(
         workers, requirement_sets
     )
 
-    model = cp.Model()
-
     every_worker_is_somewhere_constraints = (
         generate_every_worker_is_somewhere_constraints(scheduled)
     )
-
     model += every_worker_is_somewhere_constraints
 
     requirement_constraints = generate_requirement_constraints(
@@ -59,13 +65,25 @@ def generate_complete_schedule(
 
     model += rotations_constraints
 
+    logger.warning("TODO: missing overrides functionality")
+    logger.warning("TODO: missing preference optimization functionality")
+
     is_feasible = model.solve(
         solver=config.DEFAULT_CPMPY_SOLVER,
         log_search_progress=config.VERBOSE_SOLVER_OUTPUT,
         time_limit=config.SOLVER_TIME_LIMIT,
     )
 
+    logger.warning("TODO: missing MUS functionality")
     if not is_feasible:
         # min_unsat_result = get_MUS(model)
         # print(min_unsat_result)
         raise ValueError("Infeasible")
+
+    solved_scheduled = scheduled.with_columns(
+        pl.col(config.CPMPY_VARIABLE_COLUMN)
+        .map_elements(lambda x: x.value(), return_dtype=pl.Boolean)
+        .alias(config.CPMPY_RESULT_COLUMN)
+    )
+
+    return solved_scheduled
