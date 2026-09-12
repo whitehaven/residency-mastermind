@@ -8,7 +8,7 @@ import config
 from constraints import (
     accumulate_req_constraints,
     generate_every_worker_is_somewhere_constraints,
-    generate_rotation_constraints,
+    accumulate_rotation_constraints,
 )
 from data_io import (
     compose_requirements_to_workers,
@@ -61,7 +61,7 @@ def generate_complete_schedule(
     )
     model += requirement_constraints
 
-    rotations_constraints = generate_rotation_constraints(
+    rotations_constraints = accumulate_rotation_constraints(
         workers_with_reqs, rotations, weeks, scheduled
     )
 

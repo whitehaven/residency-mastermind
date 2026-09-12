@@ -59,8 +59,8 @@ def accumulate_req_constraints(
     return cumu_constraints
 
 
-def generate_rotation_constraints(
-    workers: pl.DataFrame,
+def accumulate_rotation_constraints(
+    workers: pl.DataFrame,  # TODO: not clear if needs to pass this since it applies to everyone universally
     rotations: dict[str, dict],
     weeks: pl.DataFrame,
     scheduled: pl.DataFrame,
