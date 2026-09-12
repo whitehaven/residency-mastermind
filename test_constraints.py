@@ -86,7 +86,7 @@ def starmap_verify_req_constraints(
             for constraint in req_body["constraints"]:
                 match constraint:
                     case "max_weeks":
-                        if verify_req_max_weeks_constraint(
+                        if not verify_req_max_weeks_constraint(
                             solved_schedule,
                             worker["name"],
                             req_body["fulfilled_by"],
@@ -94,9 +94,10 @@ def starmap_verify_req_constraints(
                         ):
                             return False
                     case "min_weeks":
-                        if verify_req_min_weeks_constraint(
+                        if not verify_req_min_weeks_constraint(
                             solved_schedule,
                             worker["name"],
+                            req_body["fulfilled_by"],
                             req_body["constraints"]["min_weeks"],
                         ):
                             return False
@@ -135,7 +136,7 @@ def verify_req_max_weeks_constraint(
         .item()
     )
 
-    constraint_met = weeks_scheduled > max_weeks
+    constraint_met = weeks_scheduled <= max_weeks
 
     return constraint_met
 
@@ -154,12 +155,14 @@ def verify_req_min_weeks_constraint(
         .item()
     )
 
-    constraint_met = weeks_scheduled < min_weeks
+    constraint_met = weeks_scheduled >= min_weeks
 
     return constraint_met
 
 
-def starmap_verify_rot_constraints(rotations: dict[str, dict], solved_schedule: pl.DataFrame) -> bool:
+def starmap_verify_rot_constraints(
+    rotations: dict[str, dict], solved_schedule: pl.DataFrame
+) -> bool:
     """
 
     :param solved_schedule:
@@ -168,12 +171,68 @@ def starmap_verify_rot_constraints(rotations: dict[str, dict], solved_schedule: 
     """
     for rot_name, rot_body in rotations.items():
         for constraint_name, constraint_body in rot_body.items():
-            match constraint_name:
-                case "max_workers_assigned":
-                    pass
-                case "min_workers_assigned":
-                    pass
-                case _:
-                    raise NotImplementedError(
-                        f"{constraint_name=} not a known constraint"
-                    )
+            for week_schedule in solved_schedule.partition_by("monday_date"):
+                match constraint_name:
+                    case "max_workers_assigned":
+                        if not verify_rot_max_workers_constraint(
+                            week_schedule, rot_name, rot_body["max_workers_assigned"]
+                        ):
+                            return False
+                    case "min_workers_assigned":
+                        if not verify_rot_min_workers_constraint(
+                            week_schedule, rot_name, rot_body["min_workers_assigned"]
+                        ):
+                            return False
+                    case _:
+                        raise NotImplementedError(
+                            f"{constraint_name=} not a known constraint"
+                        )
+    return True
+    #
+    # for rot_name, rot_body in rotations.items():
+    #     for constraint_name, constraint_body in rot_body.items():
+    #         match constraint_name:
+    #             case "max_workers_assigned":
+    #                 if not verify_rot_max_workers_constraint(
+    #                     solved_schedule, rot_name, rot_body["max_workers_assigned"]
+    #                 ):
+    #                     return False
+    #             case "min_workers_assigned":
+    #                 if not verify_rot_min_workers_constraint(
+    #                     solved_schedule, rot_name, rot_body["min_workers_assigned"]
+    #                 ):
+    #                     return False
+    #             case _:
+    #                 raise NotImplementedError(
+    #                     f"{constraint_name=} not a known constraint"
+    #                 )
+
+
+def verify_rot_max_workers_constraint(
+    solved_schedule: pl.DataFrame, rotation: str, max_workers: int
+) -> bool:
+    weeks_scheduled = (
+        solved_schedule.filter(pl.col("rotation") == rotation)
+        .select(config.CPMPY_RESULT_COLUMN)
+        .sum()
+        .item()
+    )
+
+    constraint_met = weeks_scheduled <= max_workers
+
+    return constraint_met
+
+
+def verify_rot_min_workers_constraint(
+    solved_schedule: pl.DataFrame, rotation: str, min_workers: int
+) -> bool:
+    weeks_scheduled = (
+        solved_schedule.filter(pl.col("rotation") == rotation)
+        .select(config.CPMPY_RESULT_COLUMN)
+        .sum()
+        .item()
+    )
+
+    constraint_met = weeks_scheduled >= min_workers
+
+    return constraint_met
