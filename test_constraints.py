@@ -14,8 +14,7 @@ logger.add(
 
 
 @pytest.mark.skip("incomplete")
-def test_enforce_requirement_constraints(minimal_case_setup, minimal_req_composition):
-
+def test_accumulate_req_constraints(minimal_case_setup, minimal_req_composition):
     workers, rotations, weeks, _requirements = minimal_case_setup
     logger.trace(
         f"loaded minimal test case: {workers.shape=}, {len(rotations)=}, {weeks.shape=}"
@@ -36,3 +35,11 @@ def test_enforce_requirement_constraints(minimal_case_setup, minimal_req_composi
 
     assert isinstance(cumulative_constraints, list)
     logger.warning("TODO: test_enforce_requirement_constraints incomplete")
+
+
+def test_generate_max_weeks_req_constraints():
+    assert False
+
+
+def test_generate_min_weeks_req_constraints():
+    assert False
