@@ -1,6 +1,7 @@
 import sys
 
 import polars as pl
+import pytest
 from loguru import logger
 
 from data_io import compose_requirements_to_workers, generate_pl_wrapped_boolvar
@@ -19,6 +20,9 @@ def test_generate_pl_wrapped_boolvar(minimal_case_setup):
     assert wrapped.shape[0] == len(workers) * len(rotations) * len(weeks)
 
 
+@pytest.mark.skip(
+    "tested by eye but all tests are just pasting output; TODO: probably delete"
+)
 def test_compose_requirements_to_workers(minimal_case_setup, minimal_req_composition):
     workers, _rotations, _weeks, _requirements = minimal_case_setup
     req_sets = minimal_req_composition

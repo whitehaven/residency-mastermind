@@ -29,6 +29,8 @@ def accumulate_req_constraints(
 
     cumu_constraints = []
 
+    # TODO: probably should iterate workers by worker in workers_with_reqsets.partition_by("name")
+
     for worker in workers_with_reqsets.iter_rows(named=True):
         for req_name, req_body in worker["req_set"].items():
             for constraint in req_body["constraints"]:
@@ -48,6 +50,12 @@ def accumulate_req_constraints(
                                 fulfilling_rotations=req_body["fulfilled_by"],
                                 min_weeks=req_body["constraints"]["min_weeks"],
                             )
+                        )
+                    case "min_contiguity":
+                        generate_min_contiguity_req_constraints(
+                            scheduled,
+                            affected_rotations=req_body["fulfilled_by"],
+                            min_contiguity=req_body["constraints"]["min_contiguity"],
                         )
                     case _:
                         raise NotImplementedError(
@@ -220,3 +228,19 @@ def generate_max_weeks_req_constraints(
         cumu_constraints.append(cp.sum(this_workers_vars) <= max_weeks)
 
     return cumu_constraints
+
+
+def generate_min_contiguity_req_constraints(
+    scheduled: pl.DataFrame, affected_rotations: list[str], min_contiguity: int
+) -> list[cp.core.Comparison]:
+    """
+    Generate set of constraints that will require scheduled time on a rotation is always greater than or equal to `min_contiguity`.
+
+    For example, if a requirement is that 4 weeks are spent on HS Rounding Senior rotations, any week that is scheduled must be part of a segment of 4 weeks.
+
+    :param scheduled:
+    :param affected_rotations:
+    :param min_contiguity:
+    :return:
+    """
+    pass
