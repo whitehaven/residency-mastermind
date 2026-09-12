@@ -54,8 +54,6 @@ def accumulate_req_constraints(
                             f"{constraint=} not a known constraint"
                         )
 
-    logger.warning("note generate_requirement_constraints not completed and returns []")
-
     return cumu_constraints
 
 
