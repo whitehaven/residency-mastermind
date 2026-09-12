@@ -7,8 +7,8 @@ from loguru import logger
 import config
 from constraints import (
     accumulate_req_constraints,
-    generate_every_worker_is_somewhere_constraints,
     accumulate_rotation_constraints,
+    generate_every_worker_is_somewhere_constraints,
 )
 from data_io import (
     compose_requirements_to_workers,
@@ -26,8 +26,8 @@ def generate_complete_schedule(
     rotations: dict[str, dict],
     weeks: pl.DataFrame,
     requirement_sets: dict[str, dict],
-    overrides: pl.DataFrame,
-    requests: pl.DataFrame,
+    overrides: pl.DataFrame | None,
+    requests: pl.DataFrame | None,
 ) -> pl.DataFrame:
     """
     inputs
