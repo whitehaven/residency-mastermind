@@ -1,14 +1,8 @@
-import sys
-
 import polars as pl
 from loguru import logger
 
 from data_io import convert_melted_to_block_schedule
 from main import generate_complete_schedule
-
-logger.add(
-    sys.stderr, format="{time} {level} {message}", filter="my_module", level="INFO"
-)
 
 
 def test_generate_complete_schedule_constraint_only_minimal_problem_size(
@@ -31,4 +25,4 @@ def test_generate_complete_schedule_constraint_only_minimal_problem_size(
     block_schedule = convert_melted_to_block_schedule(solved_schedule)
     assert isinstance(block_schedule, pl.DataFrame)
 
-    logger.warning("TODO: convert_melted_to_block_schedule needs testing")
+    logger.warning("TODO: convert_melted_to_block_schedule is untested. Verify all outputs.")
