@@ -90,6 +90,47 @@ def minimal_case_setup():
                     "Orange HS Senior",
                 ],
             },
+            "Vacation": {"constraints": {"max_weeks": 4}, "fulfilled_by": ["Vacation"]},
+        },
+        "R2 PCT": {},
+        "R2 Standard": {},
+    }
+
+    return workers, rotations, weeks, requirements
+
+
+@pytest.fixture(scope="session")
+def minimal_contiguity_case(minimal_case_setup):
+    _workers, rotations, _weeks, _requirements = minimal_case_setup
+
+    workers = pl.DataFrame(
+        [
+            {"name": "Aaron Aaronson", "year": "R2", "track": "Standard"},
+            {"name": "Bill Byornsen", "year": "R2", "track": "PCT"},
+            {"name": "Charles Chrysler", "year": "R2", "track": "PCT"},
+        ]
+    )
+
+    weeks = pl.DataFrame(
+        [
+            {"monday_date": "2026-07-06", "week": 1, "block": 1},
+            {"monday_date": "2026-07-13", "week": 2, "block": 1},
+            {"monday_date": "2026-07-20", "week": 3, "block": 1},
+            {"monday_date": "2026-07-27", "week": 4, "block": 1},
+            {"monday_date": "2026-08-04", "week": 5, "block": 2},
+            {"monday_date": "2026-08-11", "week": 6, "block": 2},
+        ]
+    ).with_columns(pl.col("monday_date").str.to_date())
+
+    requirements = {
+        "R2 Base": {
+            "HS Rounding Senior": {
+                "constraints": {"min_weeks": 2, "max_weeks": 4, "min_contiguity": 2},
+                "fulfilled_by": [
+                    "Green HS Senior",
+                    "Orange HS Senior",
+                ],
+            },
             "Vacation": {"constraints": {"max_weeks": 3}, "fulfilled_by": ["Vacation"]},
         },
         "R2 PCT": {},
