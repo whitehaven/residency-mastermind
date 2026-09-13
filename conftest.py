@@ -146,6 +146,25 @@ def td_reqs_minimal_with_min_contiguity():
 
 
 @pytest.fixture(scope="session")
+def td_reqs_minimal_with_max_contiguity():
+    requirements = {
+        "R2 Base": {
+            "HS Rounding Senior": {
+                "constraints": {"min_weeks": 2, "max_weeks": 4, "max_contiguity": 2},
+                "fulfilled_by": [
+                    "Green HS Senior",
+                    "Orange HS Senior",
+                ],
+            },
+            "Vacation": {"constraints": {"max_weeks": 3}, "fulfilled_by": ["Vacation"]},
+        },
+        "R2 PCT": {},
+        "R2 Standard": {},
+    }
+    return requirements
+
+
+@pytest.fixture(scope="session")
 def td_rotations_hs_vacation():
     rotations = {
         "Green HS Senior": {
@@ -174,6 +193,21 @@ def minimal_min_contiguity_case(
 
     requirements = td_reqs_minimal_with_min_contiguity
 
+    rotations = td_rotations_hs_vacation
+
+    return workers, rotations, weeks, requirements
+
+
+@pytest.fixture(scope="session")
+def minimal_max_contiguity_case(
+    td_workers_three_simple: pl.DataFrame,
+    td_weeks_six_consecutive: pl.DataFrame,
+    td_rotations_hs_vacation: dict[str, dict],
+    td_reqs_minimal_with_max_contiguity: dict[str, dict],
+):
+    workers = td_workers_three_simple
+    weeks = td_weeks_six_consecutive
+    requirements = td_reqs_minimal_with_max_contiguity
     rotations = td_rotations_hs_vacation
 
     return workers, rotations, weeks, requirements
