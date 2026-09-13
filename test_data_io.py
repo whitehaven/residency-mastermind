@@ -6,10 +6,6 @@ from loguru import logger
 
 from data_io import compose_requirements_to_workers, generate_pl_wrapped_boolvar
 
-logger.add(
-    sys.stderr, format="{time} {level} {message}", filter="my_module", level="INFO"
-)
-
 
 def test_generate_pl_wrapped_boolvar(minimal_case_setup):
     workers, rotations, weeks, _requirements = minimal_case_setup

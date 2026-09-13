@@ -16,9 +16,8 @@ from data_io import (
     get_MUS_output,
 )
 
-logger.add(
-    sys.stderr, format="{time} {level} {message}", filter="my_module", level="INFO"
-)
+logger.remove()
+logger.add(sys.stderr, level="TRACE")
 
 
 def generate_complete_schedule(
@@ -67,8 +66,12 @@ def generate_complete_schedule(
 
     model += rotations_constraints
 
-    logger.warning("TODO: missing overrides functionality")
-    logger.info("this test doesn't include preference optimization functionality")
+    logger.warning(
+        "TODO: Overrides functionality not implemented. Overrides will not be reflected in solutions nor unsatisfiability diagnostics."
+    )
+    logger.warning(
+        "TODO: Preference optimization not implemented. Preferences will not be reflected in solutions nor unsatisfiability diagnostics."
+    )
 
     is_feasible = model.solve(
         solver=config.DEFAULT_CPMPY_SOLVER,
@@ -77,10 +80,10 @@ def generate_complete_schedule(
     )
 
     if not is_feasible:
-        min_unsat_result = get_MUS_output(model)
-        print(min_unsat_result)
-        raise ValueError("Infeasible, see MUS output above")
+        logger.error(get_MUS_output(model))
+        raise ValueError("Infeasible, MUS output to log.")
 
+    logger.success("Feasibility confirmed.")
     solved_scheduled = scheduled.with_columns(
         pl.col(config.CPMPY_VARIABLE_COLUMN)
         .map_elements(lambda x: x.value(), return_dtype=pl.Boolean)

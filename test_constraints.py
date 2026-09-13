@@ -1,15 +1,9 @@
-import sys
-
 import polars as pl
 from loguru import logger
 
 import config
 from data_io import compose_requirements_to_workers, convert_melted_to_block_schedule
 from main import generate_complete_schedule
-
-logger.add(
-    sys.stderr, format="{time} {level} {message}", filter="my_module", level="INFO"
-)
 
 
 def test_starmap_constraints_minimal_case(minimal_case_setup):
@@ -32,7 +26,8 @@ def test_min_contiguity_constraints(minimal_min_contiguity_case):
 
     block = convert_melted_to_block_schedule(solved_schedule)
 
-    print(block)
+    with pl.Config(tbl_cols=-1):
+        logger.trace(block)
 
     assert starmap_verify_req_constraints(workers_with_reqs, solved_schedule)
     assert starmap_verify_rot_constraints(rotations, solved_schedule)
