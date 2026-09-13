@@ -1,11 +1,10 @@
 import sys
 
 import polars as pl
-import pytest
 from loguru import logger
 
 import config
-from data_io import compose_requirements_to_workers
+from data_io import compose_requirements_to_workers, convert_melted_to_block_schedule
 from main import generate_complete_schedule
 
 logger.add(
@@ -15,12 +14,25 @@ logger.add(
 
 def test_starmap_constraints_minimal_case(minimal_case_setup):
     workers, rotations, weeks, requirements = minimal_case_setup
-
     workers_with_reqs = compose_requirements_to_workers(workers, requirements)
-
     solved_schedule = generate_complete_schedule(
         workers, rotations, weeks, requirements, overrides=None, requests=None
     )
+
+    assert starmap_verify_req_constraints(workers_with_reqs, solved_schedule)
+    assert starmap_verify_rot_constraints(rotations, solved_schedule)
+
+
+def test_min_contiguity_constraints(minimal_contiguity_case):
+    workers, rotations, weeks, requirements = minimal_contiguity_case
+    workers_with_reqs = compose_requirements_to_workers(workers, requirements)
+    solved_schedule = generate_complete_schedule(
+        workers, rotations, weeks, requirements, overrides=None, requests=None
+    )
+
+    block = convert_melted_to_block_schedule(solved_schedule)
+
+    print(block)
 
     assert starmap_verify_req_constraints(workers_with_reqs, solved_schedule)
     assert starmap_verify_rot_constraints(rotations, solved_schedule)
@@ -47,6 +59,14 @@ def starmap_verify_req_constraints(
                             worker["name"],
                             req_body["fulfilled_by"],
                             req_body["constraints"]["min_weeks"],
+                        ):
+                            return False
+                    case "min_contiguity":
+                        if not verify_req_min_contiguity_constraint(
+                            solved_schedule,
+                            worker["name"],
+                            req_body["fulfilled_by"],
+                            req_body["constraints"]["min_contiguity"],
                         ):
                             return False
                     case _:
@@ -108,6 +128,47 @@ def verify_req_min_weeks_constraint(
     return constraint_met
 
 
+def verify_req_min_contiguity_constraint(
+    solved_schedule: pl.DataFrame,
+    worker: str,
+    affected_rotations: list[str],
+    min_contiguity: int,
+) -> bool:
+    """
+    For each affected rotation, walk that worker's per-rotation assignments in chronological order and require every
+    maximal run of scheduled weeks has length >= `min_contiguity`.
+
+    :param solved_schedule:
+    :param worker: 1 and only 1 worker
+    :param affected_rotations: rotations for which THIS requirement demands contiguity
+    :param min_contiguity:
+    :return:
+    """
+    for rotation in affected_rotations:
+        is_scheduled_weeks = (
+            solved_schedule.filter(pl.col("name") == worker)
+            .filter(pl.col("rotation") == rotation)
+            .sort(by="monday_date")
+            .select(config.CPMPY_RESULT_COLUMN)
+            .to_series()
+            .to_list()
+        )
+
+        run_length = 0
+        for is_scheduled in is_scheduled_weeks:
+            if is_scheduled:
+                run_length += 1
+            else:
+                if 0 < run_length < min_contiguity:
+                    return False
+                run_length = 0
+
+        if 0 < run_length < min_contiguity:
+            return False
+
+    return True
+
+
 def starmap_verify_rot_constraints(
     rotations: dict[str, dict], solved_schedule: pl.DataFrame
 ) -> bool:
@@ -136,24 +197,6 @@ def starmap_verify_rot_constraints(
                             f"{constraint_name=} not a known constraint"
                         )
     return True
-    #
-    # for rot_name, rot_body in rotations.items():
-    #     for constraint_name, constraint_body in rot_body.items():
-    #         match constraint_name:
-    #             case "max_workers_assigned":
-    #                 if not verify_rot_max_workers_constraint(
-    #                     solved_schedule, rot_name, rot_body["max_workers_assigned"]
-    #                 ):
-    #                     return False
-    #             case "min_workers_assigned":
-    #                 if not verify_rot_min_workers_constraint(
-    #                     solved_schedule, rot_name, rot_body["min_workers_assigned"]
-    #                 ):
-    #                     return False
-    #             case _:
-    #                 raise NotImplementedError(
-    #                     f"{constraint_name=} not a known constraint"
-    #                 )
 
 
 def verify_rot_max_workers_constraint(

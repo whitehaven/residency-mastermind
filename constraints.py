@@ -29,8 +29,6 @@ def accumulate_req_constraints(
 
     cumu_constraints = []
 
-    # TODO: probably should iterate workers by worker in workers_with_reqsets.partition_by("name")
-
     for worker in workers_with_reqsets.iter_rows(named=True):
         for req_name, req_body in worker["req_set"].items():
             for constraint in req_body["constraints"]:
@@ -52,10 +50,14 @@ def accumulate_req_constraints(
                             )
                         )
                     case "min_contiguity":
-                        generate_min_contiguity_req_constraints(
-                            scheduled,
-                            affected_rotations=req_body["fulfilled_by"],
-                            min_contiguity=req_body["constraints"]["min_contiguity"],
+                        cumu_constraints.extend(
+                            generate_min_contiguity_req_constraints(
+                                scheduled.filter(pl.col("name") == worker["name"]),
+                                affected_rotations=req_body["fulfilled_by"],
+                                min_contiguity=req_body["constraints"][
+                                    "min_contiguity"
+                                ],
+                            )
                         )
                     case _:
                         raise NotImplementedError(
@@ -238,9 +240,46 @@ def generate_min_contiguity_req_constraints(
 
     For example, if a requirement is that 4 weeks are spent on HS Rounding Senior rotations, any week that is scheduled must be part of a segment of 4 weeks.
 
-    :param scheduled:
+    Encoding: for each rotation, look at that worker's per-rotation vars `x[w]` in chronological order. Every maximal
+    run of 1s must have length >= `min_contiguity`. Enforced in two parts per possible run start `w`:
+      * if the run starts at `w` (x[w] and not x[w-1]) and `w + min_contiguity - 1` fits in the schedule, the next
+        `min_contiguity - 1` weeks must also be 1;
+      * no run may start in the last `min_contiguity - 1` weeks, since it could never reach the required length.
+
+    :param scheduled: *pre-filtered* scheduled df (single worker) containing cpmpy variables at the config.CPMPY_VARIABLE_COLUMN
     :param affected_rotations:
     :param min_contiguity:
     :return:
     """
-    pass
+    cumu_constraints = []
+
+    if min_contiguity <= 1:
+        return cumu_constraints
+
+    for rotation in affected_rotations:
+        scheduled_this_rotation = scheduled.filter(pl.col("rotation") == rotation).sort(
+            by="monday_date"
+        )
+        week_vars = scheduled_this_rotation[config.CPMPY_VARIABLE_COLUMN].to_list()
+        num_weeks = len(week_vars)
+
+        if num_weeks < min_contiguity:
+            for var in week_vars:
+                cumu_constraints.append(var == 0)
+            continue
+
+        for run_start_idx in range(num_weeks - min_contiguity + 1):
+            run_starts_here = week_vars[run_start_idx] & (
+                ~week_vars[run_start_idx - 1] if run_start_idx > 0 else True
+            )
+            rest_of_run_vars = week_vars[
+                run_start_idx + 1 : run_start_idx + min_contiguity
+            ]
+            cumu_constraints.append(run_starts_here.implies(cp.all(rest_of_run_vars)))
+
+        for run_start_idx in range(num_weeks - min_contiguity + 1, num_weeks):
+            cumu_constraints.append(
+                ~(week_vars[run_start_idx] & ~week_vars[run_start_idx - 1])
+            )
+
+    return cumu_constraints
