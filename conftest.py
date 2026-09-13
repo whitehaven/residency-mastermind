@@ -100,9 +100,7 @@ def minimal_case_setup():
 
 
 @pytest.fixture(scope="session")
-def minimal_contiguity_case(minimal_case_setup):
-    _workers, rotations, _weeks, _requirements = minimal_case_setup
-
+def td_workers_three_simple():
     workers = pl.DataFrame(
         [
             {"name": "Aaron Aaronson", "year": "R2", "track": "Standard"},
@@ -110,7 +108,11 @@ def minimal_contiguity_case(minimal_case_setup):
             {"name": "Charles Chrysler", "year": "R2", "track": "PCT"},
         ]
     )
+    return workers
 
+
+@pytest.fixture(scope="session")
+def td_weeks_six_consecutive():
     weeks = pl.DataFrame(
         [
             {"monday_date": "2026-07-06", "week": 1, "block": 1},
@@ -121,7 +123,11 @@ def minimal_contiguity_case(minimal_case_setup):
             {"monday_date": "2026-08-11", "week": 6, "block": 2},
         ]
     ).with_columns(pl.col("monday_date").str.to_date())
+    return weeks
 
+
+@pytest.fixture(scope="session")
+def td_reqs_minimal_with_min_contiguity():
     requirements = {
         "R2 Base": {
             "HS Rounding Senior": {
@@ -136,6 +142,39 @@ def minimal_contiguity_case(minimal_case_setup):
         "R2 PCT": {},
         "R2 Standard": {},
     }
+    return requirements
+
+
+@pytest.fixture(scope="session")
+def td_rotations_hs_vacation():
+    rotations = {
+        "Green HS Senior": {
+            "min_workers_assigned": 1,
+            "max_workers_assigned": 1,
+        },
+        "Orange HS Senior": {
+            "min_workers_assigned": 1,
+            "max_workers_assigned": 1,
+        },
+        "Vacation": {"max_workers_assigned": 6},
+    }
+    return rotations
+
+
+@pytest.fixture(scope="session")
+def minimal_min_contiguity_case(
+    td_workers_three_simple: pl.DataFrame,
+    td_weeks_six_consecutive: pl.DataFrame,
+    td_rotations_hs_vacation: dict[str, dict],
+    td_reqs_minimal_with_min_contiguity: dict[str, dict],
+):
+    workers = td_workers_three_simple
+
+    weeks = td_weeks_six_consecutive
+
+    requirements = td_reqs_minimal_with_min_contiguity
+
+    rotations = td_rotations_hs_vacation
 
     return workers, rotations, weeks, requirements
 
