@@ -1,14 +1,7 @@
-import sys
-
 import cpmpy as cp
 import polars as pl
-from loguru import logger
 
 import config
-
-logger.add(
-    sys.stderr, format="{time} {level} {message}", filter="my_module", level="INFO"
-)
 
 
 def accumulate_req_constraints(
@@ -56,6 +49,16 @@ def accumulate_req_constraints(
                                 affected_rotations=req_body["fulfilled_by"],
                                 min_contiguity=req_body["constraints"][
                                     "min_contiguity"
+                                ],
+                            )
+                        )
+                    case "max_contiguity":
+                        cumu_constraints.extend(
+                            generate_max_contiguity_req_constraints(
+                                scheduled.filter(pl.col("name") == worker["name"]),
+                                affected_rotations=req_body["fulfilled_by"],
+                                max_contiguity=req_body["constraints"][
+                                    "max_contiguity"
                                 ],
                             )
                         )
@@ -281,5 +284,46 @@ def generate_min_contiguity_req_constraints(
             cumu_constraints.append(
                 ~(week_vars[run_start_idx] & ~week_vars[run_start_idx - 1])
             )
+
+    return cumu_constraints
+
+
+def generate_max_contiguity_req_constraints(
+    scheduled: pl.DataFrame, affected_rotations: list[str], max_contiguity: int
+) -> list[cp.core.Comparison]:
+    """
+    Generate set of constraints that will require scheduled time on a rotation never stays contiguous for more than
+    `max_contiguity` weeks in a row.
+
+    For example, if a requirement is that a resident is on ICU Senior at most 2 weeks at a stretch, any week that is
+    scheduled must be part of a segment of no more than 2 weeks.
+
+    Encoding: for each rotation, look at that worker's per-rotation vars `x[w]` in chronological order. Every maximal
+    run of 1s must have length <= `max_contiguity`. Equivalently, no window of `max_contiguity + 1` consecutive weeks
+    may be fully scheduled, i.e. `cp.sum(x[w : w + max_contiguity + 1]) <= max_contiguity` for every window start `w`.
+
+    :param scheduled: *pre-filtered* scheduled df (single worker) containing cpmpy variables at the config.CPMPY_VARIABLE_COLUMN
+    :param affected_rotations:
+    :param max_contiguity:
+    :return:
+    """
+    cumu_constraints = []
+
+    if max_contiguity < 1:
+        raise ValueError(f"{max_contiguity=} must be a positive integer")
+
+    for rotation in affected_rotations:
+        scheduled_this_rotation = scheduled.filter(pl.col("rotation") == rotation).sort(
+            by="monday_date"
+        )
+        week_vars = scheduled_this_rotation[config.CPMPY_VARIABLE_COLUMN].to_list()
+        num_weeks = len(week_vars)
+
+        if num_weeks <= max_contiguity:
+            continue
+
+        for run_start_idx in range(num_weeks - max_contiguity):
+            window_vars = week_vars[run_start_idx : run_start_idx + max_contiguity + 1]
+            cumu_constraints.append(cp.sum(window_vars) <= max_contiguity)
 
     return cumu_constraints

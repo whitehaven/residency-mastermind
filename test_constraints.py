@@ -38,6 +38,28 @@ def test_min_contiguity_constraints(minimal_min_contiguity_case):
     assert starmap_verify_rot_constraints(rotations, solved_schedule)
 
 
+def test_max_contiguity_constraints(minimal_max_contiguity_case):
+    workers, rotations, weeks, requirements = minimal_max_contiguity_case
+    workers_with_reqs = compose_requirements_to_workers(workers, requirements)
+    solved_schedule = generate_complete_schedule(
+        workers, rotations, weeks, requirements, overrides=None, requests=None
+    )
+
+    assert starmap_verify_req_constraints(workers_with_reqs, solved_schedule)
+    logger.debug(
+        f"Requirement constraints verified across {len(workers_with_reqs)} workers and {len(solved_schedule)} variables."
+    )
+    assert starmap_verify_rot_constraints(rotations, solved_schedule)
+    logger.debug(
+        f"Rotation constraints verified across {len(rotations)} rotations and {len(solved_schedule)} variables."
+    )
+
+    block = convert_melted_to_block_schedule(solved_schedule)
+
+    with pl.Config(tbl_cols=-1):
+        logger.trace(block)
+
+
 def starmap_verify_req_constraints(
     workers_with_reqs: pl.DataFrame, solved_schedule: pl.DataFrame
 ):
@@ -67,6 +89,14 @@ def starmap_verify_req_constraints(
                             worker["name"],
                             req_body["fulfilled_by"],
                             req_body["constraints"]["min_contiguity"],
+                        ):
+                            return False
+                    case "max_contiguity":
+                        if not verify_req_max_contiguity_constraint(
+                            solved_schedule,
+                            worker["name"],
+                            req_body["fulfilled_by"],
+                            req_body["constraints"]["max_contiguity"],
                         ):
                             return False
                     case _:
@@ -164,6 +194,47 @@ def verify_req_min_contiguity_constraint(
                 run_length = 0
 
         if 0 < run_length < min_contiguity:
+            return False
+
+    return True
+
+
+def verify_req_max_contiguity_constraint(
+    solved_schedule: pl.DataFrame,
+    worker: str,
+    affected_rotations: list[str],
+    max_contiguity: int,
+) -> bool:
+    """
+    For each affected rotation, walk that worker's per-rotation assignments in chronological order and require every
+    maximal run of scheduled weeks has length <= `max_contiguity`.
+
+    :param solved_schedule:
+    :param worker: 1 and only 1 worker
+    :param affected_rotations: rotations for which THIS requirement demands contiguity
+    :param max_contiguity:
+    :return:
+    """
+    for rotation in affected_rotations:
+        is_scheduled_weeks = (
+            solved_schedule.filter(pl.col("name") == worker)
+            .filter(pl.col("rotation") == rotation)
+            .sort(by="monday_date")
+            .select(config.CPMPY_RESULT_COLUMN)
+            .to_series()
+            .to_list()
+        )
+
+        run_length = 0
+        for is_scheduled in is_scheduled_weeks:
+            if is_scheduled:
+                run_length += 1
+            else:
+                if run_length > max_contiguity:
+                    return False
+                run_length = 0
+
+        if run_length > max_contiguity:
             return False
 
     return True
