@@ -79,7 +79,8 @@ def minimal_case_setup():
             {"monday_date": "2026-07-20", "week": 3, "block": 1},
             {"monday_date": "2026-07-27", "week": 4, "block": 1},
         ]
-    )
+    ).with_columns(pl.col("monday_date").str.to_date())
+
     requirements = {
         "R2 Base": {
             "HS Rounding Senior": {
@@ -100,7 +101,6 @@ def minimal_case_setup():
 
 @pytest.fixture(scope="session")
 def large_case_setup():
-
     workers = pl.DataFrame(
         [
             {"name": "Aaron Aaronson", "year": "R1", "track": "Standard"},
@@ -281,7 +281,7 @@ def large_case_setup():
             {"monday_date": "2027-06-21", "week": 51, "block": 13},
             {"monday_date": "2027-06-28", "week": 52, "block": 13},
         ]
-    )
+    ).with_columns(pl.col("monday_date").str.to_date())
 
     raise NotImplementedError("no requirements assembled")
     requirements = None
