@@ -188,11 +188,8 @@ def minimal_min_contiguity_case(
     td_reqs_minimal_with_min_contiguity: dict[str, dict],
 ):
     workers = td_workers_three_simple
-
     weeks = td_weeks_six_consecutive
-
     requirements = td_reqs_minimal_with_min_contiguity
-
     rotations = td_rotations_hs_vacation
 
     return workers, rotations, weeks, requirements
@@ -209,6 +206,59 @@ def minimal_max_contiguity_case(
     weeks = td_weeks_six_consecutive
     requirements = td_reqs_minimal_with_max_contiguity
     rotations = td_rotations_hs_vacation
+
+    return workers, rotations, weeks, requirements
+
+
+@pytest.fixture(scope="session")
+def td_rotations_gn_prp_vacation():
+    rotations = {
+        "Green HS Senior": {
+            "min_workers_assigned": 0,
+            "max_workers_assigned": 1,
+        },
+        "Purple HS Senior": {"min_workers_assigned": 0, "max_workers_assigned": 1},
+        "Vacation": {"max_workers_assigned": 6},
+    }
+    return rotations
+
+
+@pytest.fixture(scope="session")
+def td_reqs_minimal_with_prereqs():
+    requirements = {
+        "R2 Base": {
+            "HS Rounding Senior": {
+                "constraints": {
+                    "min_weeks": 2,
+                    "max_weeks": 4,
+                    "prerequisite": {
+                        "weeks": 2,
+                        "rots_meeting_prereqs": ["Purple HS Senior"],
+                    },
+                },
+                "fulfilled_by": [
+                    "Green HS Senior",
+                ],
+            },
+            "Vacation": {"constraints": {"max_weeks": 3}, "fulfilled_by": ["Vacation"]},
+        },
+        "R2 PCT": {},
+        "R2 Standard": {},
+    }
+    return requirements
+
+
+@pytest.fixture(scope="session")
+def minimal_prerequisites_case(
+    td_workers_three_simple: pl.DataFrame,
+    td_weeks_six_consecutive: pl.DataFrame,
+    td_rotations_gn_prp_vacation: dict[str, dict],
+    td_reqs_minimal_with_prereqs: dict[str, dict],
+):
+    workers = td_workers_three_simple
+    rotations = td_rotations_gn_prp_vacation
+    weeks = td_weeks_six_consecutive
+    requirements = td_reqs_minimal_with_prereqs
 
     return workers, rotations, weeks, requirements
 
