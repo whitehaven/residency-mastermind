@@ -271,9 +271,11 @@ def verify_req_prerequisite(
                 & (pl.col("monday_date") == week["monday_date"])
             )[config.CPMPY_RESULT_COLUMN].item()
 
-            if this_week_is_sched_for_rot_with_prereqs:
-                assert rots_meeting_prereq_before_this_week >= prereq_weeks
-    logger.warning("TODO: verify_req_prerequisite incomplete.")
+            if (
+                this_week_is_sched_for_rot_with_prereqs
+                and rots_meeting_prereq_before_this_week < prereq_weeks
+            ):
+                return False
     return True
 
 

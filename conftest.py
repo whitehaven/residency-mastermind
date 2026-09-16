@@ -215,9 +215,9 @@ def td_rotations_gn_prp_vacation():
     rotations = {
         "Green HS Senior": {
             "min_workers_assigned": 0,
-            "max_workers_assigned": 1,
+            "max_workers_assigned": 2,
         },
-        "Purple HS Senior": {"min_workers_assigned": 0, "max_workers_assigned": 1},
+        "Purple HS Senior": {"min_workers_assigned": 0, "max_workers_assigned": 2},
         "Vacation": {"max_workers_assigned": 6},
     }
     return rotations
@@ -240,7 +240,11 @@ def td_reqs_minimal_with_prereqs():
                     "Green HS Senior",
                 ],
             },
-            "Vacation": {"constraints": {"max_weeks": 3}, "fulfilled_by": ["Vacation"]},
+            "HS Admitting Senior": {
+                "constraints": {"min_weeks": 2, "max_weeks": 2},
+                "fulfilled_by": ["Purple HS Senior"],
+            },
+            "Vacation": {"constraints": {"max_weeks": 2}, "fulfilled_by": ["Vacation"]},
         },
         "R2 PCT": {},
         "R2 Standard": {},
