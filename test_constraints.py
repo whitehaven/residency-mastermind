@@ -13,7 +13,7 @@ def test_starmap_constraints_minimal_case(minimal_case_setup):
         workers, rotations, weeks, requirements, overrides=None, requests=None
     )
 
-    assert starmap_verify_req_constraints(workers_with_reqs, solved_schedule)
+    assert starmap_verify_req_constraints(workers_with_reqs, weeks, solved_schedule)
     assert starmap_verify_rot_constraints(rotations, solved_schedule)
 
 
@@ -29,7 +29,7 @@ def test_min_contiguity_constraints(minimal_min_contiguity_case):
     with pl.Config(tbl_cols=-1):
         logger.trace(block)
 
-    assert starmap_verify_req_constraints(workers_with_reqs, solved_schedule)
+    assert starmap_verify_req_constraints(workers_with_reqs, weeks, solved_schedule)
     assert starmap_verify_rot_constraints(rotations, solved_schedule)
 
 
@@ -40,7 +40,7 @@ def test_max_contiguity_constraints(minimal_max_contiguity_case):
         workers, rotations, weeks, requirements, overrides=None, requests=None
     )
 
-    assert starmap_verify_req_constraints(workers_with_reqs, solved_schedule)
+    assert starmap_verify_req_constraints(workers_with_reqs, weeks, solved_schedule)
     logger.debug(
         f"Requirement constraints verified across {len(workers_with_reqs)} workers and {len(solved_schedule)} variables."
     )
@@ -56,7 +56,7 @@ def test_max_contiguity_constraints(minimal_max_contiguity_case):
 
 
 def starmap_verify_req_constraints(
-    workers_with_reqs: pl.DataFrame, solved_schedule: pl.DataFrame
+    workers_with_reqs: pl.DataFrame, weeks: pl.DataFrame, solved_schedule: pl.DataFrame
 ):
     for worker in workers_with_reqs.iter_rows(named=True):
         for req_name, req_body in worker["req_set"].items():
@@ -92,6 +92,20 @@ def starmap_verify_req_constraints(
                             worker["name"],
                             req_body["fulfilled_by"],
                             req_body["constraints"]["max_contiguity"],
+                        ):
+                            return False
+                    case "prerequisite":
+                        if not verify_req_prerequisite(
+                            solved_schedule,
+                            weeks,
+                            worker=worker["name"],
+                            affected_rotations=req_body["fulfilled_by"],
+                            rots_meeting_prereqs=req_body["constraints"][
+                                "prerequisite"
+                            ]["rots_meeting_prereqs"],
+                            prereq_weeks=req_body["constraints"]["prerequisite"][
+                                "weeks"
+                            ],
                         ):
                             return False
                     case _:
@@ -235,10 +249,39 @@ def verify_req_max_contiguity_constraint(
     return True
 
 
+def verify_req_prerequisite(
+    solved_schedule: pl.DataFrame,
+    weeks: pl.DataFrame,
+    worker: str,
+    affected_rotations: list[str],
+    rots_meeting_prereqs: list[str],
+    prereq_weeks: int,
+) -> bool:
+
+    this_worker_schedule = solved_schedule.filter(pl.col("name") == worker)
+    for rotation in affected_rotations:
+        for week in weeks.iter_rows(named=True):
+            rots_meeting_prereq_before_this_week = this_worker_schedule.filter(
+                (pl.col("monday_date") < week["monday_date"])
+                & (pl.col("rotation").is_in(rots_meeting_prereqs))
+            )[config.CPMPY_RESULT_COLUMN].sum()
+
+            this_week_is_sched_for_rot_with_prereqs = this_worker_schedule.filter(
+                (pl.col("rotation") == rotation)
+                & (pl.col("monday_date") == week["monday_date"])
+            )[config.CPMPY_RESULT_COLUMN].item()
+
+            if this_week_is_sched_for_rot_with_prereqs:
+                assert rots_meeting_prereq_before_this_week >= prereq_weeks
+    logger.warning("TODO: verify_req_prerequisite incomplete.")
+    return True
+
+
 def starmap_verify_rot_constraints(
     rotations: dict[str, dict], solved_schedule: pl.DataFrame
 ) -> bool:
     """
+    Dispatcher for rotation constraints.
 
     :param solved_schedule:
     :param rotations:
@@ -291,5 +334,22 @@ def verify_rot_min_workers_constraint(
     )
 
     constraint_met = weeks_scheduled >= min_workers
-
     return constraint_met
+
+
+def test_minimal_prerequisites_case(minimal_prerequisites_case):
+    workers, rotations, weeks, requirements = minimal_prerequisites_case
+
+    workers_with_reqs = compose_requirements_to_workers(workers, requirements)
+
+    solved_schedule = generate_complete_schedule(
+        workers, rotations, weeks, requirements, overrides=None, requests=None
+    )
+
+    block = convert_melted_to_block_schedule(solved_schedule)
+
+    with pl.Config(tbl_cols=-1):
+        logger.trace(block)
+
+    assert starmap_verify_req_constraints(workers_with_reqs, weeks, solved_schedule)
+    assert starmap_verify_rot_constraints(rotations, solved_schedule)

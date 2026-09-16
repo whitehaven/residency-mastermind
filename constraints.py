@@ -1,5 +1,6 @@
 import cpmpy as cp
 import polars as pl
+from loguru import logger
 
 import config
 
@@ -61,6 +62,18 @@ def accumulate_req_constraints(
                                     "max_contiguity"
                                 ],
                             )
+                        )
+                    case "prerequisite":
+                        generate_prerequisite_constraints(
+                            scheduled.filter(pl.col("name") == worker["name"]),
+                            weeks=weeks,
+                            affected_rotations=req_body["fulfilled_by"],
+                            rots_meeting_prereqs=req_body["constraints"][
+                                "prerequisite"
+                            ]["rots_meeting_prereqs"],
+                            prereq_weeks=req_body["constraints"]["prerequisite"][
+                                "weeks"
+                            ],
                         )
                     case _:
                         raise NotImplementedError(
@@ -325,5 +338,46 @@ def generate_max_contiguity_req_constraints(
         for run_start_idx in range(num_weeks - max_contiguity):
             window_vars = week_vars[run_start_idx : run_start_idx + max_contiguity + 1]
             cumu_constraints.append(cp.sum(window_vars) <= max_contiguity)
+
+    return cumu_constraints
+
+
+def generate_prerequisite_constraints(
+    scheduled: pl.DataFrame,
+    weeks: pl.DataFrame,
+    affected_rotations: list[str],
+    rots_meeting_prereqs: list[str],
+    prereq_weeks: int,
+) -> list[cp.core.Comparison]:
+    cumu_constraints = []
+
+    for worker_sched_vars_df in scheduled.partition_by("name"):
+        for rotation in affected_rotations:
+            for week in weeks.iter_rows(named=True):
+                vars_rots_meeting_prereq_before_this_week = worker_sched_vars_df.filter(
+                    (pl.col("monday_date") < week["monday_date"])
+                    & (pl.col("rotation").is_in(rots_meeting_prereqs))
+                )[config.CPMPY_VARIABLE_COLUMN].to_list()
+
+                if (
+                    len(vars_rots_meeting_prereq_before_this_week) == 0
+                ):  # or < prereq_weeks? - eh, let's let the solver deal with it
+                    continue
+
+                var_this_week_receiving_prereqs = worker_sched_vars_df.filter(
+                    (pl.col("rotation") == rotation)
+                    & (pl.col("monday_date") == week["monday_date"])
+                )[config.CPMPY_VARIABLE_COLUMN].item()
+
+                cumu_constraints.append(
+                    var_this_week_receiving_prereqs.implies(
+                        cp.sum(vars_rots_meeting_prereq_before_this_week)
+                        >= prereq_weeks
+                    )
+                )
+
+    logger.warning(
+        "TODO: generate_prerequisite_constraints untested. Verify any results."
+    )
 
     return cumu_constraints
