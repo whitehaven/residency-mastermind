@@ -108,6 +108,8 @@ def starmap_verify_req_constraints(
                             ],
                         ):
                             return False
+                    case "must_be_succeeded_by":
+                        return False
                     case _:
                         raise NotImplementedError(
                             f"{constraint=} not a known constraint"
@@ -279,6 +281,13 @@ def verify_req_prerequisite(
     return True
 
 
+def verify_must_be_succeeded_constraint(
+    solved_schedule: pl.DataFrame,
+) -> bool:
+    logger.warning("verify_must_be_succeeded_constraint incomplete. returns false")
+    return False
+
+
 def starmap_verify_rot_constraints(
     rotations: dict[str, dict], solved_schedule: pl.DataFrame
 ) -> bool:
@@ -341,6 +350,24 @@ def verify_rot_min_workers_constraint(
 
 def test_minimal_prerequisites_case(minimal_prerequisites_case):
     workers, rotations, weeks, requirements = minimal_prerequisites_case
+
+    workers_with_reqs = compose_requirements_to_workers(workers, requirements)
+
+    solved_schedule = generate_complete_schedule(
+        workers, rotations, weeks, requirements, overrides=None, requests=None
+    )
+
+    block = convert_melted_to_block_schedule(solved_schedule)
+
+    with pl.Config(tbl_cols=-1):
+        logger.trace(block)
+
+    assert starmap_verify_req_constraints(workers_with_reqs, weeks, solved_schedule)
+    assert starmap_verify_rot_constraints(rotations, solved_schedule)
+
+
+def test_minimal_must_be_succeeded_by_case(minimal_must_be_succeeded_by_case):
+    workers, rotations, weeks, requirements = minimal_must_be_succeeded_by_case
 
     workers_with_reqs = compose_requirements_to_workers(workers, requirements)
 

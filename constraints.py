@@ -1,6 +1,5 @@
 import cpmpy as cp
 import polars as pl
-from loguru import logger
 
 import config
 
@@ -66,17 +65,26 @@ def accumulate_req_constraints(
                     case "prerequisite":
                         cumu_constraints.extend(
                             generate_prerequisite_constraints(
-                                scheduled.filter(
-                                    pl.col("name") == worker["name"]
-                                ),
+                                scheduled.filter(pl.col("name") == worker["name"]),
                                 weeks=weeks,
                                 affected_rotations=req_body["fulfilled_by"],
                                 rots_meeting_prereqs=req_body["constraints"][
                                     "prerequisite"
                                 ]["rots_meeting_prereqs"],
-                                prereq_weeks=req_body["constraints"][
-                                    "prerequisite"
-                                ]["weeks"],
+                                prereq_weeks=req_body["constraints"]["prerequisite"][
+                                    "weeks"
+                                ],
+                            )
+                        )
+                    case "must_be_succeeded_by":
+                        cumu_constraints.extend(
+                            generate_must_be_succeeded_by_constraints(
+                                scheduled.filter(pl.col("name") == worker["name"]),
+                                weeks=weeks,
+                                rots_that_must_be_succeeded=req_body["fulfilled_by"],
+                                rots_that_must_succeed=req_body["constraints"][
+                                    "must_be_succeeded_by"
+                                ],
                             )
                         )
                     case _:
@@ -376,3 +384,30 @@ def generate_prerequisite_constraints(
                 )
 
     return cumu_constraints
+
+
+def generate_must_be_succeeded_by_constraints(
+    scheduled: pl.DataFrame,
+    weeks: pl.DataFrame,
+    rots_that_must_be_succeeded: list[str],
+    rots_that_must_succeed: list[str],
+) -> list[cp.core.Comparison]:
+    cumu_constraints = []
+
+    for worker_sched_vars_df in scheduled.partition_by("name"):
+        for rot_that_must_be_succeeded in rots_that_must_be_succeeded:
+            for rot_that_must_succeed in rots_that_must_succeed:
+                all_weeks_rot_must_be_succeeded = worker_sched_vars_df.filter(
+                    pl.col("rotation") == rot_that_must_be_succeeded
+                )[config.CPMPY_VARIABLE_COLUMN].to_list()
+                all_weeks_rot_must_succeed = worker_sched_vars_df.filter(
+                    pl.col("rotation") == rot_that_must_succeed
+                )[config.CPMPY_VARIABLE_COLUMN].to_list()
+
+                for idx, week in enumerate(all_weeks_rot_must_be_succeeded):
+                    week.implies(all_weeks_rot_must_succeed[idx + 1])
+                    # This would work except that the must_succeed rotation could be one of several.
+                    # Doesn't matter in reverse because the worker could only be on one rotation.
+
+            # for all rots_must_be_succeeded - 1
+            # s[week n][rot_that_must_be_succeeded] -> s[week n+1][this rot_must_be_succeeded]
