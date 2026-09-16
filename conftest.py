@@ -268,6 +268,67 @@ def minimal_prerequisites_case(
 
 
 @pytest.fixture(scope="session")
+def td_rotations_purple_must_be_succeeded_by_hosp():
+    rotations = {
+        "Purple HS Senior": {
+            "min_workers_assigned": 0,
+            "max_workers_assigned": 1,
+        },
+        "SHMC Hospitalist": {"min_workers_assigned": 0, "max_workers_assigned": 2},
+        "Vacation": {"max_workers_assigned": 6},
+    }
+    return rotations
+
+
+@pytest.fixture(scope="session")
+def td_reqs_for_must_be_succeeded_test():
+    """
+    Note rotation to succeed a requirement must be specified as rotation name, not requirement.
+
+    FUTURE: Could change to match against requirements, but this would require look up architecture which could outrun its usefulness.
+    """
+    requirements = {
+        "R2 Base": {
+            "HS Admitting Senior": {
+                "constraints": {
+                    "min_weeks": 2,
+                    "max_weeks": 4,
+                    "must_be_succeeded_by": ["SHMC Hospitalist"],
+                },
+                "fulfilled_by": [
+                    "Purple HS Senior",
+                ],
+            },
+            "Hospitalist": {
+                "constraints": {
+                    "min_weeks": 2,
+                    "max_weeks": 4,
+                },
+                "fulfilled_by": ["SHMC Hospitalist"],
+            },
+            "Vacation": {"constraints": {"max_weeks": 3}, "fulfilled_by": ["Vacation"]},
+        },
+        "R2 PCT": {},
+        "R2 Standard": {},
+    }
+    return requirements
+
+
+@pytest.fixture(scope="session")
+def minimal_must_be_succeeded_by_case(
+    td_workers_three_simple: pl.DataFrame,
+    td_weeks_six_consecutive: pl.DataFrame,
+    td_rotations_purple_must_be_succeeded_by_hosp: dict[str, dict],
+    td_reqs_for_must_be_succeeded_test: dict[str, dict],
+):
+    workers = td_workers_three_simple
+    weeks = td_weeks_six_consecutive
+    rotations = td_rotations_purple_must_be_succeeded_by_hosp
+    requirements = td_reqs_for_must_be_succeeded_test
+    return workers, rotations, weeks, requirements
+
+
+@pytest.fixture(scope="session")
 def large_case_setup():
     workers = pl.DataFrame(
         [
