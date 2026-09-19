@@ -392,22 +392,25 @@ def generate_must_be_succeeded_by_constraints(
     rots_that_must_be_succeeded: list[str],
     rots_that_must_succeed: list[str],
 ) -> list[cp.core.Comparison]:
-    cumu_constraints = []
 
+    cumu_constraints = []
     for worker_sched_vars_df in scheduled.partition_by("name"):
         for rot_that_must_be_succeeded in rots_that_must_be_succeeded:
-            for rot_that_must_succeed in rots_that_must_succeed:
-                all_weeks_rot_must_be_succeeded = worker_sched_vars_df.filter(
-                    pl.col("rotation") == rot_that_must_be_succeeded
-                )[config.CPMPY_VARIABLE_COLUMN].to_list()
-                all_weeks_rot_must_succeed = worker_sched_vars_df.filter(
-                    pl.col("rotation") == rot_that_must_succeed
+            for this_week_idx in range(
+                weeks.shape[0] - 1
+            ):  # MAYBE: could probably refactor to offset zipped iterator
+                next_week_idx = this_week_idx + 1
+                this_week = weeks.row(this_week_idx, named=True)
+                next_week = weeks.row(next_week_idx, named=True)
+
+                this_week_var = scheduled.filter(
+                    (pl.col("monday_date") == this_week["monday_date"])
+                    & (pl.col("rotation") == rot_that_must_be_succeeded),
+                )[config.CPMPY_VARIABLE_COLUMN].item()
+                next_week_vars = scheduled.filter(
+                    (pl.col("monday_date") == next_week["monday_date"])
+                    & (pl.col("rotation").is_in(rots_that_must_succeed)),
                 )[config.CPMPY_VARIABLE_COLUMN].to_list()
 
-                for idx, week in enumerate(all_weeks_rot_must_be_succeeded):
-                    week.implies(all_weeks_rot_must_succeed[idx + 1])
-                    # This would work except that the must_succeed rotation could be one of several.
-                    # Doesn't matter in reverse because the worker could only be on one rotation.
-
-            # for all rots_must_be_succeeded - 1
-            # s[week n][rot_that_must_be_succeeded] -> s[week n+1][this rot_must_be_succeeded]
+                cumu_constraints.append(this_week_var.implies(cp.any(next_week_vars)))
+    return cumu_constraints
