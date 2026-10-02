@@ -2,6 +2,7 @@ import datetime
 
 import cpmpy as cp
 import polars as pl
+from loguru import logger
 
 import config
 
@@ -447,4 +448,24 @@ def generate_must_be_succeeded_by_constraints(
                 )[config.CPMPY_VARIABLE_COLUMN].to_list()
 
                 cumu_constraints.append(this_week_var.implies(cp.any(next_week_vars)))
+    return cumu_constraints
+
+
+def generate_override_enforcement_constraints(
+    scheduled: pl.DataFrame,
+    overrides: pl.DataFrame,
+) -> list[cp.core.Comparison]:
+    cumu_constraints = []
+    matched_overrides = scheduled.join(
+        overrides, on=["name", "rotation", "monday_date"], how="inner"
+    )
+    if len(matched_overrides) != len(overrides):
+        logger.error("Didn't match all overrides to scheduled.")
+        logger.trace(f"Somehow {len(overrides)=} yet {len(matched_overrides)=}.")
+        raise ValueError("Didn't match all overrides to scheduled.")
+
+    for override in matched_overrides.iter_rows(named=True):
+        cumu_constraints.append(
+            override[config.CPMPY_VARIABLE_COLUMN] == override["override_value"]
+        )
     return cumu_constraints

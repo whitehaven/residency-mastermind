@@ -111,14 +111,20 @@ def starmap_verify_req_constraints(
                         ):
                             return False
                     case "must_be_succeeded_by":
-                        verify_must_be_succeeded_constraint(
+                        if not verify_must_be_succeeded_constraint(
                             solved_schedule,
                             weeks=weeks,
                             predecessor_rotations=req_body["fulfilled_by"],
                             successor_rotations=req_body["constraints"][
                                 "must_be_succeeded_by"
                             ],
-                        )
+                        ):
+                            return False
+                    case "must_respect_block_alignment":
+                        if not verify_must_respect_block_alignment_constraint(
+                            solved_schedule, weeks, rotation=req_body["fulfilled_by"]
+                        ):
+                            return False
                     case _:
                         raise NotImplementedError(
                             f"{constraint=} not a known constraint"
@@ -493,3 +499,37 @@ def test_minimal_available_weeks_case(minimal_available_weeks):
 
     assert starmap_verify_req_constraints(workers_with_reqs, weeks, solved_schedule)
     assert starmap_verify_rot_constraints(rotations, solved_schedule)
+
+
+def test_minimal_override_enforcement_case(minimal_with_overrides):
+    workers, rotations, weeks, requirements, overrides = minimal_with_overrides
+
+    workers_with_reqs = compose_requirements_to_workers(workers, requirements)
+
+    solved_schedule = generate_complete_schedule(
+        workers, rotations, weeks, requirements, overrides=overrides, requests=None
+    )
+
+    block = convert_melted_to_block_schedule(solved_schedule)
+
+    with pl.Config(tbl_cols=-1):
+        logger.trace(f"Testing overrides: {overrides}.")
+        logger.trace(block)
+
+    assert starmap_verify_req_constraints(workers_with_reqs, weeks, solved_schedule)
+    assert starmap_verify_rot_constraints(rotations, solved_schedule)
+    assert verify_overrides(solved_schedule, overrides)
+
+
+def verify_overrides(solved_schedule: pl.DataFrame, overrides: pl.DataFrame) -> bool:
+    matched_overrides = solved_schedule.join(
+        overrides, on=["name", "rotation", "monday_date"], how="inner"
+    )
+    if len(matched_overrides) != len(overrides):
+        logger.error("Didn't match all overrides to solved_schedule.")
+        logger.trace(f"Somehow {len(overrides)=} yet {len(matched_overrides)=}.")
+        raise ValueError("Didn't match all overrides to solved_schedule.")
+    for override in matched_overrides.iter_rows(named=True):
+        if override[config.CPMPY_RESULT_COLUMN] != override["override_value"]:
+            return False
+    return True
