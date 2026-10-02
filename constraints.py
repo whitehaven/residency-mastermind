@@ -81,8 +81,8 @@ def accumulate_req_constraints(
                             generate_must_be_succeeded_by_constraints(
                                 scheduled.filter(pl.col("name") == worker["name"]),
                                 weeks=weeks,
-                                rots_that_must_be_succeeded=req_body["fulfilled_by"],
-                                rots_that_must_succeed=req_body["constraints"][
+                                predecessor_rotations=req_body["fulfilled_by"],
+                                successor_rotations=req_body["constraints"][
                                     "must_be_succeeded_by"
                                 ],
                             )
@@ -389,13 +389,13 @@ def generate_prerequisite_constraints(
 def generate_must_be_succeeded_by_constraints(
     scheduled: pl.DataFrame,
     weeks: pl.DataFrame,
-    rots_that_must_be_succeeded: list[str],
-    rots_that_must_succeed: list[str],
+    predecessor_rotations: list[str],
+    successor_rotations: list[str],
 ) -> list[cp.core.Comparison]:
 
     cumu_constraints = []
-    for worker_sched_vars_df in scheduled.partition_by("name"):
-        for rot_that_must_be_succeeded in rots_that_must_be_succeeded:
+    for worker_df in scheduled.partition_by("name"):
+        for predecessor_rotation in predecessor_rotations:
             for this_week_idx in range(
                 weeks.shape[0] - 1
             ):  # MAYBE: could probably refactor to offset zipped iterator
@@ -403,13 +403,13 @@ def generate_must_be_succeeded_by_constraints(
                 this_week = weeks.row(this_week_idx, named=True)
                 next_week = weeks.row(next_week_idx, named=True)
 
-                this_week_var = scheduled.filter(
+                this_week_var = worker_df.filter(
                     (pl.col("monday_date") == this_week["monday_date"])
-                    & (pl.col("rotation") == rot_that_must_be_succeeded),
+                    & (pl.col("rotation") == predecessor_rotation),
                 )[config.CPMPY_VARIABLE_COLUMN].item()
-                next_week_vars = scheduled.filter(
+                next_week_vars = worker_df.filter(
                     (pl.col("monday_date") == next_week["monday_date"])
-                    & (pl.col("rotation").is_in(rots_that_must_succeed)),
+                    & (pl.col("rotation").is_in(successor_rotations)),
                 )[config.CPMPY_VARIABLE_COLUMN].to_list()
 
                 cumu_constraints.append(this_week_var.implies(cp.any(next_week_vars)))
