@@ -109,7 +109,15 @@ def starmap_verify_req_constraints(
                         ):
                             return False
                     case "must_be_succeeded_by":
-                        return False
+                        verify_must_be_succeeded_constraint(
+                            solved_schedule,
+                            weeks=weeks,
+                            predecessor_rotations=req_body["fulfilled_by"],
+                            successor_rotations=req_body["constraints"][
+                                "must_be_succeeded_by"
+                            ],
+                        )
+
                     case _:
                         raise NotImplementedError(
                             f"{constraint=} not a known constraint"
@@ -283,9 +291,46 @@ def verify_req_prerequisite(
 
 def verify_must_be_succeeded_constraint(
     solved_schedule: pl.DataFrame,
+    weeks: pl.DataFrame,
+    predecessor_rotations: list[str],
+    successor_rotations: list[str],
 ) -> bool:
-    logger.warning("verify_must_be_succeeded_constraint incomplete. returns false")
-    return False
+    for worker_df in solved_schedule.partition_by("name"):
+        for predecessor_rotation in predecessor_rotations:
+            for this_week_idx in range(
+                weeks.shape[0] - 1
+            ):  # MAYBE: could refactor to offset zipped iterator
+                next_week_idx = this_week_idx + 1
+                this_week = weeks.row(this_week_idx, named=True)
+                next_week = weeks.row(next_week_idx, named=True)
+
+                is_predecessor_scheduled_this_week = worker_df.filter(
+                    (pl.col("monday_date") == this_week["monday_date"])
+                    & (pl.col("rotation") == predecessor_rotation),
+                )[config.CPMPY_RESULT_COLUMN].item()
+
+                successors_scheduled_next_week = worker_df.filter(
+                    (pl.col("monday_date") == next_week["monday_date"])
+                    & (pl.col("rotation").is_in(successor_rotations)),
+                )[config.CPMPY_RESULT_COLUMN].sum()
+
+                if (
+                    is_predecessor_scheduled_this_week
+                    and successors_scheduled_next_week != 1
+                ):
+                    logger.debug(
+                        f"predecessor-successor check returning "
+                        f"{(is_predecessor_scheduled_this_week and successors_scheduled_next_week != 1)}"
+                    )
+                    logger.debug(
+                        f"{is_predecessor_scheduled_this_week=} "
+                        f"with {successors_scheduled_next_week=}"
+                    )
+                    logger.debug(
+                        f"{predecessor_rotation=} should come before {successor_rotations=}"
+                    )
+                    return False
+    return True
 
 
 def starmap_verify_rot_constraints(
