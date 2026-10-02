@@ -51,6 +51,10 @@ def generate_complete_schedule(
 
     workers_with_reqs = compose_requirements_to_workers(workers, requirement_sets)
 
+    logger.warning(
+        "No internal consistency checks are implemented. Errors will only be caught by failed indexing."
+    )
+
     every_worker_is_somewhere_constraints = (
         generate_every_worker_is_somewhere_constraints(scheduled)
     )

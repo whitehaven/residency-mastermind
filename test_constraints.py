@@ -296,6 +296,13 @@ def verify_req_prerequisite(
     return True
 
 
+def verify_must_respect_block_alignment_constraint(
+    solved_schedule: pl.DataFrame, weeks: pl.DataFrame, rotation: str
+) -> bool:
+    logger.warning("verify_must_respect_block_alignment_constraint not implemented")
+    return False
+
+
 def verify_must_be_succeeded_constraint(
     solved_schedule: pl.DataFrame,
     weeks: pl.DataFrame,
@@ -533,3 +540,24 @@ def verify_overrides(solved_schedule: pl.DataFrame, overrides: pl.DataFrame) -> 
         if override[config.CPMPY_RESULT_COLUMN] != override["override_value"]:
             return False
     return True
+
+
+def test_minimal_respect_block_alignment_case(minimal_with_respect_block_alignment):
+    workers, rotations, weeks, requirements = minimal_with_respect_block_alignment
+
+    workers_with_reqs = compose_requirements_to_workers(workers, requirements)
+
+    solved_schedule = generate_complete_schedule(
+        workers, rotations, weeks, requirements, overrides=None, requests=None
+    )
+
+    block = convert_melted_to_block_schedule(solved_schedule)
+
+    with pl.Config(tbl_cols=-1):
+        logger.trace(
+            f"Testing must_respect_block_alignment on {requirements['HS Rounding Senior']['fulfilled_by']}"
+        )
+        logger.trace(block)
+
+    assert starmap_verify_req_constraints(workers_with_reqs, weeks, solved_schedule)
+    assert starmap_verify_rot_constraints(rotations, solved_schedule)
