@@ -1,3 +1,5 @@
+import datetime
+
 import polars as pl
 from loguru import logger
 
@@ -357,6 +359,10 @@ def starmap_verify_rot_constraints(
                             week_schedule, rot_name, rot_body["min_workers_assigned"]
                         ):
                             return False
+                    case "unavailable_weeks":
+                        verify_rot_unavailable_weeks_constraint(
+                            solved_schedule, rot_name, constraint_body
+                        )
                     case _:
                         raise NotImplementedError(
                             f"{constraint_name=} not a known constraint"
@@ -393,6 +399,16 @@ def verify_rot_min_workers_constraint(
     return constraint_met
 
 
+def verify_rot_unavailable_weeks_constraint(
+    solved_schedule: pl.DataFrame, rotation, unavailable_weeks: list[datetime.date]
+) -> bool:
+    total_scheduled_during_unavailable_weeks = solved_schedule.filter(
+        (pl.col("rotation") == rotation)
+        & (pl.col("monday_date").is_in(unavailable_weeks))
+    )[config.CPMPY_RESULT_COLUMN].sum()
+    return total_scheduled_during_unavailable_weeks == 0
+
+
 def test_minimal_prerequisites_case(minimal_prerequisites_case):
     workers, rotations, weeks, requirements = minimal_prerequisites_case
 
@@ -423,6 +439,27 @@ def test_minimal_must_be_succeeded_by_case(minimal_must_be_succeeded_by_case):
     block = convert_melted_to_block_schedule(solved_schedule)
 
     with pl.Config(tbl_cols=-1):
+        logger.trace(block)
+
+    assert starmap_verify_req_constraints(workers_with_reqs, weeks, solved_schedule)
+    assert starmap_verify_rot_constraints(rotations, solved_schedule)
+
+
+def test_minimal_unavailable_weeks_case(minimal_unavailable_weeks):
+    workers, rotations, weeks, requirements = minimal_unavailable_weeks
+
+    workers_with_reqs = compose_requirements_to_workers(workers, requirements)
+
+    solved_schedule = generate_complete_schedule(
+        workers, rotations, weeks, requirements, overrides=None, requests=None
+    )
+
+    block = convert_melted_to_block_schedule(solved_schedule)
+
+    with pl.Config(tbl_cols=-1):
+        logger.trace(
+            f"Testing unavailable weeks: SOM unavailable for {rotations['Systems of Medicine']['unavailable_weeks']} weeks"
+        )
         logger.trace(block)
 
     assert starmap_verify_req_constraints(workers_with_reqs, weeks, solved_schedule)
