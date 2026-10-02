@@ -9,6 +9,7 @@ from constraints import (
     accumulate_req_constraints,
     accumulate_rotation_constraints,
     generate_every_worker_is_somewhere_constraints,
+    generate_override_enforcement_constraints,
 )
 from data_io import (
     compose_requirements_to_workers,
@@ -54,23 +55,31 @@ def generate_complete_schedule(
         generate_every_worker_is_somewhere_constraints(scheduled)
     )
     model += every_worker_is_somewhere_constraints
+    logger.info(f"Added {len(every_worker_is_somewhere_constraints)=} constraints.")
 
     requirement_constraints = accumulate_req_constraints(
         workers_with_reqs, rotations, weeks, scheduled
     )
     model += requirement_constraints
+    logger.info(f"Added {len(requirement_constraints)=} constraints.")
 
     rotations_constraints = accumulate_rotation_constraints(
         workers_with_reqs, rotations, weeks, scheduled
     )
 
     model += rotations_constraints
+    logger.info(f"Added {len(rotations_constraints)=} constraints.")
+
+    if overrides is not None:
+        override_constraints = generate_override_enforcement_constraints(
+            scheduled, overrides
+        )
+        model += override_constraints
+        logger.info(f"Added {len(override_constraints)=} constraints.")
+    logger.info("No override constraints specified.")
 
     logger.warning(
-        "TODO: Overrides functionality not implemented. Overrides will not be reflected in solutions nor unsatisfiability diagnostics."
-    )
-    logger.warning(
-        "TODO: Preference optimization not implemented. Preferences will not be reflected in solutions nor unsatisfiability diagnostics."
+        "TODO: Preference optimization not implemented. Passed preferences will not be reflected in solutions nor unsatisfiability diagnostics."
     )
 
     is_feasible = model.solve(

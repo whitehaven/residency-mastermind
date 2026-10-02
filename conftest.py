@@ -422,6 +422,50 @@ def minimal_available_weeks(
 
 
 @pytest.fixture(scope="session")
+def td_overrides_minimal():
+    overrides = pl.DataFrame(
+        [
+            {
+                "name": "Charles Chrysler",
+                "monday_date": datetime.date(2026, 7, 6),
+                "rotation": "Vacation",
+                "override_value": True,
+            },
+            {
+                "name": "Charles Chrysler",
+                "monday_date": datetime.date(2026, 7, 20),
+                "rotation": "Vacation",
+                "override_value": True,
+            },
+            {
+                "name": "Charles Chrysler",
+                "monday_date": datetime.date(2026, 7, 13),
+                "rotation": "Vacation",
+                "override_value": False,
+            },
+        ]
+    )
+    return overrides
+
+
+@pytest.fixture(scope="session")
+def minimal_with_overrides(
+    td_workers_three_simple: pl.DataFrame,
+    td_weeks_six_consecutive: pl.DataFrame,
+    td_rotations_gn_prp_vacation: dict[str, dict],
+    td_reqs_minimal_with_prereqs: dict[str, dict],
+    td_overrides_minimal: pl.DataFrame,
+):
+
+    workers = td_workers_three_simple
+    weeks = td_weeks_six_consecutive
+    rotations = td_rotations_gn_prp_vacation
+    requirements = td_reqs_minimal_with_prereqs
+    overrides = td_overrides_minimal
+    return workers, rotations, weeks, requirements, overrides
+
+
+@pytest.fixture(scope="session")
 def large_case_setup():
     workers = pl.DataFrame(
         [
