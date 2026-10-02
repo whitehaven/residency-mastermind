@@ -1,3 +1,5 @@
+import datetime
+
 import polars as pl
 import pytest
 
@@ -315,6 +317,51 @@ def td_reqs_for_must_be_succeeded_test():
 
 
 @pytest.fixture(scope="session")
+def td_reqs_for_unavailable_weeks_test():
+    requirements = {
+        "R2 Base": {
+            "HS Admitting Senior": {
+                "constraints": {
+                    "min_weeks": 2,
+                    "max_weeks": 4,
+                },
+                "fulfilled_by": [
+                    "Purple HS Senior",
+                ],
+            },
+            "Systems of Medicine": {
+                "constraints": {"min_weeks": 1, "max_weeks": 1},
+                "fulfilled_by": ["Systems of Medicine"],
+            },
+            "Vacation": {"constraints": {"max_weeks": 3}, "fulfilled_by": ["Vacation"]},
+        },
+        "R2 PCT": {},
+        "R2 Standard": {},
+    }
+    return requirements
+
+
+@pytest.fixture(scope="session")
+def td_rots_for_unavailable_weeks_test():
+    rotations = {
+        "Purple HS Senior": {
+            "min_workers_assigned": 1,
+            "max_workers_assigned": 1,
+        },
+        "Systems of Medicine": {
+            "unavailable_weeks": [
+                datetime.date(2026, 7, 6),
+                datetime.date(2026, 7, 13),  # leaving 2026-07-20 available
+                datetime.date(2026, 7, 27),  # leaving 2026-08-04
+                datetime.date(2026, 8, 11),
+            ]
+        },
+        "Vacation": {},
+    }
+    return rotations
+
+
+@pytest.fixture(scope="session")
 def minimal_must_be_succeeded_by_case(
     td_workers_three_simple: pl.DataFrame,
     td_weeks_six_consecutive: pl.DataFrame,
@@ -325,6 +372,20 @@ def minimal_must_be_succeeded_by_case(
     weeks = td_weeks_six_consecutive
     rotations = td_rotations_purple_must_be_succeeded_by_hosp
     requirements = td_reqs_for_must_be_succeeded_test
+    return workers, rotations, weeks, requirements
+
+
+@pytest.fixture(scope="session")
+def minimal_unavailable_weeks(
+    td_workers_three_simple: pl.DataFrame,
+    td_weeks_six_consecutive: pl.DataFrame,
+    td_rots_for_unavailable_weeks_test: dict[str, dict],
+    td_reqs_for_unavailable_weeks_test: dict[str, dict],
+):
+    workers = td_workers_three_simple
+    weeks = td_weeks_six_consecutive
+    rotations = td_rots_for_unavailable_weeks_test
+    requirements = td_reqs_for_unavailable_weeks_test
     return workers, rotations, weeks, requirements
 
 
