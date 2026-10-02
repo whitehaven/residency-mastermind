@@ -90,6 +90,14 @@ def accumulate_req_constraints(
                                 ],
                             )
                         )
+                    case "must_respect_block_alignment":
+                        cumu_constraints.extend(
+                            generate_respect_block_alignment_constraints(
+                                scheduled.filter(pl.col("name") == worker["name"]),
+                                weeks=weeks,
+                                rotations_affected=req_body["fulfilled_by"],
+                            )
+                        )
                     case _:
                         raise NotImplementedError(
                             f"{constraint=} not a known constraint"
@@ -139,6 +147,12 @@ def accumulate_rotation_constraints(
                     cumu_constraints.append(
                         generate_rot_available_weeks_constraint(
                             scheduled, rot_name, constraint_value
+                        )
+                    )
+                case "must_respect_block_alignment":
+                    cumu_constraints.append(
+                        generate_respect_block_alignment_constraints(
+                            scheduled, weeks, rot_name
                         )
                     )
                 case _:
@@ -245,6 +259,32 @@ def generate_rot_available_weeks_constraint(
         & (~pl.col("monday_date").is_in(available_weeks))
     )[config.CPMPY_VARIABLE_COLUMN].to_list()
     return cp.sum(every_unavailable_var) == 0
+
+
+def generate_respect_block_alignment_constraints(
+    scheduled: pl.DataFrame, weeks: pl.DataFrame, rotations_affected: list[str]
+) -> list[cp.core.Comparison]:
+    cumu_constraints = []
+    for rotation_affected in rotations_affected:
+        this_rot_scheduled = scheduled.filter(pl.col("rotation") == rotation_affected)
+        for worker_this_rot_scheduled in this_rot_scheduled.partition_by("name"):
+            for week_0, week_1 in zip(range(len(weeks)), range(1, len(weeks))):
+                this_week = weeks[week_0]
+                next_week = weeks[week_1]
+
+                if this_week["block"].item() != next_week["block"].item():
+                    this_week_scheduled: cp.BoolVal = this_week.join(
+                        worker_this_rot_scheduled, on="monday_date", how="left"
+                    )[config.CPMPY_VARIABLE_COLUMN].item()
+
+                    next_week_scheduled: cp.BoolVal = next_week.join(
+                        worker_this_rot_scheduled, on="monday_date", how="left"
+                    )[config.CPMPY_VARIABLE_COLUMN].item()
+
+                    cumu_constraints.append(
+                        this_week_scheduled.implies(~next_week_scheduled)
+                    )
+    return cumu_constraints
 
 
 def generate_min_weeks_req_constraints(

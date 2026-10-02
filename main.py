@@ -19,6 +19,7 @@ from data_io import (
 
 logger.remove()
 logger.add(sys.stderr, level="TRACE")
+logger.add("logs/run_{time:YYYY-MM-DD_HH-mm-ss}.log", level="TRACE", rotation="10 MB")
 
 
 def generate_complete_schedule(
@@ -50,6 +51,10 @@ def generate_complete_schedule(
     scheduled = generate_pl_wrapped_boolvar(workers, rotations, weeks)
 
     workers_with_reqs = compose_requirements_to_workers(workers, requirement_sets)
+
+    logger.warning(
+        "No internal consistency checks are implemented. Errors will only be caught by failed indexing."
+    )
 
     every_worker_is_somewhere_constraints = (
         generate_every_worker_is_somewhere_constraints(scheduled)
@@ -90,7 +95,7 @@ def generate_complete_schedule(
 
     if not is_feasible:
         logger.error(get_MUS_output(model))
-        raise ValueError("Infeasible, MUS output to log.")
+        raise RuntimeError("Infeasible, MUS output to log.")
 
     logger.success("Feasibility confirmed.")
     solved_scheduled = scheduled.with_columns(

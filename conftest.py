@@ -114,6 +114,19 @@ def td_workers_three_simple():
 
 
 @pytest.fixture(scope="session")
+def td_workers_four_simple():
+    workers = pl.DataFrame(
+        [
+            {"name": "Aaron Aaronson", "year": "R2", "track": "Standard"},
+            {"name": "Bill Byornsen", "year": "R2", "track": "Standard"},
+            {"name": "Charles Chrysler", "year": "R2", "track": "Standard"},
+            {"name": "Daniel Darrington", "year": "R2", "track": "Standard"},
+        ]
+    )
+    return workers
+
+
+@pytest.fixture(scope="session")
 def td_weeks_six_consecutive():
     weeks = pl.DataFrame(
         [
@@ -123,6 +136,23 @@ def td_weeks_six_consecutive():
             {"monday_date": "2026-07-27", "week": 4, "block": 1},
             {"monday_date": "2026-08-04", "week": 5, "block": 2},
             {"monday_date": "2026-08-11", "week": 6, "block": 2},
+        ]
+    ).with_columns(pl.col("monday_date").str.to_date())
+    return weeks
+
+
+@pytest.fixture(scope="session")
+def td_weeks_eight_consecutive():
+    weeks = pl.DataFrame(
+        [
+            {"monday_date": "2026-07-06", "week": 1, "block": 1},
+            {"monday_date": "2026-07-13", "week": 2, "block": 1},
+            {"monday_date": "2026-07-20", "week": 3, "block": 1},
+            {"monday_date": "2026-07-27", "week": 4, "block": 1},
+            {"monday_date": "2026-08-04", "week": 5, "block": 2},
+            {"monday_date": "2026-08-11", "week": 6, "block": 2},
+            {"monday_date": "2026-08-18", "week": 7, "block": 2},
+            {"monday_date": "2026-08-25", "week": 8, "block": 2},
         ]
     ).with_columns(pl.col("monday_date").str.to_date())
     return weeks
@@ -380,6 +410,51 @@ def td_rots_for_available_weeks_test():
 
 
 @pytest.fixture(scope="session")
+def td_rots_for_respect_block_alignment_test():
+    rotations = {
+        "Green HS Senior": {
+            "min_workers_assigned": 1,
+            "max_workers_assigned": 1,
+        },
+        "Orange HS Senior": {
+            "min_workers_assigned": 1,
+            "max_workers_assigned": 1,
+        },
+        "POCUS Elective": {"max_workers_assigned": 1},
+        "Vacation": {},
+    }
+    return rotations
+
+
+@pytest.fixture(scope="session")
+def td_reqs_for_respect_block_alignment_test():
+    requirements = {
+        "R2 Base": {
+            "HS Rounding Senior": {
+                "constraints": {
+                    "min_weeks": 2,
+                    "max_weeks": 4,
+                    "min_contiguity": 2,
+                    "must_respect_block_alignment": True,
+                },
+                "fulfilled_by": [
+                    "Green HS Senior",
+                    "Orange HS Senior",
+                ],
+            },
+            "POCUS Elective": {
+                "constraints": {"min_weeks": 0, "max_weeks": 2},
+                "fulfilled_by": ["POCUS Elective"],
+            },
+            "Vacation": {"constraints": {"max_weeks": 3}, "fulfilled_by": ["Vacation"]},
+        },
+        "R2 PCT": {},
+        "R2 Standard": {},
+    }
+    return requirements
+
+
+@pytest.fixture(scope="session")
 def minimal_must_be_succeeded_by_case(
     td_workers_three_simple: pl.DataFrame,
     td_weeks_six_consecutive: pl.DataFrame,
@@ -456,13 +531,26 @@ def minimal_with_overrides(
     td_reqs_minimal_with_prereqs: dict[str, dict],
     td_overrides_minimal: pl.DataFrame,
 ):
-
     workers = td_workers_three_simple
     weeks = td_weeks_six_consecutive
     rotations = td_rotations_gn_prp_vacation
     requirements = td_reqs_minimal_with_prereqs
     overrides = td_overrides_minimal
     return workers, rotations, weeks, requirements, overrides
+
+
+@pytest.fixture(scope="session")
+def minimal_with_respect_block_alignment(
+    td_workers_four_simple: pl.DataFrame,
+    td_weeks_eight_consecutive: pl.DataFrame,
+    td_rots_for_respect_block_alignment_test: dict[str, dict],
+    td_reqs_for_respect_block_alignment_test: dict[str, dict],
+):
+    workers = td_workers_four_simple
+    weeks = td_weeks_eight_consecutive
+    rotations = td_rots_for_respect_block_alignment_test
+    requirements = td_reqs_for_respect_block_alignment_test
+    return workers, rotations, weeks, requirements
 
 
 @pytest.fixture(scope="session")

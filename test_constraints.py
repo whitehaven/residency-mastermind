@@ -60,6 +60,7 @@ def test_max_contiguity_constraints(minimal_max_contiguity_case):
 def starmap_verify_req_constraints(
     workers_with_reqs: pl.DataFrame, weeks: pl.DataFrame, solved_schedule: pl.DataFrame
 ):
+    constraints_passed = 0
     for worker in workers_with_reqs.iter_rows(named=True):
         for req_name, req_body in worker["req_set"].items():
             for constraint in req_body["constraints"]:
@@ -122,13 +123,19 @@ def starmap_verify_req_constraints(
                             return False
                     case "must_respect_block_alignment":
                         if not verify_must_respect_block_alignment_constraint(
-                            solved_schedule, weeks, rotation=req_body["fulfilled_by"]
+                            solved_schedule,
+                            weeks=weeks,
+                            rotations_affected=req_body["fulfilled_by"],
                         ):
                             return False
                     case _:
                         raise NotImplementedError(
                             f"{constraint=} not a known constraint"
                         )
+                constraints_passed += 1
+    logger.success(
+        f"All requirement-based constraints passed. ({constraints_passed} evaluations completed.)"
+    )
     return True
 
 
@@ -296,6 +303,35 @@ def verify_req_prerequisite(
     return True
 
 
+def verify_must_respect_block_alignment_constraint(
+    solved_schedule: pl.DataFrame, weeks: pl.DataFrame, rotations_affected: list[str]
+) -> bool:
+    for rotation_affected in rotations_affected:
+        this_rot_scheduled = solved_schedule.filter(
+            pl.col("rotation") == rotation_affected
+        )
+        for worker_this_rot_scheduled in this_rot_scheduled.partition_by("name"):
+            for week_0, week_1 in zip(range(len(weeks)), range(1, len(weeks))):
+                this_week = weeks[week_0]
+                next_week = weeks[week_1]
+
+                do_week_0_and_week_1_cross_block = (
+                    this_week["block"].item() != next_week["block"].item()
+                )
+                if do_week_0_and_week_1_cross_block:
+                    this_week_scheduled: bool = this_week.join(
+                        worker_this_rot_scheduled, on="monday_date", how="left"
+                    )[config.CPMPY_RESULT_COLUMN].item()
+
+                    next_week_scheduled: bool = next_week.join(
+                        worker_this_rot_scheduled, on="monday_date", how="left"
+                    )[config.CPMPY_RESULT_COLUMN].item()
+
+                    if this_week_scheduled and next_week_scheduled:
+                        return False
+    return True
+
+
 def verify_must_be_succeeded_constraint(
     solved_schedule: pl.DataFrame,
     weeks: pl.DataFrame,
@@ -343,6 +379,7 @@ def verify_must_be_succeeded_constraint(
 def starmap_verify_rot_constraints(
     rotations: dict[str, dict], solved_schedule: pl.DataFrame
 ) -> bool:
+    constraints_passed = 0
     for rot_name, rot_body in rotations.items():
         for constraint_name, constraint_body in rot_body.items():
             for week_schedule in solved_schedule.partition_by("monday_date"):
@@ -371,6 +408,10 @@ def starmap_verify_rot_constraints(
                         raise NotImplementedError(
                             f"{constraint_name=} not a known constraint"
                         )
+            constraints_passed += 1
+    logger.success(
+        f"All rotation-based constraints passed. ({constraints_passed} evaluations completed.)"
+    )
     return True
 
 
@@ -529,7 +570,30 @@ def verify_overrides(solved_schedule: pl.DataFrame, overrides: pl.DataFrame) -> 
         logger.error("Didn't match all overrides to solved_schedule.")
         logger.trace(f"Somehow {len(overrides)=} yet {len(matched_overrides)=}.")
         raise ValueError("Didn't match all overrides to solved_schedule.")
+
     for override in matched_overrides.iter_rows(named=True):
         if override[config.CPMPY_RESULT_COLUMN] != override["override_value"]:
             return False
+    logger.success(f"All overrides (n={len(matched_overrides)}) verified in solution.")
     return True
+
+
+def test_minimal_respect_block_alignment_case(minimal_with_respect_block_alignment):
+    workers, rotations, weeks, requirements = minimal_with_respect_block_alignment
+
+    workers_with_reqs = compose_requirements_to_workers(workers, requirements)
+
+    solved_schedule = generate_complete_schedule(
+        workers, rotations, weeks, requirements, overrides=None, requests=None
+    )
+
+    block = convert_melted_to_block_schedule(solved_schedule)
+
+    with pl.Config(tbl_cols=-1, tbl_width_chars=-1):
+        logger.debug(
+            f"Completed schedule for test of must_respect_block_alignment on rotations: {requirements['R2 Base']['HS Rounding Senior']['fulfilled_by']}"
+        )
+        logger.debug(block)
+
+    assert starmap_verify_req_constraints(workers_with_reqs, weeks, solved_schedule)
+    assert starmap_verify_rot_constraints(rotations, solved_schedule)
