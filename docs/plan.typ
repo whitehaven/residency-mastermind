@@ -113,9 +113,9 @@ Requirements are superceded from general to specific; e.g., if an R2 needs 8 wee
 this is raised to 12 weeks. The Primary Care Track set of requirements supercedes the base R2 set.
 
 Note there is no (good) way to fully delete requirements by supercession - all residents are treated as having a track,
-i.e., an R2 planning on being a hospitalist is given the "Standard" track. #footnote()[In theory, the requirement's `min_weeks` parameters could be set to 0 in supercession, effectively deleting the requirement. This is hideous, however, and should be avoided.]
-
-#todo()[Complete set composition code]
+i.e., an R2 planning on being a hospitalist is given the "Standard" track. #footnote()[In theory, the requirement's
+  `min_weeks` parameters could be set to 0 in supercession, effectively deleting the requirement. This is hideous,
+  however, and should be avoided.]
 
 == Scheduled variables blocks
 Created from cartesian product (`pl.DataFrame.join(how="cross,...`) of Workers, Rotations and Weeks.
@@ -167,6 +167,15 @@ Internally `polars.DataFrame` that is created at runtime.
 - when `week_start` and `week_end` are not equal, unclear what to do with bonus/penalty - probably would divide over
   minimum size of rotation - see below.
 
+
+= Input Validation
+Check
+
+= Constraint Generation
+Process each logical group, generating the `cpmpy` expressions to express all constraints.
+
+= Optimization Function Generation
+
 ==== Handling of multi-week bonus/penalty
 
 The primary issue is of fairness between residents - if the same penalty or bonus was applied in a multi-week case, this
@@ -215,24 +224,16 @@ probably makes it unimportant.
 )
 If resident asks for very large range, could get into issues with rounding toward 0.
 
-= Input Validation
-Check
 
-= Constraint Generation
-Process each logical group, generating the `cpmpy` expressions to express all constraints.
-
-$forall$
-
-= Optimization Function Generation
 
 = Solve Model
 
 = Error/Failure Handling
 Using `cpmpy.tools.MUS`, we can generate a minimum unsolvable set of constraints - this can be hard to trace back to the
-originating constraint, but can help diagnose contradictory constraints.
+originating constraint, but can help diagnose contradictory constraints. See @cpmpy-docs for details.
 
 = Versioning
 See `pyproject.toml`.
 
 #outline(title: "TODOs", target: figure.where(kind: "todo"))
-
+#bibliography("refs.bib",style:"ieee")
