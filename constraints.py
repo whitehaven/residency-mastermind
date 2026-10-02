@@ -134,6 +134,12 @@ def accumulate_rotation_constraints(
                             scheduled, rot_name, constraint_value
                         )
                     )
+                case "available_weeks":
+                    cumu_constraints.append(
+                        generate_rot_available_weeks_constraint(
+                            scheduled, rot_name, constraint_value
+                        )
+                    )
                 case _:
                     raise NotImplementedError(
                         f"{constraint_name=} not a known constraint"
@@ -222,10 +228,20 @@ def generate_rot_min_workers_constraints(
 
 def generate_rot_unavailable_weeks_constraint(
     scheduled: pl.DataFrame, rotation: str, unavailable_weeks: list[datetime.date]
-) -> list[cp.core.Comparison]:
+) -> cp.core.Comparison:
     every_unavailable_var = scheduled.filter(
         (pl.col("rotation") == rotation)
         & (pl.col("monday_date").is_in(unavailable_weeks))
+    )[config.CPMPY_VARIABLE_COLUMN].to_list()
+    return cp.sum(every_unavailable_var) == 0
+
+
+def generate_rot_available_weeks_constraint(
+    scheduled: pl.DataFrame, rotation: str, available_weeks: list[datetime.date]
+) -> cp.core.Comparison:
+    every_unavailable_var = scheduled.filter(
+        (pl.col("rotation") == rotation)
+        & (~pl.col("monday_date").is_in(available_weeks))
     )[config.CPMPY_VARIABLE_COLUMN].to_list()
     return cp.sum(every_unavailable_var) == 0
 
