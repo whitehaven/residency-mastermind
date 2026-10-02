@@ -119,7 +119,6 @@ def starmap_verify_req_constraints(
                                 "must_be_succeeded_by"
                             ],
                         )
-
                     case _:
                         raise NotImplementedError(
                             f"{constraint=} not a known constraint"
@@ -338,13 +337,6 @@ def verify_must_be_succeeded_constraint(
 def starmap_verify_rot_constraints(
     rotations: dict[str, dict], solved_schedule: pl.DataFrame
 ) -> bool:
-    """
-    Dispatcher for rotation constraints.
-
-    :param solved_schedule:
-    :param rotations:
-    :return:
-    """
     for rot_name, rot_body in rotations.items():
         for constraint_name, constraint_body in rot_body.items():
             for week_schedule in solved_schedule.partition_by("monday_date"):
@@ -360,9 +352,15 @@ def starmap_verify_rot_constraints(
                         ):
                             return False
                     case "unavailable_weeks":
-                        verify_rot_unavailable_weeks_constraint(
+                        if not verify_rot_unavailable_weeks_constraint(
                             solved_schedule, rot_name, constraint_body
-                        )
+                        ):
+                            return False
+                    case "available_weeks":
+                        if not verify_rot_available_weeks_constraint(
+                            solved_schedule, rot_name, constraint_body
+                        ):
+                            return False
                     case _:
                         raise NotImplementedError(
                             f"{constraint_name=} not a known constraint"
@@ -405,6 +403,16 @@ def verify_rot_unavailable_weeks_constraint(
     total_scheduled_during_unavailable_weeks = solved_schedule.filter(
         (pl.col("rotation") == rotation)
         & (pl.col("monday_date").is_in(unavailable_weeks))
+    )[config.CPMPY_RESULT_COLUMN].sum()
+    return total_scheduled_during_unavailable_weeks == 0
+
+
+def verify_rot_available_weeks_constraint(
+    solved_schedule: pl.DataFrame, rotation, available_weeks: list[datetime.date]
+) -> bool:
+    total_scheduled_during_unavailable_weeks = solved_schedule.filter(
+        (pl.col("rotation") == rotation)
+        & (~pl.col("monday_date").is_in(available_weeks))
     )[config.CPMPY_RESULT_COLUMN].sum()
     return total_scheduled_during_unavailable_weeks == 0
 
@@ -459,6 +467,27 @@ def test_minimal_unavailable_weeks_case(minimal_unavailable_weeks):
     with pl.Config(tbl_cols=-1):
         logger.trace(
             f"Testing unavailable weeks: SOM unavailable for {rotations['Systems of Medicine']['unavailable_weeks']} weeks"
+        )
+        logger.trace(block)
+
+    assert starmap_verify_req_constraints(workers_with_reqs, weeks, solved_schedule)
+    assert starmap_verify_rot_constraints(rotations, solved_schedule)
+
+
+def test_minimal_available_weeks_case(minimal_available_weeks):
+    workers, rotations, weeks, requirements = minimal_available_weeks
+
+    workers_with_reqs = compose_requirements_to_workers(workers, requirements)
+
+    solved_schedule = generate_complete_schedule(
+        workers, rotations, weeks, requirements, overrides=None, requests=None
+    )
+
+    block = convert_melted_to_block_schedule(solved_schedule)
+
+    with pl.Config(tbl_cols=-1):
+        logger.trace(
+            f"Testing available weeks: SOM available for {rotations['Systems of Medicine']['available_weeks']}."
         )
         logger.trace(block)
 

@@ -317,7 +317,7 @@ def td_reqs_for_must_be_succeeded_test():
 
 
 @pytest.fixture(scope="session")
-def td_reqs_for_unavailable_weeks_test():
+def td_reqs_for_week_availability_test():
     requirements = {
         "R2 Base": {
             "HS Admitting Senior": {
@@ -362,6 +362,24 @@ def td_rots_for_unavailable_weeks_test():
 
 
 @pytest.fixture(scope="session")
+def td_rots_for_available_weeks_test():
+    rotations = {
+        "Purple HS Senior": {
+            "min_workers_assigned": 1,
+            "max_workers_assigned": 1,
+        },
+        "Systems of Medicine": {
+            "available_weeks": [
+                datetime.date(2026, 7, 6),
+                datetime.date(2026, 7, 27),
+            ]
+        },
+        "Vacation": {},
+    }
+    return rotations
+
+
+@pytest.fixture(scope="session")
 def minimal_must_be_succeeded_by_case(
     td_workers_three_simple: pl.DataFrame,
     td_weeks_six_consecutive: pl.DataFrame,
@@ -380,12 +398,26 @@ def minimal_unavailable_weeks(
     td_workers_three_simple: pl.DataFrame,
     td_weeks_six_consecutive: pl.DataFrame,
     td_rots_for_unavailable_weeks_test: dict[str, dict],
-    td_reqs_for_unavailable_weeks_test: dict[str, dict],
+    td_reqs_for_week_availability_test: dict[str, dict],
 ):
     workers = td_workers_three_simple
     weeks = td_weeks_six_consecutive
     rotations = td_rots_for_unavailable_weeks_test
-    requirements = td_reqs_for_unavailable_weeks_test
+    requirements = td_reqs_for_week_availability_test
+    return workers, rotations, weeks, requirements
+
+
+@pytest.fixture(scope="session")
+def minimal_available_weeks(
+    td_workers_three_simple: pl.DataFrame,
+    td_weeks_six_consecutive: pl.DataFrame,
+    td_rots_for_available_weeks_test: dict[str, dict],
+    td_reqs_for_week_availability_test: dict[str, dict],
+):
+    workers = td_workers_three_simple
+    weeks = td_weeks_six_consecutive
+    rotations = td_rots_for_available_weeks_test
+    requirements = td_reqs_for_week_availability_test
     return workers, rotations, weeks, requirements
 
 
