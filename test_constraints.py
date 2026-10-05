@@ -12,7 +12,7 @@ def test_starmap_constraints_minimal_case(minimal_case_setup):
     workers, rotations, weeks, requirements = minimal_case_setup
     workers_with_reqs = compose_requirements_to_workers(workers, requirements)
     solved_schedule = generate_complete_schedule(
-        workers, rotations, weeks, requirements, overrides=None, requests=None
+        workers, rotations, weeks, requirements, overrides=None, preferences=None
     )
 
     assert starmap_verify_req_constraints(workers_with_reqs, weeks, solved_schedule)
@@ -23,7 +23,7 @@ def test_min_contiguity_constraints(minimal_min_contiguity_case):
     workers, rotations, weeks, requirements = minimal_min_contiguity_case
     workers_with_reqs = compose_requirements_to_workers(workers, requirements)
     solved_schedule = generate_complete_schedule(
-        workers, rotations, weeks, requirements, overrides=None, requests=None
+        workers, rotations, weeks, requirements, overrides=None, preferences=None
     )
 
     block = convert_melted_to_block_schedule(solved_schedule)
@@ -39,7 +39,7 @@ def test_max_contiguity_constraints(minimal_max_contiguity_case):
     workers, rotations, weeks, requirements = minimal_max_contiguity_case
     workers_with_reqs = compose_requirements_to_workers(workers, requirements)
     solved_schedule = generate_complete_schedule(
-        workers, rotations, weeks, requirements, overrides=None, requests=None
+        workers, rotations, weeks, requirements, overrides=None, preferences=None
     )
 
     assert starmap_verify_req_constraints(workers_with_reqs, weeks, solved_schedule)
@@ -470,7 +470,7 @@ def test_minimal_prerequisites_case(minimal_prerequisites_case):
     workers_with_reqs = compose_requirements_to_workers(workers, requirements)
 
     solved_schedule = generate_complete_schedule(
-        workers, rotations, weeks, requirements, overrides=None, requests=None
+        workers, rotations, weeks, requirements, overrides=None, preferences=None
     )
 
     block = convert_melted_to_block_schedule(solved_schedule)
@@ -488,7 +488,7 @@ def test_minimal_must_be_succeeded_by_case(minimal_must_be_succeeded_by_case):
     workers_with_reqs = compose_requirements_to_workers(workers, requirements)
 
     solved_schedule = generate_complete_schedule(
-        workers, rotations, weeks, requirements, overrides=None, requests=None
+        workers, rotations, weeks, requirements, overrides=None, preferences=None
     )
 
     block = convert_melted_to_block_schedule(solved_schedule)
@@ -506,7 +506,7 @@ def test_minimal_unavailable_weeks_case(minimal_unavailable_weeks):
     workers_with_reqs = compose_requirements_to_workers(workers, requirements)
 
     solved_schedule = generate_complete_schedule(
-        workers, rotations, weeks, requirements, overrides=None, requests=None
+        workers, rotations, weeks, requirements, overrides=None, preferences=None
     )
 
     block = convert_melted_to_block_schedule(solved_schedule)
@@ -527,7 +527,7 @@ def test_minimal_available_weeks_case(minimal_available_weeks):
     workers_with_reqs = compose_requirements_to_workers(workers, requirements)
 
     solved_schedule = generate_complete_schedule(
-        workers, rotations, weeks, requirements, overrides=None, requests=None
+        workers, rotations, weeks, requirements, overrides=None, preferences=None
     )
 
     block = convert_melted_to_block_schedule(solved_schedule)
@@ -548,7 +548,7 @@ def test_minimal_override_enforcement_case(minimal_with_overrides):
     workers_with_reqs = compose_requirements_to_workers(workers, requirements)
 
     solved_schedule = generate_complete_schedule(
-        workers, rotations, weeks, requirements, overrides=overrides, requests=None
+        workers, rotations, weeks, requirements, overrides=overrides, preferences=None
     )
 
     block = convert_melted_to_block_schedule(solved_schedule)
@@ -584,7 +584,7 @@ def test_minimal_respect_block_alignment_case(minimal_with_respect_block_alignme
     workers_with_reqs = compose_requirements_to_workers(workers, requirements)
 
     solved_schedule = generate_complete_schedule(
-        workers, rotations, weeks, requirements, overrides=None, requests=None
+        workers, rotations, weeks, requirements, overrides=None, preferences=None
     )
 
     block = convert_melted_to_block_schedule(solved_schedule)

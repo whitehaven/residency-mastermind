@@ -5,6 +5,8 @@ import polars as pl
 
 import config
 
+# hold on, could we not just tack a preferences column onto `scheduled`?
+
 
 def generate_blank_preferences_df(
     resident_list: list, rotations_list: list, weeks_list: list
@@ -34,28 +36,14 @@ def generate_blank_preferences_df(
     blank_preferences = blank_preferences.with_columns(preference=pl.lit(0))
     return blank_preferences
 
+
 def create_preferences_objective(
     scheduled: pl.DataFrame, preferences: pl.DataFrame
-) -> int | cp.core.Operator:
-    """
-    Create a preference-based objective function for the scheduling model.
+) -> cp.core.Operator:
 
-    It will be maximized, therefore higher is more likely to be respected.
-
-    Args:
-        scheduled: DataFrame with boolean variables
-        preferences: DataFrame with preference scores
-
-    Returns:
-        cpmpy expression representing the objective to maximize
-
-    Example:
-        # High positive score for desired vacation week
-        # Negative score for undesirable assignments
-        # Zero score for neutral assignments
-    """
-
-    joined = join_preferences_with_scheduled(scheduled, preferences)
+    joined = preferences.join(
+        scheduled, on=["name", "monday_date", "rotation"], how="left"
+    )
 
     # Create weighted sum: sum(boolvar * preference_score)
     objective_terms = []
@@ -73,18 +61,8 @@ def create_preferences_objective(
 def calculate_total_preference_satisfaction(
     solved_schedule: pl.DataFrame, preferences: pl.DataFrame
 ) -> int:
-    """
-    Calculate total preference satisfaction from a solved schedule.
-
-    Args:
-        solved_schedule: DataFrame with solved boolean results
-        preferences: DataFrame with preference scores
-
-    Returns:
-        Total preference score (sum of preference * scheduled_boolean)
-    """
     joined = solved_schedule.join(
-        preferences, on=["resident", "rotation", "week"], how="inner"
+        preferences, on=["name", "monday_date", "rotation"], how="left"
     )
 
     total_score = (

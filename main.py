@@ -16,9 +16,10 @@ from data_io import (
     generate_pl_wrapped_boolvar,
     get_MUS_output,
 )
+from optimization import create_preferences_objective
 
 logger.remove()
-logger.add(sys.stderr, level="TRACE")
+logger.add(sys.stderr, level=config.LOGGER_OUTPUT_LEVEL)
 logger.add("logs/run_{time:YYYY-MM-DD_HH-mm-ss}.log", level="TRACE", rotation="10 MB")
 
 
@@ -28,7 +29,7 @@ def generate_complete_schedule(
     weeks: pl.DataFrame,
     requirement_sets: dict[str, dict],
     overrides: pl.DataFrame | None,
-    requests: pl.DataFrame | None,
+    preferences: pl.DataFrame | None,
 ) -> pl.DataFrame:
     model = cp.Model()
 
@@ -65,11 +66,15 @@ def generate_complete_schedule(
         )
         model += override_constraints
         logger.info(f"Added {len(override_constraints)=} constraints.")
-    logger.info("No override constraints specified.")
+    else:
+        logger.info("No override constraints specified.")
 
-    logger.warning(
-        "TODO: Preference optimization not implemented. Passed preferences will not be reflected in solutions nor unsatisfiability diagnostics."
-    )
+    if preferences is not None:
+        preferences_objective = create_preferences_objective(scheduled, preferences)
+        model.maximize(preferences_objective)
+        logger.info("Added preferences objective.")
+    else:
+        logger.info("No preferences specified, solving for feasibility only.")
 
     is_feasible = model.solve(
         solver=config.DEFAULT_CPMPY_SOLVER,
