@@ -30,22 +30,6 @@ def generate_complete_schedule(
     overrides: pl.DataFrame | None,
     requests: pl.DataFrame | None,
 ) -> pl.DataFrame:
-    """
-    inputs
-        [later, assumes completed] read files
-        [later] validation
-        [x] generation of cpmpy variable df `scheduled`
-        requirement sets composition
-    constraints
-        Requirement set enforcement (for each requirement group)
-        overrides
-    optimization
-    results
-        unsatisfiability diagnostics
-        export
-
-        :return: solved_schedule : pl.DataFrame := completed schedule, is `scheduled` above with additional column indicating solved bool for that coordinate
-    """
     model = cp.Model()
 
     scheduled = generate_pl_wrapped_boolvar(workers, rotations, weeks)
