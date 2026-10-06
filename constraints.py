@@ -27,6 +27,8 @@ def accumulate_req_constraints(
 
     for worker in workers_with_reqsets.iter_rows(named=True):
         for req_name, req_body in worker["req_set"].items():
+            logger.trace(f"{req_name=}: {req_body=}")
+            logger.trace(f"{worker}")
             for constraint in req_body["constraints"]:
                 match constraint:
                     case "max_weeks":

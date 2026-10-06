@@ -593,23 +593,3 @@ def test_minimal_respect_block_alignment_case(minimal_with_respect_block_alignme
 
     assert starmap_verify_req_constraints(workers_with_reqs, weeks, solved_schedule)
     assert starmap_verify_rot_constraints(rotations, solved_schedule)
-
-
-def test_real_data_2025_case_constraints_only(real_2025_inputs):
-    workers, rotations, weeks, requirements = real_2025_inputs
-
-    workers_with_reqs = compose_requirements_to_workers(workers, requirements)
-
-    solved_schedule = generate_complete_schedule(
-        workers, rotations, weeks, requirements, overrides=None, preferences=None
-    )
-    block = convert_melted_to_block_schedule(solved_schedule)
-
-    with pl.Config(tbl_cols=-1, tbl_width_chars=-1):
-        logger.trace(
-            "Full test run based on real inputs from 2025 (with names changed)"
-        )
-        logger.trace(block)
-
-    assert starmap_verify_req_constraints(workers_with_reqs, weeks, solved_schedule)
-    assert starmap_verify_rot_constraints(rotations, solved_schedule)

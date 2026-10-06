@@ -603,3 +603,408 @@ def minimal_with_preferences_case(
     overrides = None
     preferences = td_preferences_minimal
     return workers, rotations, weeks, requirements, overrides, preferences
+
+
+@pytest.fixture(scope="session")
+def real_2025_case_constraints_only():
+    workers = pl.DataFrame(
+        [
+            {"name": "JBe", "track": "Standard", "year": "R3"},
+            {"name": "JKa", "track": "Fellowship", "year": "R3"},
+            {"name": "NKi", "track": "PCT", "year": "R3"},
+            {"name": "BLe", "track": "PCT", "year": "R3"},
+            {"name": "SNe", "track": "PCT", "year": "R3"},
+            {"name": "IOl", "track": "PCT", "year": "R3"},
+            {"name": "ASc", "track": "Standard", "year": "R3"},
+            {"name": "TSe", "track": "Standard", "year": "R3"},
+            {"name": "LSz", "track": "Standard", "year": "R3"},
+            {"name": "EBr", "track": "Fellowship", "year": "R3"},
+            {"name": "MAd", "track": "Standard", "year": "R2"},
+            {"name": "JAz", "track": "Standard", "year": "R2"},
+            {"name": "NBr", "track": "Standard", "year": "R2"},
+            {"name": "ACh", "track": "Fellowship", "year": "R2"},
+            {"name": "CGo", "track": "PCT", "year": "R2"},
+            {"name": "AKa", "track": "Standard", "year": "R2"},
+            {"name": "CLe", "track": "Fellowship", "year": "R2"},
+            {"name": "CLo", "track": "Fellowship", "year": "R2"},
+            {"name": "ASw", "track": "Standard", "year": "R2"},
+            {"name": "AWe", "track": "PCT", "year": "R2"},
+        ]
+    )
+    rotations = {
+        "Green HS Senior": {
+            "minimum_residents_assigned": 1,
+            "maximum_residents_assigned": 1,
+        },
+        "Orange HS Senior": {
+            "minimum_residents_assigned": 1,
+            "maximum_residents_assigned": 1,
+        },
+        "Consults": {
+            "minimum_residents_assigned": 0,
+            "maximum_residents_assigned": 2,
+        },
+        "SHMC ICU Senior": {
+            "minimum_residents_assigned": 1,
+            "maximum_residents_assigned": 1,
+        },
+        "SHMC CICU": {
+            "minimum_residents_assigned": 0,
+            "maximum_residents_assigned": 1,
+        },
+        "Night Senior": {
+            "minimum_residents_assigned": 1,
+            "maximum_residents_assigned": 1,
+        },
+        "STHC Senior": {
+            "minimum_residents_assigned": 1,
+            "maximum_residents_assigned": 6,
+        },
+        "Vacation": {
+            "minimum_residents_assigned": 0,
+            "maximum_residents_assigned": 30,
+        },
+        "Systems of Medicine": {
+            "minimum_residents_assigned": 0,
+            "maximum_residents_assigned": 7,
+        },
+        "IP Cardiology Senior": {
+            "minimum_residents_assigned": 0,
+            "maximum_residents_assigned": 1,
+        },
+        "Geriatrics": {
+            "minimum_residents_assigned": 0,
+            "maximum_residents_assigned": 2,
+        },
+        "OP Cardiology": {
+            "minimum_residents_assigned": 0,
+            "maximum_residents_assigned": 2,
+        },
+        "Psych Consult": {
+            "minimum_residents_assigned": 0,
+            "maximum_residents_assigned": 1,
+        },
+        "Dermatology": {
+            "minimum_residents_assigned": 0,
+            "maximum_residents_assigned": 2,
+        },
+        "Elective": {
+            "minimum_residents_assigned": 0,
+            "maximum_residents_assigned": 30,
+        },
+        "GIM": {
+            "minimum_residents_assigned": 0,
+            "maximum_residents_assigned": 10,
+        },
+        "Hospitalist": {
+            "minimum_residents_assigned": 0,
+            "maximum_residents_assigned": 3,
+        },
+        "OP Pulmonology": {
+            "minimum_residents_assigned": 0,
+            "maximum_residents_assigned": 2,
+        },
+    }
+    weeks = pl.DataFrame(
+        [
+            {"monday_date": "2026-07-06", "week": 1, "block": 1},
+            {"monday_date": "2026-07-13", "week": 2, "block": 1},
+            {"monday_date": "2026-07-20", "week": 3, "block": 1},
+            {"monday_date": "2026-07-27", "week": 4, "block": 1},
+            {"monday_date": "2026-08-03", "week": 5, "block": 2},
+            {"monday_date": "2026-08-10", "week": 6, "block": 2},
+            {"monday_date": "2026-08-17", "week": 7, "block": 2},
+            {"monday_date": "2026-08-24", "week": 8, "block": 2},
+            {"monday_date": "2026-08-31", "week": 9, "block": 3},
+            {"monday_date": "2026-09-07", "week": 10, "block": 3},
+            {"monday_date": "2026-09-14", "week": 11, "block": 3},
+            {"monday_date": "2026-09-21", "week": 12, "block": 3},
+            {"monday_date": "2026-09-28", "week": 13, "block": 4},
+            {"monday_date": "2026-10-05", "week": 14, "block": 4},
+            {"monday_date": "2026-10-12", "week": 15, "block": 4},
+            {"monday_date": "2026-10-19", "week": 16, "block": 4},
+            {"monday_date": "2026-10-26", "week": 17, "block": 5},
+            {"monday_date": "2026-11-02", "week": 18, "block": 5},
+            {"monday_date": "2026-11-09", "week": 19, "block": 5},
+            {"monday_date": "2026-11-16", "week": 20, "block": 5},
+            {"monday_date": "2026-11-23", "week": 21, "block": 6},
+            {"monday_date": "2026-11-30", "week": 22, "block": 6},
+            {"monday_date": "2026-12-07", "week": 23, "block": 6},
+            {"monday_date": "2026-12-14", "week": 24, "block": 6},
+            {"monday_date": "2026-12-21", "week": 25, "block": 7},
+            {"monday_date": "2026-12-28", "week": 26, "block": 7},
+            {"monday_date": "2027-01-04", "week": 27, "block": 7},
+            {"monday_date": "2027-01-11", "week": 28, "block": 7},
+            {"monday_date": "2027-01-18", "week": 29, "block": 8},
+            {"monday_date": "2027-01-25", "week": 30, "block": 8},
+            {"monday_date": "2027-02-01", "week": 31, "block": 8},
+            {"monday_date": "2027-02-08", "week": 32, "block": 8},
+            {"monday_date": "2027-02-15", "week": 33, "block": 9},
+            {"monday_date": "2027-02-22", "week": 34, "block": 9},
+            {"monday_date": "2027-03-01", "week": 35, "block": 9},
+            {"monday_date": "2027-03-08", "week": 36, "block": 9},
+            {"monday_date": "2027-03-15", "week": 37, "block": 10},
+            {"monday_date": "2027-03-22", "week": 38, "block": 10},
+            {"monday_date": "2027-03-29", "week": 39, "block": 10},
+            {"monday_date": "2027-04-05", "week": 40, "block": 10},
+            {"monday_date": "2027-04-12", "week": 41, "block": 11},
+            {"monday_date": "2027-04-19", "week": 42, "block": 11},
+            {"monday_date": "2027-04-26", "week": 43, "block": 11},
+            {"monday_date": "2027-05-03", "week": 44, "block": 11},
+            {"monday_date": "2027-05-10", "week": 45, "block": 12},
+            {"monday_date": "2027-05-17", "week": 46, "block": 12},
+            {"monday_date": "2027-05-24", "week": 47, "block": 12},
+            {"monday_date": "2027-05-31", "week": 48, "block": 12},
+            {"monday_date": "2027-06-07", "week": 49, "block": 13},
+            {"monday_date": "2027-06-14", "week": 50, "block": 13},
+            {"monday_date": "2027-06-21", "week": 51, "block": 13},
+            {"monday_date": "2027-06-28", "week": 52, "block": 13},
+        ]
+    )
+    requirements = {
+        "R2 Base": {
+            "HS Rounding Senior": {
+                "constraints": {
+                    "min_weeks": 2,
+                    "max_weeks": 4,
+                    "min_contiguity": 2,
+                    "max_contiguity": 4,
+                    "must_respect_block_alignment": True,
+                    "prerequisite": {
+                        "weeks": 2,
+                        "rots_meeting_prereqs": ["Purple HS Senior"],
+                    },
+                },
+                "fulfilled_by": ["Green HS Senior", "Orange HS Senior"],
+            },
+            "HS Admitting Senior": {
+                "constraints": {
+                    "min_weeks": 5,
+                    "max_weeks": 6,
+                    "min_contiguity": 2,
+                },
+                "fulfilled_by": ["Purple HS Senior"],
+            },
+            "Night Senior": {
+                "constraints": {
+                    "min_weeks": 4,
+                    "max_weeks": 4,
+                    "min_contiguity": 4,
+                },
+                "fulfilled_by": ["Night Senior"],
+            },
+            "ICU Senior": {
+                "constraints": {
+                    "min_weeks": 4,
+                    "max_weeks": 4,
+                    "min_contiguity": 4,
+                },
+                "fulfilled_by": ["SHMC ICU Senior"],
+            },
+            "Consults": {
+                "constraints": {
+                    "min_weeks": 4,
+                },
+                "fulfilled_by": ["Consults"],
+            },
+            "Hospitalist": {
+                "constraints": {
+                    "max_weeks": 0,
+                },
+                "fulfilled_by": ["Hospitalist"],
+            },
+            "Vacation": {
+                "constraints": {"min_weeks": 3, "max_weeks": 3},
+                "fulfilled_by": ["Vacation"],
+            },
+            "STHC Senior": {
+                "constraints": {
+                    "max_weeks": 4,
+                    "min_contiguity": 4,
+                    "must_respect_block_alignment": True,
+                },
+                "fulfilled_by": ["STHC Senior"],
+            },
+            "OP Cardiology": {
+                "constraints": {
+                    "max_weeks": 4,
+                    "min_contiguity": 2,
+                },
+                "fulfilled_by": ["OP Cardiology"],
+            },
+            "Dermatology": {
+                "constraints": {
+                    "min_weeks": 2,
+                    "max_weeks": 2,
+                    "min_contiguity": 2,
+                },
+                "fulfilled_by": ["Dermatology"],
+            },
+            "Geriatrics": {
+                "constraints": {
+                    "min_weeks": 2,
+                    "max_weeks": 2,
+                    "min_contiguity": 2,
+                },
+                "fulfilled_by": ["Geriatrics"],
+            },
+            "Psych Consult": {
+                "constraints": {
+                    "min_weeks": 2,
+                    "max_weeks": 2,
+                    "min_contiguity": 2,
+                },
+                "fulfilled_by": ["Psych Consult"],
+            },
+            "Systems of Medicine": {
+                "constraints": {
+                    "min_weeks": 2,
+                    "max_weeks": 2,
+                    "min_contiguity": 2,
+                },
+                "fulfilled_by": ["Systems of Medicine"],
+            },
+            "Elective": {
+                "constraints": {
+                    "max_weeks": 20,
+                },
+                "fulfilled_by": ["Elective"],
+            },
+            "GIM": {
+                "constraints": {
+                    "max_weeks": 0,
+                },
+                "fulfilled_by": ["GIM"],
+            },
+        },
+        "R2 Standard": {},
+        "R2 Fellowship": {},
+        "R2 PCT": {
+            "GIM": {
+                "constraints": {
+                    "min_weeks": 4,
+                    "max_weeks": 4,
+                    "min_contiguity": 2,
+                    "max_contiguity": 2,
+                },
+                "fulfilled_by": ["GIM"],
+            }
+        },
+        "R3 Base": {
+            "HS Rounding Senior": {
+                "constraints": {
+                    "min_weeks": 8,
+                    "max_weeks": 4,
+                    "min_contiguity": 2,
+                    "max_contiguity": 4,
+                    "must_respect_block_alignment": True,
+                },
+                "fulfilled_by": ["Green HS Senior", "Orange HS Senior"],
+            },
+            "Night Senior": {
+                "constraints": {
+                    "min_weeks": 1,
+                    "max_weeks": 2,
+                },
+                "fulfilled_by": ["Night Senior"],
+            },
+            "Hospitalist": {
+                "constraints": {
+                    "min_weeks": 4,
+                },
+                "fulfilled_by": ["Hospitalist"],
+            },
+            "IP Cardiology": {
+                "constraints": {
+                    "min_weeks": 4,
+                    "min_contiguity": 2,
+                },
+                "fulfilled_by": ["IP Cardiology"],
+            },
+            "OP Pulmonology": {
+                "constraints": {
+                    "min_weeks": 4,
+                    "max_weeks": 8,
+                    "min_contiguity": 2,
+                },
+                "fulfilled_by": ["OP Pulmonology"],
+            },
+            "Elective": {
+                "constraints": {
+                    "max_weeks": 20,
+                },
+                "fulfilled_by": ["Elective"],
+            },
+            "Vacation": {
+                "constraints": {
+                    "min_weeks": 4,
+                    "max_weeks": 4,
+                    "max_contiguity": 1,
+                },
+                "fulfilled_by": ["Elective"],
+            },
+            "OP Cardiology": {
+                "constraints": {
+                    "max_weeks": 0,
+                },
+                "fulfilled_by": ["Elective"],
+            },
+            "Systems of Medicine": {
+                "constraints": {
+                    "max_weeks": 0,
+                },
+                "fulfilled_by": ["Systems of Medicine"],
+            },
+        },
+        "R3 Standard": {
+            "STHC Senior": {
+                "constraints": {
+                    "min_weeks": 4,
+                    "max_weeks": 4,
+                    "min_contiguity": 4,
+                    "max_contiguity": 4,
+                    "must_respect_block_alignment": True,
+                },
+                "fulfilled_by": ["STHC Senior"],
+            },
+            "ICU Senior": {
+                "constraints": {
+                    "min_weeks": 4,
+                    "max_weeks": 4,
+                    "min_contiguity": 4,
+                    "max_contiguity": 4,
+                    "must_respect_block_alignment": True,
+                },
+                "fulfilled_by": ["SHMC ICU Senior", "SHMC CICU"],
+            },
+        },
+        "R3 Fellowship": {},
+        "R3 PCT": {
+            "STHC Senior": {
+                "constraints": {
+                    "min_weeks": 8,
+                    "min_contiguity": 2,
+                    "max_contiguity": 4,
+                    "must_respect_block_alignment": True,
+                },
+                "fulfilled_by": ["STHC Senior"],
+            },
+            "GIM": {
+                "constraints": {
+                    "min_weeks": 4,
+                    "max_weeks": 4,
+                    "min_contiguity": 2,
+                    "must_respect_block_alignment": True,
+                },
+                "fulfilled_by": ["GIM"],
+            },
+            "ICU Senior": {
+                "constraints": {
+                    "max_weeks": 0,
+                },
+                "fulfilled_by": ["ICU Senior", "SHMC CICU"],
+            },
+        },
+    }
+
+    return workers, rotations, weeks, requirements
