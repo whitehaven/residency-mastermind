@@ -28,7 +28,7 @@ def test_min_contiguity_constraints(minimal_min_contiguity_case):
 
     block = convert_melted_to_block_schedule(solved_schedule)
 
-    with pl.Config(tbl_cols=-1):
+    with pl.Config(tbl_cols=-1, tbl_width_chars=-1):
         logger.trace(block)
 
     assert starmap_verify_req_constraints(workers_with_reqs, weeks, solved_schedule)
@@ -41,20 +41,16 @@ def test_max_contiguity_constraints(minimal_max_contiguity_case):
     solved_schedule = generate_complete_schedule(
         workers, rotations, weeks, requirements, overrides=None, preferences=None
     )
-
-    assert starmap_verify_req_constraints(workers_with_reqs, weeks, solved_schedule)
-    logger.debug(
-        f"Requirement constraints verified across {len(workers_with_reqs)} workers and {len(solved_schedule)} variables."
-    )
-    assert starmap_verify_rot_constraints(rotations, solved_schedule)
-    logger.debug(
-        f"Rotation constraints verified across {len(rotations)} rotations and {len(solved_schedule)} variables."
-    )
-
     block = convert_melted_to_block_schedule(solved_schedule)
 
-    with pl.Config(tbl_cols=-1):
-        logger.trace(block)
+    with pl.Config(tbl_cols=-1, tbl_width_chars=-1):
+        logger.debug(
+            f"Completed schedule for test of must_respect_block_alignment on rotations: {requirements['R2 Base']['HS Rounding Senior']['fulfilled_by']}"
+        )
+        logger.debug(block)
+
+    assert starmap_verify_req_constraints(workers_with_reqs, weeks, solved_schedule)
+    assert starmap_verify_rot_constraints(rotations, solved_schedule)
 
 
 def starmap_verify_req_constraints(
@@ -475,7 +471,7 @@ def test_minimal_prerequisites_case(minimal_prerequisites_case):
 
     block = convert_melted_to_block_schedule(solved_schedule)
 
-    with pl.Config(tbl_cols=-1):
+    with pl.Config(tbl_cols=-1, tbl_width_chars=-1):
         logger.trace(block)
 
     assert starmap_verify_req_constraints(workers_with_reqs, weeks, solved_schedule)
@@ -493,7 +489,7 @@ def test_minimal_must_be_succeeded_by_case(minimal_must_be_succeeded_by_case):
 
     block = convert_melted_to_block_schedule(solved_schedule)
 
-    with pl.Config(tbl_cols=-1):
+    with pl.Config(tbl_cols=-1, tbl_width_chars=-1):
         logger.trace(block)
 
     assert starmap_verify_req_constraints(workers_with_reqs, weeks, solved_schedule)
@@ -511,7 +507,7 @@ def test_minimal_unavailable_weeks_case(minimal_unavailable_weeks):
 
     block = convert_melted_to_block_schedule(solved_schedule)
 
-    with pl.Config(tbl_cols=-1):
+    with pl.Config(tbl_cols=-1, tbl_width_chars=-1):
         logger.trace(
             f"Testing unavailable weeks: SOM unavailable for {rotations['Systems of Medicine']['unavailable_weeks']} weeks"
         )
@@ -532,7 +528,7 @@ def test_minimal_available_weeks_case(minimal_available_weeks):
 
     block = convert_melted_to_block_schedule(solved_schedule)
 
-    with pl.Config(tbl_cols=-1):
+    with pl.Config(tbl_cols=-1, tbl_width_chars=-1):
         logger.trace(
             f"Testing available weeks: SOM available for {rotations['Systems of Medicine']['available_weeks']}."
         )
@@ -553,7 +549,7 @@ def test_minimal_override_enforcement_case(minimal_with_overrides):
 
     block = convert_melted_to_block_schedule(solved_schedule)
 
-    with pl.Config(tbl_cols=-1):
+    with pl.Config(tbl_cols=-1, tbl_width_chars=-1):
         logger.trace(f"Testing overrides: {overrides}.")
         logger.trace(block)
 
@@ -594,6 +590,26 @@ def test_minimal_respect_block_alignment_case(minimal_with_respect_block_alignme
             f"Completed schedule for test of must_respect_block_alignment on rotations: {requirements['R2 Base']['HS Rounding Senior']['fulfilled_by']}"
         )
         logger.debug(block)
+
+    assert starmap_verify_req_constraints(workers_with_reqs, weeks, solved_schedule)
+    assert starmap_verify_rot_constraints(rotations, solved_schedule)
+
+
+def test_real_data_2025_case_constraints_only(real_2025_inputs):
+    workers, rotations, weeks, requirements = real_2025_inputs
+
+    workers_with_reqs = compose_requirements_to_workers(workers, requirements)
+
+    solved_schedule = generate_complete_schedule(
+        workers, rotations, weeks, requirements, overrides=None, preferences=None
+    )
+    block = convert_melted_to_block_schedule(solved_schedule)
+
+    with pl.Config(tbl_cols=-1, tbl_width_chars=-1):
+        logger.trace(
+            "Full test run based on real inputs from 2025 (with names changed)"
+        )
+        logger.trace(block)
 
     assert starmap_verify_req_constraints(workers_with_reqs, weeks, solved_schedule)
     assert starmap_verify_rot_constraints(rotations, solved_schedule)

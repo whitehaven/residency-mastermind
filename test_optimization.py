@@ -29,7 +29,7 @@ def test_minimal_preferences_case(minimal_with_preferences_case):
 
     block = convert_melted_to_block_schedule(solved_schedule)
 
-    with pl.Config(tbl_cols=-1):
+    with pl.Config(tbl_cols=-1, tbl_width_chars=-1):
         logger.trace(f"Testing minimal case with preferences: {preferences}.")
         logger.trace(block)
         maximized_utility = calculate_total_preference_satisfaction(
