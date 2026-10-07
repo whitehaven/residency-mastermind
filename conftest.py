@@ -610,7 +610,7 @@ def real_2025_case_constraints_only():
     workers = pl.DataFrame(
         [
             {"name": "JBe", "track": "Standard", "year": "R3"},
-            {"name": "JKa", "track": "Fellowship", "year": "R3"},
+            {"name": "JKa", "track": "Standard", "year": "R3"},
             {"name": "NKi", "track": "PCT", "year": "R3"},
             {"name": "BLe", "track": "PCT", "year": "R3"},
             {"name": "SNe", "track": "PCT", "year": "R3"},
@@ -618,15 +618,15 @@ def real_2025_case_constraints_only():
             {"name": "ASc", "track": "Standard", "year": "R3"},
             {"name": "TSe", "track": "Standard", "year": "R3"},
             {"name": "LSz", "track": "Standard", "year": "R3"},
-            {"name": "EBr", "track": "Fellowship", "year": "R3"},
+            {"name": "EBr", "track": "Standard", "year": "R3"},
             {"name": "MAd", "track": "Standard", "year": "R2"},
             {"name": "JAz", "track": "Standard", "year": "R2"},
             {"name": "NBr", "track": "Standard", "year": "R2"},
-            {"name": "ACh", "track": "Fellowship", "year": "R2"},
+            {"name": "ACh", "track": "Standard", "year": "R2"},
             {"name": "CGo", "track": "PCT", "year": "R2"},
             {"name": "AKa", "track": "Standard", "year": "R2"},
-            {"name": "CLe", "track": "Fellowship", "year": "R2"},
-            {"name": "CLo", "track": "Fellowship", "year": "R2"},
+            {"name": "CLe", "track": "Standard", "year": "R2"},
+            {"name": "CLo", "track": "Standard", "year": "R2"},
             {"name": "ASw", "track": "Standard", "year": "R2"},
             {"name": "AWe", "track": "PCT", "year": "R2"},
         ]
@@ -878,7 +878,6 @@ def real_2025_case_constraints_only():
             },
         },
         "R2 Standard": {},
-        "R2 Fellowship": {},
         "R2 PCT": {
             "GIM": {
                 "constraints": {
@@ -978,11 +977,11 @@ def real_2025_case_constraints_only():
                 "fulfilled_by": ["SHMC ICU Senior", "SHMC CICU"],
             },
         },
-        "R3 Fellowship": {},
         "R3 PCT": {
             "STHC Senior": {
                 "constraints": {
                     "min_weeks": 8,
+                    "max_weeks": 10,
                     "min_contiguity": 2,
                     "max_contiguity": 4,
                     "must_respect_block_alignment": True,

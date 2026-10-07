@@ -4,6 +4,7 @@ import cpmpy as cp
 import mergedeep
 import polars as pl
 from cpmpy.tools import mus
+from loguru import logger
 
 import config
 
@@ -61,12 +62,6 @@ def compose_requirements_to_workers(
                             requirement_sets["R2 PCT"],
                             strategy=mergedeep.Strategy.REPLACE,
                         )
-                    case "Fellowship":
-                        this_workers_reqs = mergedeep.merge(
-                            this_workers_reqs,
-                            requirement_sets["R2 Fellowship"],
-                            strategy=mergedeep.Strategy.REPLACE,
-                        )
                     case "Standard":
                         this_workers_reqs = mergedeep.merge(
                             this_workers_reqs,
@@ -76,7 +71,7 @@ def compose_requirements_to_workers(
                     case _:
                         raise RuntimeError(f"{worker['track']=} doesn't exist")
             case "R3":
-                this_workers_reqs.update(requirement_sets.get("R3 Base", {}))
+                this_workers_reqs.update(requirement_sets["R3 Base"])
                 match worker["track"]:
                     case "PCT":
                         this_workers_reqs = mergedeep.merge(
@@ -84,23 +79,22 @@ def compose_requirements_to_workers(
                             requirement_sets["R3 PCT"],
                             strategy=mergedeep.Strategy.REPLACE,
                         )
-                    case "Fellowship":
-                        this_workers_reqs = mergedeep.merge(
-                            this_workers_reqs,
-                            requirement_sets.get("R3 Fellowship", {}),
-                            strategy=mergedeep.Strategy.REPLACE,
-                        )
                     case "Standard":
                         this_workers_reqs = mergedeep.merge(
                             this_workers_reqs,
-                            requirement_sets.get("R3 Standard", {}),
+                            requirement_sets["R3 Standard"],
                             strategy=mergedeep.Strategy.REPLACE,
                         )
                     case _:
+                        logger.critical(f"{worker['track']=} doesn't exist")
                         raise NotImplementedError(f"{worker['track']=} doesn't exist")
             case "R1":
+                logger.critical("Requirement composition failed: R1 not implemented")
                 raise NotImplementedError("Don't plan to implement R1")
             case _:
+                logger.critical(
+                    f"Requirement composition failed: {worker['year']=} doesn't exist"
+                )
                 raise RuntimeError(f"{worker['year']=} doesn't exist")
 
         workers_reqs.update({worker["name"]: this_workers_reqs})

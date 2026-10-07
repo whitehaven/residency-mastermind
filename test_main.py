@@ -14,6 +14,9 @@ def test_real_data_2025_case_constraints_only(real_2025_case_constraints_only):
 
     workers_with_reqs = compose_requirements_to_workers(workers, requirements)
 
+    with pl.Config(tbl_cols=-1, tbl_width_chars=-1):
+        logger.trace(f"{workers_with_reqs=}")
+
     solved_schedule = generate_complete_schedule(
         workers, rotations, weeks, requirements, overrides=None, preferences=None
     )
