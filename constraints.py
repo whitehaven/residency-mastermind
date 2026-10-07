@@ -30,6 +30,11 @@ def accumulate_req_constraints(
             logger.trace(f"{req_name=}: {req_body=}")
             logger.trace(f"{worker}")
             for constraint in req_body["constraints"]:
+                is_constraint_payload_blank = (
+                    req_body["constraints"][constraint] is None
+                )
+                if is_constraint_payload_blank:
+                    continue
                 match constraint:
                     case "max_weeks":
                         cumu_constraints.extend(
